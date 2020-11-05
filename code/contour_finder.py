@@ -95,7 +95,7 @@ def angleFull(v1, v2):
     return angle % (2*np.pi)
 
 
-def points_in_section(circle, section):
+def points_in_section(circle, section, resolution):
     """
     Returns points of the contour of a circle in the given section
     """
@@ -105,7 +105,7 @@ def points_in_section(circle, section):
     if end_angle < start_angle:
         end_angle += 2*np.pi
 
-    angles = np.arange(start_angle, end_angle, 0.01)
+    angles = np.arange(start_angle, end_angle, resolution)
 
     coords_circle = []
     for angle in angles:
@@ -115,7 +115,7 @@ def points_in_section(circle, section):
     return coords_circle
 
 
-def find_contour_for_cc(G, connected_component, circles):
+def find_contour_for_cc(G, connected_component, circles, resolution):
     """
     Returns the contour for a connected compenent of a graph.
     Intersections must be pre-computed
@@ -126,7 +126,7 @@ def find_contour_for_cc(G, connected_component, circles):
 
     # If there's only one circle return contour of that circle
     if(len(connected_component) == 1):
-        return points_in_section(circles[max(connected_component)], ContourSection(0, 0, 2*np.pi))
+        return points_in_section(circles[max(connected_component)], ContourSection(0, 0, 2*np.pi),resolution)
 
     connected_component = list(connected_component)
     # Start at the point furthest to the right. This point is certainly in the contour
@@ -177,12 +177,12 @@ def find_contour_for_cc(G, connected_component, circles):
     contour_points = []
     for section in sections:
         circle = circles[section.index]
-        contour_points.extend(points_in_section(circle, section))
+        contour_points.extend(points_in_section(circle, section, resolution))
 
     return contour_points
 
 
-def find_contour(circles):
+def find_contour(circles, resolution):
     G = create_graph_from_circles(circles)
 
     if G == None:
@@ -192,4 +192,4 @@ def find_contour(circles):
     # TODO: The geograpically largest CC might not be the CC with the most nodes. Rework in future
     largest_cc = max(nx.connected_components(G), key=len)
 
-    return np.array(find_contour_for_cc(G, largest_cc, circles))
+    return np.array(find_contour_for_cc(G, largest_cc, circles, resolution))

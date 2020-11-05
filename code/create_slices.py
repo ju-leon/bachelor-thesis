@@ -19,7 +19,7 @@ def radius_at_height(radius, height):
     return np.sin(np.arccos(relativeHeight)) * radius
 
 
-def slice_catalyst(atoms, layer_height, z_start, z_end):
+def slice_catalyst(atoms, layer_height, z_start, z_end, resolution):
     slice_heights = np.arange(z_start, z_end, layer_height)
 
     slices = []
@@ -31,7 +31,7 @@ def slice_catalyst(atoms, layer_height, z_start, z_end):
             if circle_radius != 0:
                 circles.append(Circle([x, y], circle_radius))
 
-        slices.append(find_contour(circles))
+        slices.append(find_contour(circles, resolution))
     
     return slices
     

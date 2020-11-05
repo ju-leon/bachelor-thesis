@@ -23,9 +23,9 @@ def read_from_file(file):
     return atoms
 
 
-def generate_slices(atoms, layer_height, z_start, z_end):
+def generate_slices(atoms, layer_height, z_start, z_end, resolution):
     aligned_atoms = align_catalyst(atoms)
-    slices = slice_catalyst(aligned_atoms, layer_height, z_start, z_end)
+    slices = slice_catalyst(aligned_atoms, layer_height, z_start, z_end, resolution)
     return slices
 
 
@@ -33,8 +33,9 @@ def generate_fourier_descriptions(slices, order):
     fourier = []
     for slice in slices:
         fourier.append(fourier_descriptor(slice, order))
-    
+
     return np.array(fourier)
+
 
 def main():
     """
@@ -55,6 +56,8 @@ def main():
         '--z_end', default=5, help='End of the slices relative to metal center in Angstrom')
     parser.add_argument('--order', default=10,
                         help='Order of the fourier descriptor', type=int)
+    parser.add_argument('--contour_res', default=0.01,
+                        help='Resolution of the contour. Smaller numer is higher resolution', type=float)
 
     args, other_args = parser.parse_known_args()
 
@@ -62,7 +65,7 @@ def main():
         if f.endswith(".xyz"):
             atoms = read_from_file(args.data_dir + f)
             slices = generate_slices(atoms, args.layer_height,
-                                     args.z_start, args.z_end)
+                                     args.z_start, args.z_end, args.contour_res)
 
             fourier = generate_fourier_descriptions(slices, args.order)
             np.save(args.out_dir + f.replace(".xyz", "npy"), fourier)
