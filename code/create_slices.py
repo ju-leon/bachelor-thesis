@@ -33,6 +33,6 @@ def slice_catalyst(atoms, layer_height, z_start, z_end):
 
         slices.append(find_contour(circles))
     
-    return(np.array(slices, dtype=object))
+    return slices
     
 

@@ -7,6 +7,8 @@ from definitions import Point, Atom
 from mendeleev import element
 from create_slices import slice_catalyst
 from tqdm import tqdm
+from contour_descriptor import fourier_descriptor
+
 
 def read_from_file(file):
     atoms = []
@@ -21,10 +23,18 @@ def read_from_file(file):
     return atoms
 
 
-def generate_features(atoms, layer_height, z_start, z_end):
+def generate_slices(atoms, layer_height, z_start, z_end):
     aligned_atoms = align_catalyst(atoms)
-    return slice_catalyst(aligned_atoms, layer_height, z_start, z_end)
+    slices = slice_catalyst(aligned_atoms, layer_height, z_start, z_end)
+    return slices
 
+
+def generate_fourier_descriptions(slices, order):
+    fourier = []
+    for slice in slices:
+        fourier.append(fourier_descriptor(slice, order))
+    
+    return np.array(fourier)
 
 def main():
     """
@@ -39,18 +49,23 @@ def main():
 
     parser.add_argument('--layer_height', default=0.5,
                         help='Height of each slice through the atom in Angstrom', type=float)
-    parser.add_argument('--z_start', default=-5)
-    parser.add_argument('--z_end', default=5)
+    parser.add_argument('--z_start', default=-5,
+                        help='Start of the slices relative to metal center in Angstrom')
+    parser.add_argument(
+        '--z_end', default=5, help='End of the slices relative to metal center in Angstrom')
+    parser.add_argument('--order', default=10,
+                        help='Order of the fourier descriptor', type=int)
 
     args, other_args = parser.parse_known_args()
 
     for f in tqdm(os.listdir(args.data_dir)):
         if f.endswith(".xyz"):
             atoms = read_from_file(args.data_dir + f)
-            features = generate_features(atoms, args.layer_height,
-                                         args.z_start, args.z_end)
-            
-            np.save(args.out_dir + f.replace(".xyz", "npy"), features)
+            slices = generate_slices(atoms, args.layer_height,
+                                     args.z_start, args.z_end)
+
+            fourier = generate_fourier_descriptions(slices, args.order)
+            np.save(args.out_dir + f.replace(".xyz", "npy"), fourier)
 
 
 if __name__ == "__main__":
