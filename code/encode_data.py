@@ -68,7 +68,7 @@ def main():
                                      args.z_start, args.z_end, args.contour_res)
 
             fourier = generate_fourier_descriptions(slices, args.order)
-            np.save(args.out_dir + f.replace(".xyz", "npy"), fourier)
+            np.save(args.out_dir + f.replace(".xyz", ".npy"), fourier)
 
 
 if __name__ == "__main__":
