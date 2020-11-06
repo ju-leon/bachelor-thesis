@@ -2,12 +2,13 @@ import os
 import sys
 import argparse
 import numpy as np
-from alignment import align_catalyst
-from definitions import Point, Atom
-from mendeleev import element
-from create_slices import slice_catalyst
 from tqdm import tqdm
-from contour_descriptor import fourier_descriptor
+from mendeleev import element
+
+from feature_generation.definitions import Point, Atom
+from feature_generation.create_slices import slice_catalyst
+from feature_generation.contour_descriptor import fourier_descriptor
+from feature_generation.alignment import align_catalyst
 
 
 def read_from_file(file):

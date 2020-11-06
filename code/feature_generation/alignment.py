@@ -1,6 +1,6 @@
-from definitions import Atom
 import numpy as np
 import math
+from .definitions import Atom
 
 def dotproduct(v1, v2):
   return sum((a*b) for a, b in zip(v1, v2))

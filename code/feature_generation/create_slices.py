@@ -1,12 +1,11 @@
 import os
-from definitions import Atom, Circle
 import numpy as np
 from numpy import linalg as LA
 import networkx as nx
 from itertools import product
 import math
-from contour_finder import find_contour
-
+from .contour_finder import find_contour
+from .definitions import Atom, Circle
 
 def radius_at_height(radius, height):
     """
