@@ -49,6 +49,11 @@ def circle_intersection(circle1, circle2):
 
 
 def create_graph_from_circles(circles):
+    """
+    Creates a graph from a set of circles.
+    For all circles that intersect an edge between these nodes is added.
+    """
+
     if circles == []:
         return None
 

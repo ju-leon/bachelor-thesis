@@ -38,6 +38,10 @@ def get_rotation_matrix(mean):
     
 
 def align_catalyst(atoms):
+    """
+    Rotate all atoms so that the reaction pocket is at the top
+    """
+
     # Metal should be first atom in xyz file
     metal_location = atoms[0].location
 
