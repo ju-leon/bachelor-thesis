@@ -1,0 +1,183 @@
+\documentclass{thesisclass}
+% Based on thesisclass.cls of Timo Rohrberg, 2009
+% ----------------------------------------------------------------
+% Thesis - Main document
+% ----------------------------------------------------------------
+
+
+%% -------------------------------
+%% |  Information for PDF file   |
+%% -------------------------------
+\hypersetup{
+ pdfauthor={?},
+ pdftitle={?},
+ pdfsubject={?},
+ pdfkeywords={?}
+}
+
+
+%% ---------------------------------
+%% | Information about the thesis  |
+%% ---------------------------------
+
+\newcommand{\myname}{Leon Jungemeyer}
+\newcommand{\mytitle}{Rotationally invariant neural networks for homogeneous catalysis}
+\newcommand{\myinstitute}{Institute of Theoretical Informatics}
+
+\newcommand{\reviewerone}{?}
+\newcommand{\reviewertwo}{?}
+\newcommand{\advisor}{Chen Zhou}
+\newcommand{\advisortwo}{Pascal Friederich}
+
+\newcommand{\timestart}{24th April 2020}
+\newcommand{\timeend}{25th April 2020}
+
+
+%% ---------------------------------
+%% | Commands                      |
+%% ---------------------------------
+
+\newtheorem{definition}{Definition} \numberwithin{definition}{chapter}
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{corollary}[definition]{Corollary}
+\newtheorem{conjecture}[definition]{Conjecture}
+
+
+%% --------------------------------
+%% | Settings for word separation |
+%% --------------------------------
+% Help for separation:
+% In german package the following hints are additionally available:
+% "- = Additional separation
+% "| = Suppress ligation and possible separation (e.g. Schaf"|fell)
+% "~ = Hyphenation without separation (e.g. bergauf und "~ab)
+% "= = Hyphenation with separation before and after
+% "" = Separation without a hyphenation (e.g. und/""oder)
+
+% Describe separation hints here:
+\hyphenation{
+% Pro-to-koll-in-stan-zen
+% Ma-na-ge-ment  Netz-werk-ele-men-ten
+% Netz-werk Netz-werk-re-ser-vie-rung
+% Netz-werk-adap-ter Fein-ju-stier-ung
+% Da-ten-strom-spe-zi-fi-ka-tion Pa-ket-rumpf
+% Kon-troll-in-stanz
+}
+
+
+%% ------------------------
+%% |    Including files   |
+%% ------------------------
+% Only files listed here will be included!
+% Userful command for partially translating the document (for bug-fixing e.g.)
+\includeonly{
+titlepage,
+introduction,
+preliminaries,
+content,
+conclusion,
+appendix
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Here, main documents begins %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+% Remove the following line for German text
+\selectlanguage{english}
+
+\frontmatter
+\pagenumbering{roman}
+\include{titlepage}
+\blankpage
+
+%% -------------------------------
+%% |   Statement of Authorship   |
+%% -------------------------------
+
+\thispagestyle{plain}
+
+\vspace*{\fill}
+
+\centerline{\textbf{Statement of Authorship}}
+
+\vspace{0.25cm}
+
+Ich versichere wahrheitsgemäß, die Arbeit selbstständig verfasst, alle benutzten Hilfsmittel vollständig und genau angegeben und alles kenntlich gemacht zu haben, was aus Arbeiten anderer unverändert oder mit Abänderungen entnommen wurde sowie die Satzung des KIT zur Sicherung guter wissenschaftlicher Praxis in der jeweils gültigen Fassung beachtet zu haben.
+
+\vspace{2.5cm}
+
+\hspace{0.25cm} Karlsruhe, \today
+
+\vspace{2cm}
+
+\blankpage
+
+%% -------------------
+%% |   Abstract      |
+%% -------------------
+
+\thispagestyle{plain}
+
+\begin{addmargin}{0.5cm}
+
+\centerline{\textbf{Abstract}}
+
+This thesis finds rotationally invariant features of catalysts using their 3D representation. Using a catalysts unique shape, features are extracted so that spacial orientation of the molecule is of no significance. The generated features are then used to train a neural network that predicts properties of the molecule.
+
+\vskip 2cm
+
+\centerline{\textbf{Deutsche Zusammenfassung}}
+
+Kurze Inhaltsangabe auf deutsch.
+
+\end{addmargin}
+
+\blankpage
+
+%% -------------------
+%% |   Directories   |
+%% -------------------
+
+\tableofcontents
+\blankpage
+
+%% -----------------
+%% |   Main part   |
+%% -----------------
+
+\mainmatter
+\pagenumbering{arabic}
+\include{introduction}
+\include{preliminaries}
+\include{content}
+\include{conclusion}
+
+
+%% --------------------
+%% |   Bibliography   |
+%% --------------------
+
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\bibname}
+
+\iflanguage{english}
+{\bibliographystyle{alpha}}
+{\bibliographystyle{babalpha-fl}} % german style
+
+\bibliography{references}
+
+
+%% ----------------
+%% |   Appendix   |
+%% ----------------
+
+\cleardoublepage
+\input{appendix}
+
+
+\end{document}

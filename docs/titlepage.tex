@@ -1,0 +1,83 @@
+%% titlepage.tex
+%%
+
+% coordinates for the bg shape on the titlepage
+\newcommand{\diameter}{7}
+\newcommand{\xone}{-15}
+\newcommand{\xtwo}{160}
+\newcommand{\yone}{15}
+\newcommand{\ytwo}{-253}
+
+\begin{titlepage}
+% bg shape
+\begin{tikzpicture}[overlay]
+\draw[color=gray]  
+ 		 (\xone mm, \yone mm)
+  -- (\xtwo mm, \yone mm)
+ arc (90:0:\diameter mm) 
+  -- (\xtwo mm + \diameter mm , \ytwo mm) 
+	-- (\xone mm + \diameter mm , \ytwo mm)
+ arc (270:180:\diameter mm)
+	-- (\xone mm, \yone mm);
+\end{tikzpicture}
+	\begin{textblock}{10}[0,0](4,2.5)
+		\includegraphics[width=.3\textwidth]{logos/KITLogo.pdf}
+	\end{textblock}
+        \begin{textblock}{10}[0,0](14.5,2.45)
+		\includegraphics[width=.15\textwidth]{logos/algoLogo.pdf}
+	\end{textblock}
+	\changefont{phv}{m}{n}	% helvetica	
+	\vspace*{3.75cm}
+	\begin{center}
+		\Huge{\mytitle}
+		\vspace*{2.25cm}\\
+		\Large{
+			\iflanguage{english}{Bachelor Thesis of}			
+												  {Diplomarbeit\\von}
+		}\\
+		\vspace*{1cm}
+		\huge{\myname}\\
+		\vspace*{1cm}
+		\Large{
+			\iflanguage{english}{At the Department of Informatics}			
+													{An der Fakult\"at f\"ur Informatik}
+			\\
+			\myinstitute
+		}
+	\end{center}
+	\vspace*{1cm}
+\Large{
+\begin{center}
+\begin{tabular}[ht]{l c l}
+  % Gutachter sind die Professoren, die die Arbeit bewerten. 
+  \iflanguage{english}{Reviewers}{Erstgutachter}: & \hfill & \reviewerone\\
+  \iflanguage{english}{}{Zweitgutachter:} & \hfill & \reviewertwo\\
+  \iflanguage{english}{Advisors}{Betreuende Mitarbeiter}: & \hfill & \advisor\\
+  \iflanguage{english}{}{} & \hfill & \advisortwo\\
+  % Der zweite betreuende Mitarbeiter kann weggelassen werden. 
+\end{tabular}
+\end{center}
+}
+
+
+\vspace{2cm}
+\begin{center}
+\large{\iflanguage{english}{Time Period}{Bearbeitungszeit}: \ \timestart{} \ -- \ \timeend}
+\end{center}
+
+
+\begin{textblock}{10}[0,0](4,16.8)
+\tiny{ 
+	\iflanguage{english}
+		{KIT -- The Research University in the Helmholtz Association}
+		{KIT -- Die Forschungsuniversit\"at in der Helmholtz-Gemeinschaft}
+}
+\end{textblock}
+
+\begin{textblock}{10}[0,0](14,16.75)
+\large{
+	\textbf{www.kit.edu} 
+}
+\end{textblock}
+
+\end{titlepage}
