@@ -2,20 +2,143 @@
 %%
 
 %% ==============
-\chapter{Content Chapters}
+\chapter{Feature generation}
 \label{ch:Content1}
 %% ==============
 
-The content chapters of your thesis should of course be renamed. How many chapters you need to write depends on your thesis and cannot be said in general.
+The first step of most machine learning tasks is to extract relevant features from our dataset.
+In the case of out data, we can make use of the special structure of catalyst molecules when generating out features.
+Since location and rotation of the molecule has no effect on it's properties, our features should not contain any information about these.
+
+The dataset can formally be described as a set $D$. \\
+$D$ represents a set of molecules. Each molecule is represented by a list of touples of (atom, location in 3d space). \\
+$D = \{(m_0, m_1, \dots, m_n)| m_i \in \{ (a, l): a \in A, l \in \mathbb{R}^3\}, i = 0..n\}$ with $A = M \cup \{h\} \cup A_r$ being a set of atoms, where $M$ are all metal atoms, $h$ is a hydrogen atom, $A_r$ are all other atoms. 
+Each atoms has certain properties, such as a Van-der-Waals radius. 
+Since we're looking at catalysts, we can set the following conditions to our molecules $(m_0, m_1, \dots, m_n) \in D$:
+\begin{itemize}
+  \item $m_0 \in M \times \mathbb{R}^3$, the first atom is a metal atom.
+  \item $m_1, m_2 \in (h, l), l \in \mathbb{R}^3$, the second and third atoms are hydrogen atoms.
+\end{itemize}
 
 
-\section{Section 1}
+\section{Translational invariance}
 
-\dots
 
-\subsection{Subsection 1}
+In a first step, the molecule $m=((a_0, l_0),\dots,(a_n, l_n)) \in D$ is centered around a unique point.
+Since every catalyst has exactly one metal atom, the molecule can be centered around this atom.
+Formally, the metal atom is set to location $(0,0,0)$ and all other atoms are translated accordingly.
 
-\dots
+$m' = m -^E l_0$ \footnote{$\circ^E$, with $\circ$ being any pairwise operator, will be used as a abbrevation for a pairwise application of $\circ$ to the location of each atom in a molecule.
+\\
+$x \circ^E ((a_0, l_0), (a_1, l_1), ... ,(a_n, l_n)) = ((a_0, x \circ l_0), (a_1, x \circ l_1), ... (a_n, x \circ l_n))$
+\\
+and
+\\
+$((a_0, l_0), (a_1, l_1), ... (a_n, l_n)) \circ^E x = ((a_0, l_0 \circ x), (a_1, l_1 \circ x), ... (a_n, l_n \circ x))$
+}
+
+
+\section{Rotational invariance}
+
+The next step is to find a unique rotation.
+This problem can be devided into 2 parts.
+By definition the second and third atom of any molecule in the dataset are hydrogen atoms.
+These atoms form a reaction pocket. %TODO: Describe reaction pocket somewhere
+The reaction pocket will become the new top of the molecule.
+Since every atom has exactly 1 reaction pocket, 2 more degrees of freedom can be removed, only allowing for rotations around the z-axis.
+
+
+\subsection{Define top point}
+
+The location of the reaction pocket $l_r$ is calculated by taking the mean of the location of the first 2 hydrogen atoms, so:
+
+$l_{pocket} = \frac{l'_1 + l'_2}{2}$
+
+The molecule is then rotated so that the reaction pocket will be straigt up from the center point, so $l_{pocket}' = (0,0,z)$.
+Using a rotational matrix, all points are rotated around the center accordingly.
+
+For finding a rotational matrix, first the angles between $l'_{pocket}$ and the z-axis $(0,0,1)$ are computed.
+More specifically, the angle $\alpha$ between $(l'_{pocket}[0], l'_{pocket}[1], 0)$ and $(1,1,0)$ that needs to be rotated around the z-axis, 
+the angle $\beta$ between $l'_{pocket}$ and $(1,1,1)$ that needs to be rotated around the y-axis afterwards.
+
+$\alpha = \arccos \left(
+  \frac{
+  \begin{pmatrix}
+    l'_{pocket}[0] &
+    l'_{pocket}[1] &
+    0
+  \end{pmatrix}^T
+  \cdot 
+  \begin{pmatrix}
+    1 &
+    1 &
+    0
+  \end{pmatrix}^T}
+  {
+  \begin{Vmatrix}
+    l'_{pocket}[0] &
+    l'_{pocket}[1] &
+    0
+  \end{Vmatrix}
+  \cdot 
+  \begin{Vmatrix}
+    1 &
+    1 &
+    0
+  \end{Vmatrix}}
+\right)
+$
+
+$\beta = \arccos \left(
+  \frac{
+    l'_{pocket}
+  \cdot 
+  \begin{pmatrix}
+    1 &
+    1 &
+    1
+  \end{pmatrix}^T}
+  {
+  \begin{Vmatrix}
+    l'_{pocket}
+  \end{Vmatrix}
+  \cdot 
+  \begin{Vmatrix}
+    1 &
+    1 &
+    1
+  \end{Vmatrix}}
+\right)
+$
+
+First, the y-part of $l'_{pocket}$ is eliminated by rotating the point around the z-axis using a rotation matrix.
+
+$
+R_z =
+\begin{pmatrix}
+  \cos(\alpha) & \sin(\alpha) & 0 \\
+  -\sin(\alpha) & \cos(\alpha) & 0 \\
+  0 & 0 & 1
+\end{pmatrix}
+$
+
+Afterwards, the remaining x-part of $l'_{pocket}$ is eliminated by rotating the point around the y-axis.
+
+$
+R_y =
+\begin{pmatrix}
+  \cos(\beta) & 0 & -\sin(\beta) \\
+  0 & 1 & 0 \\
+  \sin(\beta) & 0 & \cos(\beta) 
+\end{pmatrix}
+$
+
+The full rotation can be described as $R = R_y \cdot R_z$
+
+This rotation is applied to all atoms, so:
+
+$m'' = R \cdot^E m'$
+
 
 \subsubsection{Subsubsection 1}
 
