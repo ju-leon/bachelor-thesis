@@ -90,3 +90,9 @@ target/
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+# Editors
+.vscode
+.idea
+
+/code/out
