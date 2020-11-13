@@ -203,7 +203,7 @@ By slicing a molecule at a location $z_{slice}$, every slice contains a subset o
 % Algorithm interface
 \KwIn{Set \C of circles}
 \KwData{Graph $\G = (\C, \emptyset)$}
-\KwOut{List of contour sections $C$ in order}
+\KwOut{List of contour sections $\C$ in order}
 
 % The algorithm
 \BlankLine
@@ -290,10 +290,19 @@ First column & Second column \\
   \label{fig:somegraph}
 \end{figure}
 
-\begin{figure} [bt]
-  \begin{center}
-      \includegraphics[width=1.0\textwidth]{figures/contour/c1.pdf}
-    \caption{A funny graph.}
-  \end{center}
-  \label{fig:contour1}
+
+\begin{figure}[!htb]
+  \minipage{0.32\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/contour/c1copy.pdf}
+    \caption{Finding first contour section}\label{fig:contour1}
+  \endminipage\hfill
+  \minipage{0.32\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/contour/c2copy.pdf}
+    \caption{Finiding middle contour section}\label{fig:contour2}
+  \endminipage\hfill
+  \minipage{0.32\textwidth}%
+    \includegraphics[width=1.0\textwidth]{figures/contour/c3copy.pdf}
+    \caption{Finding the last contour section}\label{fig:contour3}
+  \endminipage
 \end{figure}
+
