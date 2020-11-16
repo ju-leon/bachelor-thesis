@@ -19,7 +19,16 @@ def radius_at_height(radius, height):
 
 
 def slice_catalyst(atoms, layer_height, z_start, z_end, resolution):
+    """
+    Slices a single catalyst.
+    The reaction pocket is ignored and not added to the slices.
+    """
+    
     slice_heights = np.arange(z_start, z_end, layer_height)
+
+    # Remove reaction pocket from slices
+    atoms[1] = Atom("H", [0,0,0], 0)
+    atoms[2] = Atom("H", [0,0,0], 0)
 
     slices = []
     for height in slice_heights:
