@@ -12,6 +12,9 @@ def radius_at_height(radius, height):
     Returns the radius of a sphere at a height.
     Height is relative to the center of the sphere.
     """
+    if radius == 0:
+        return 0
+
     relativeHeight = (height - (radius)) / radius
     if relativeHeight <= -1 or relativeHeight >= 1:
         return 0
@@ -23,7 +26,7 @@ def slice_catalyst(atoms, layer_height, z_start, z_end, resolution):
     Slices a single catalyst.
     The reaction pocket is ignored and not added to the slices.
     """
-    
+
     slice_heights = np.arange(z_start, z_end, layer_height)
 
     # Remove reaction pocket from slices
