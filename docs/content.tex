@@ -155,18 +155,67 @@ TODO: Layer height %TODO: Why is layer height chosen as it is?
 
 By slicing a molecule at a location $z_{slice}$, every slice contains a subset of atoms of the current molecule with a radius at the current height.
 
+\dots
 
-\subparagraph{Subparagraph 1} Always reference figures, tables etc. To give a few simple examples, this section contains Algorithm \ref{theorem:doof}, Table \ref{tbl:randomnumbers}, Figure \ref{fig:somegraph}, and Theorem \ref{theorem:doof}. To give an example citation we recommend the book of Garey and Johnson \cite{gj-ci-79}.
+\begin{figure} [h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/slice-iso.png} % for .pdf files etc use \includegraphics{test.pdf}
+  \caption{A slice with isolates.}
+  \label{fig:slice}
+\end{figure}
 
-\begin{theorem}
-\label{theorem:doof}
-  Wer das liest ist doof.
-\end{theorem}
-\begin{proof}
-  Weil ist so.
-\end{proof}
+\subsection{Invariant contour describition}
 
-\begin{algorithm}[bt]
+After slicing the molecule, a set of circles $C$ for every slice is left \ref{fig:slice}.
+These circles can be partially or fully intersecting. 
+
+To describe the contour, a fourier contour descriptor is used.
+This contour descriptor allows to easily ignore rotation of the contour and generate invariant low-dimensional features from the shape.
+However, it can only work on a closed contour, so isolate islands of circles that don't intersect have to be dealt with seperately.
+
+%TODO
+TODO: Describe how the contour descriptor works
+
+\subparagraph{Igoring isolates} 
+
+The easiest step to get a single closed contour is to simply ignore isolate circles.
+To find isoaltes, a graph is constucted. 
+Each circle is node, if 2 circles intersect each other an edge is added between these nodes.
+Now each connected component of the graph correlates to one closed contour. 
+The component with the most nodes is the fed into the contour descriptor.
+
+\subparagraph{Describe contour}
+
+From the set of intersection circles, the contour needs to be extracted. 
+Since the contour points need to be computed just from radius and position information, and are not rendered onto a 2D pixel grid, standard contour finding algorithms can not be used.
+Instead, knoledge about the general shape is used to compute the contour. 
+
+The contour is computed using \ref{alg:CircleSetContour}.
+
+First, the point "furthest to the right", so with the largest x-value is found. 
+Since the point with the highest x-Value in any circle is always at angle 0, we set the intial angle $\alpha$ and rotation vector $\vec{c}$ accordingly.
+From the circle containing that point, the contour is followed from that point counter-clockwise until the first intersection with another cirlce is found \ref{fig:contour1}.
+To the list of countour sections, we add the current contour section from angle 0 to the angle of intersection.
+
+Now, the contour of this circle is followed again until it intersects another. This is reapeated until the starting circle is reached again \ref{fig:contour2}.
+
+Once the starting circle is reached, the last remaing contour part of the starting circle needs to be added to the list of contour sections \ref{fig:contour3}.
+
+From the ordered list of contour sections, the contour points can easily be computed.
+Since each contour section consits of a radius $r$, location $(x,y)$, and start- and end angle $\alpha_{start}, \alpha_{end}$, the coordinates of the contour points can simply be computed using $x_c = \cos(\alpha_c) \cdot r + x$ and  $y_c = \sin(\alpha_c) \cdot r + y$ 
+for $\alpha_i = \alpha_{start} + i \cdot \Delta, \alpha_i \leq \alpha_{end}$.
+$\Delta$ is a tuning paramter that specifies the resolution of the contour.
+
+
+%\begin{theorem}
+%\label{theorem:doof}
+%  Wer das liest ist doof.
+%\end{theorem}
+%\begin{proof}
+%  Weil ist so.
+%\end{proof}
+
+\begin{algorithm}[p]
 \caption{\textsc{CircleSetContour}}\label{alg:CircleSetContour}
 
 
@@ -262,33 +311,16 @@ $\alpha \leftarrow 0$
   \tcp{Finish contour of last circle}
   $\C.\append \left( c_{max}, \alpha, 0 \right)$
 
-
 \end{algorithm}
 
-\begin{table} [bt]
-\centering
-\caption{Some strange numbers.}
-\begin{tabular}{rr}
-\toprule
-First column & Second column \\
-\midrule
-3\,109\,218\,136 & 3\,208\,415\,108 \\
-2\,231\,385\,058 & 1\,959\,477\,358 \\
-1\,287\,719\,872 & 1\,317\,165\,206 \\
-2\,516\,844\,936 & 2\,630\,583\,944 \\
-1\,569\,466\,774 & 1\,636\,507\,220 \\
-1\,032\,627\,816 &    991\,322\,491 \\
-\bottomrule
-\end{tabular}
-\label{tbl:randomnumbers}
-\end{table}
 
-\begin{figure} [bt]
-  \centering
-  \input{figures/somegraph} % for .pdf files etc use \includegraphics{test.pdf}
-  \caption{A funny graph.}
-  \label{fig:somegraph}
-\end{figure}
+
+%\begin{figure} [bt]
+%  \centering
+%  \input{figures/somegraph} % for .pdf files etc use \includegraphics{test.pdf}
+%  \caption{Slice with isolate circles.}
+%  \label{fig:somegraph}
+%\end{figure}
 
 
 \begin{figure}[!htb]
