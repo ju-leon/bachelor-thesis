@@ -1,185 +1,146 @@
-\documentclass{thesisclass}
-% Based on thesisclass.cls of Timo Rohrberg, 2009
-% ----------------------------------------------------------------
-% Thesis - Main document
-% ----------------------------------------------------------------
+%% LaTeX2e class for student theses
+%% thesis.tex
+%% 
+%% Karlsruhe Institute of Technology
+%% Institute for Program Structures and Data Organization
+%% Chair for Software Design and Quality (SDQ)
+%%
+%% Dr.-Ing. Erik Burger
+%% burger@kit.edu
+%%
+%% See https://sdqweb.ipd.kit.edu/wiki/Dokumentvorlagen
+%%
+%% Version 1.3.5, 2020-06-26
 
-
-%% -------------------------------
-%% |  Information for PDF file   |
-%% -------------------------------
-\hypersetup{
- pdfauthor={?},
- pdftitle={?},
- pdfsubject={?},
- pdfkeywords={?}
-}
-
+%% Available page modes: oneside, twoside
+%% Available languages: english, ngerman
+%% Available modes: draft, final (see README)
+\documentclass[twoside, english]{sdqthesis}
 
 %% ---------------------------------
 %% | Information about the thesis  |
 %% ---------------------------------
 
-\newcommand{\myname}{Leon Jungemeyer}
-\newcommand{\mytitle}{Rotationally invariant neural networks for homogeneous catalysis}
-\newcommand{\myinstitute}{Institute of Theoretical Informatics}
+%% Name of the author
+\author{Leon Jungemeyer}
 
-\newcommand{\reviewerone}{?}
-\newcommand{\reviewertwo}{?}
-\newcommand{\advisor}{Chen Zhou}
-\newcommand{\advisortwo}{Pascal Friederich}
+%% Title (and possibly subtitle) of the thesis
+\title{Rotationally invariant neural networks for homogeneous catalysis}
 
-\newcommand{\timestart}{24th April 2020}
-\newcommand{\timeend}{25th April 2020}
+%% Type of the thesis 
+\thesistype{Bachelor's Thesis}
 
+%% Change the institute here, ``IPD'' is default
+\myinstitute{Institute of Theoretical Informatics (ITI)}
 
-%% ---------------------------------
-%% | Commands                      |
-%% ---------------------------------
+%% You can put a logo in the ``logos'' directory and include it here
+%% instead of the SDQ logo
+%\grouplogo{AImat_logo.png}
+%% Alternatively, you can disable the group logo
+\nogrouplogo
 
-\newtheorem{definition}{Definition} \numberwithin{definition}{chapter}
-\newtheorem{theorem}[definition]{Theorem}
-\newtheorem{lemma}[definition]{Lemma}
-\newtheorem{corollary}[definition]{Corollary}
-\newtheorem{conjecture}[definition]{Conjecture}
+%% The reviewers are the professors that grade your thesis
+\reviewerone{Prof. Pascal Friderich}
+\reviewertwo{Prof. B}
 
+%% The advisors are PhDs or Postdocs
+\advisorone{M.Sc. / PhD. Chen Zhou}
+%% The second advisor can be omitted
+\advisortwo{M.Sc. D}
+
+%% Please enter the start end end time of your thesis
+\editingtime{xx. Month 20XX}{xx. Month 20XX}
+
+\settitle
 
 %% --------------------------------
 %% | Settings for word separation |
 %% --------------------------------
-% Help for separation:
-% In german package the following hints are additionally available:
-% "- = Additional separation
-% "| = Suppress ligation and possible separation (e.g. Schaf"|fell)
-% "~ = Hyphenation without separation (e.g. bergauf und "~ab)
-% "= = Hyphenation with separation before and after
-% "" = Separation without a hyphenation (e.g. und/""oder)
 
-% Describe separation hints here:
+%% Describe separation hints here.
+%% For more details, see 
+%% http://en.wikibooks.org/wiki/LaTeX/Text_Formatting#Hyphenation
 \hyphenation{
-% Pro-to-koll-in-stan-zen
-% Ma-na-ge-ment  Netz-werk-ele-men-ten
-% Netz-werk Netz-werk-re-ser-vie-rung
-% Netz-werk-adap-ter Fein-ju-stier-ung
-% Da-ten-strom-spe-zi-fi-ka-tion Pa-ket-rumpf
-% Kon-troll-in-stanz
+% me-ta-mo-del
 }
 
+%% --------------------------------
+%% | Bibliography                 |
+%% --------------------------------
 
-%% ------------------------
-%% |    Including files   |
-%% ------------------------
-% Only files listed here will be included!
-% Userful command for partially translating the document (for bug-fixing e.g.)
-\includeonly{
-titlepage,
-introduction,
-preliminaries,
-content,
-conclusion,
-appendix
-}
+%% Use biber instead of BibTeX, see README
+\usepackage[citestyle=numeric,style=numeric,backend=biber]{biblatex}
+\addbibresource{thesis.bib}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Here, main documents begins %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ====================================
+%% ====================================
+%% ||                                ||
+%% || Beginning of the main document ||
+%% ||                                ||
+%% ====================================
+%% ====================================
 \begin{document}
 
-% Remove the following line for German text
-\selectlanguage{english}
+%% Set PDF metadata
+\setpdf
 
+%% Set the title
+\maketitle
+
+
+
+%% The Preamble begins here
 \frontmatter
+
+\input{sections/declaration.tex}
+
+\setcounter{page}{1}
 \pagenumbering{roman}
-\include{titlepage}
-\blankpage
 
-%% -------------------------------
-%% |   Statement of Authorship   |
-%% -------------------------------
+%% ----------------
+%% |   Abstract   |
+%% ----------------
+ 
+%% For theses written in English, an abstract both in English
+%% and German is mandatory.
+%%
+%% For theses written in German, a German abstract is sufficient.
+%%
+%% The text is included from the following files:
+%% - sections/abstract
 
-\thispagestyle{plain}
+\includeabstract
 
-\vspace*{\fill}
-
-\centerline{\textbf{Statement of Authorship}}
-
-\vspace{0.25cm}
-
-Ich versichere wahrheitsgemäß, die Arbeit selbstständig verfasst, alle benutzten Hilfsmittel vollständig und genau angegeben und alles kenntlich gemacht zu haben, was aus Arbeiten anderer unverändert oder mit Abänderungen entnommen wurde sowie die Satzung des KIT zur Sicherung guter wissenschaftlicher Praxis in der jeweils gültigen Fassung beachtet zu haben.
-
-\vspace{2.5cm}
-
-\hspace{0.25cm} Karlsruhe, \today
-
-\vspace{2cm}
-
-\blankpage
-
-%% -------------------
-%% |   Abstract      |
-%% -------------------
-
-\thispagestyle{plain}
-
-\begin{addmargin}{0.5cm}
-
-\centerline{\textbf{Abstract}}
-
-The goal of this thesis is to finds rotationally invariant features of catalysts using their 3D representation. 
-Using a catalysts unique shape, features are extracted so that spacial orientation of the molecule is of no significance. 
-The generated features are then used to train a neural network that predicts properties of the molecule.
-
-\vskip 2cm
-
-\centerline{\textbf{Deutsche Zusammenfassung}}
-
-Kurze Inhaltsangabe auf deutsch.
-
-\end{addmargin}
-
-\blankpage
-
-%% -------------------
-%% |   Directories   |
-%% -------------------
-
+%% ------------------------
+%% |   Table of Contents  |
+%% ------------------------
 \tableofcontents
-\blankpage
+
+\listoffigures
+\listoftables
 
 %% -----------------
 %% |   Main part   |
 %% -----------------
 
 \mainmatter
-\pagenumbering{arabic}
-\include{introduction}
-\include{preliminaries}
-\include{content}
-\include{conclusion}
 
+\input{sections/introduction.tex}
+\input{sections/content.tex}
+\input{sections/evaluation.tex}
+\input{sections/conclusion.tex}
 
 %% --------------------
 %% |   Bibliography   |
 %% --------------------
 
-\cleardoublepage
-\phantomsection
-\addcontentsline{toc}{chapter}{\bibname}
-
-\iflanguage{english}
-{\bibliographystyle{alpha}}
-{\bibliographystyle{babalpha-fl}} % german style
-
-\bibliography{references}
-
+%% Add entry to the table of contents for the bibliography
+\printbibliography[heading=bibintoc]
 
 %% ----------------
 %% |   Appendix   |
 %% ----------------
-
-\cleardoublepage
-\input{appendix}
-
+\appendix
+\input{sections/appendix.tex}
 
 \end{document}
