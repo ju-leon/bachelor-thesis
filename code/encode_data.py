@@ -70,10 +70,18 @@ def main():
     parser.add_argument('--channels', default="X",
                         help='Channels of the feature vector. X=All Atoms, Atom Letter for specific atom. As String, e.g. XHC')
 
+    parser.add_argument('--combine_files', default=False, help='Combine all feature vectors into a single file. This improves reading speed on some systems.', action='store_true')
+
     args, other_args = parser.parse_known_args()
 
     os.makedirs(args.out_dir , exist_ok=True)
-    
+
+
+    combine_files = args.combine_files
+    if combine_files:
+        features = []
+        labels = []
+
     for f in tqdm(os.listdir(args.data_dir)):
         if f.endswith(".xyz"):
             atoms = read_from_file(args.data_dir + f)
@@ -82,8 +90,15 @@ def main():
                                      args.z_start, args.z_end, args.contour_res, args.channels)
 
             fourier = generate_fourier_descriptions(slices, args.order)
-            np.save(args.out_dir + f.replace(".xyz", ".npy"), fourier)
+            if combine_files:
+                features.append(fourier)
+                labels.append(f[:-4])
+            else:
+                np.save(args.out_dir + f.replace(".xyz", ".npy"), fourier)
 
-
+    if combine_files:
+        np.save(args.out_dir + "features.npy", np.array(features))
+        np.save(args.out_dir + "labels.npy", np.array(labels))
+        
 if __name__ == "__main__":
     main()
