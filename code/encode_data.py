@@ -13,27 +13,34 @@ from feature_generation.alignment import align_catalyst
 
 def read_from_file(file):
     atoms = []
+
     for lineidx, line in enumerate(open(file, "r")):
         if lineidx >= 2:
             elem = line.split()[0].capitalize()
             location = np.array([float(line.split()[1]), float(
                 line.split()[2]), float(line.split()[3])])
 
-            atoms.append(Atom(elem, location, element(
-                elem).atomic_radius_rahm / 100))
+            radius = element(elem).vdw_radius / 100
+            atoms.append(Atom(elem, location, radius))
+
     return atoms
 
 
-def generate_slices(atoms, layer_height, z_start, z_end, resolution):
+def generate_slices(atoms, layer_height, z_start, z_end, resolution, channels):
     aligned_atoms = align_catalyst(atoms)
-    slices = slice_catalyst(aligned_atoms, layer_height, z_start, z_end, resolution)
+    slices = slice_catalyst(aligned_atoms, layer_height,
+                            z_start, z_end, resolution, channels)
     return slices
 
 
 def generate_fourier_descriptions(slices, order):
     fourier = []
     for slice in slices:
-        fourier.append(fourier_descriptor(slice, order))
+        channels = []
+        for channel in slice:
+            channels.append(fourier_descriptor(channel, order))
+
+        fourier.append(np.dstack(channels))
 
     return np.array(fourier)
 
@@ -49,24 +56,30 @@ def main():
     parser.add_argument(
         'out_dir', help='Directory for storing generated features')
 
-    parser.add_argument('--layer_height', default=0.5,
+    parser.add_argument('--layer_height', default=1,
                         help='Height of each slice through the atom in Angstrom', type=float)
-    parser.add_argument('--z_start', default=-5,
+    parser.add_argument('--z_start', default=-10,
                         help='Start of the slices relative to metal center in Angstrom')
     parser.add_argument(
         '--z_end', default=5, help='End of the slices relative to metal center in Angstrom')
     parser.add_argument('--order', default=10,
                         help='Order of the fourier descriptor', type=int)
-    parser.add_argument('--contour_res', default=0.01,
-                        help='Resolution of the contour. Smaller numer is higher resolution', type=float)
+    parser.add_argument('--contour_res', default=0.1,
+                        help='Resolution of the contour. Smaller number is higher resolution', type=float)
+
+    parser.add_argument('--channels', default="X",
+                        help='Channels of the feature vector. X=All Atoms, Atom Letter for specific atom. As String, e.g. XHC')
 
     args, other_args = parser.parse_known_args()
 
+    os.makedirs(args.out_dir , exist_ok=True)
+    
     for f in tqdm(os.listdir(args.data_dir)):
         if f.endswith(".xyz"):
             atoms = read_from_file(args.data_dir + f)
+
             slices = generate_slices(atoms, args.layer_height,
-                                     args.z_start, args.z_end, args.contour_res)
+                                     args.z_start, args.z_end, args.contour_res, args.channels)
 
             fourier = generate_fourier_descriptions(slices, args.order)
             np.save(args.out_dir + f.replace(".xyz", ".npy"), fourier)

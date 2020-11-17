@@ -21,10 +21,14 @@ def radius_at_height(radius, height):
     return np.sin(np.arccos(relativeHeight)) * radius
 
 
-def slice_catalyst(atoms, layer_height, z_start, z_end, resolution):
+def slice_catalyst(atoms, layer_height, z_start, z_end, resolution, channels=["X"]):
     """
     Slices a single catalyst.
     The reaction pocket is ignored and not added to the slices.
+    Channels:
+        ALL: All, combine all atoms into single channel
+        H: Only hydrogen atoms in one channel
+        C: Only carbon atoms in one channel
     """
 
     slice_heights = np.arange(z_start, z_end, layer_height)
@@ -35,15 +39,19 @@ def slice_catalyst(atoms, layer_height, z_start, z_end, resolution):
 
     slices = []
     for height in slice_heights:
-        circles = []
-        for (element, (x, y, z), radius) in atoms:
-            delta_z = height - z
-            circle_radius = radius_at_height(radius, delta_z)
-            if circle_radius != 0:
-                circles.append(Circle([x, y], circle_radius))
+        channel_circles = []
+        for channel in channels:
+            circles = []
+            for (element, (x, y, z), radius) in atoms:
+                delta_z = height - z
+                circle_radius = radius_at_height(radius, delta_z)
+                if circle_radius != 0 and (channel == "X" or element == channel):
+                    circles.append(Circle([x, y], circle_radius))
 
-        slices.append(find_contour(circles, resolution))
-    
+            channel_circles.append(find_contour(circles, resolution))
+
+        slices.append(channel_circles)
+        
     return slices
     
 

@@ -131,7 +131,7 @@ def find_contour_for_cc(G, connected_component, circles, resolution):
 
     # If there's only one circle return contour of that circle
     if(len(connected_component) == 1):
-        return points_in_section(circles[max(connected_component)], ContourSection(0, 0, 2*np.pi),resolution)
+        return points_in_section(circles[max(connected_component)], ContourSection(0, 0, 2*np.pi), resolution)
 
     connected_component = list(connected_component)
     # Start at the point furthest to the right. This point is certainly in the contour
@@ -160,12 +160,12 @@ def find_contour_for_cc(G, connected_component, circles, resolution):
                     [1, 0], [point[0] - circles[active_node].point[0], point[1] - circles[active_node].point[1]]))
                 data_for_angle.append((neighbor, point))
 
-        next_node=data_for_angle[cyclic_min_larger_than(
+        next_node = data_for_angle[cyclic_min_larger_than(
             angles, current_angle)][0]
-        intersection_point=data_for_angle[cyclic_min_larger_than(
+        intersection_point = data_for_angle[cyclic_min_larger_than(
             angles, current_angle)][1]
 
-        contour_section=ContourSection(
+        contour_section = ContourSection(
             active_node, current_angle, angles[cyclic_min_larger_than(angles, current_angle)])
 
         sections.append(contour_section)
@@ -187,13 +187,14 @@ def find_contour_for_cc(G, connected_component, circles, resolution):
     return contour_points
 
 
+
 def find_contour(circles, resolution):
     G = create_graph_from_circles(circles)
 
     if G == None:
         return []
 
-    # Extract the larges connected component
+    # Extract the largest connected components
     # TODO: The geograpically largest CC might not be the CC with the most nodes. Rework in future
     largest_cc = max(nx.connected_components(G), key=len)
 
