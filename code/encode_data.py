@@ -10,6 +10,23 @@ from feature_generation.create_slices import slice_catalyst
 from feature_generation.contour_descriptor import fourier_descriptor
 from feature_generation.alignment import align_catalyst
 
+import time
+
+
+radii = dict()
+
+
+def get_radius(atom):
+    """
+    Getting radii from mendeleev seems to be reallly slow. Buffer them to speed up exectuion
+    """
+    if atom in radii:
+        return radii[atom]
+    else:
+        radius = element(atom).vdw_radius / 100
+        radii[atom] = radius
+        return radius
+
 
 def read_from_file(file):
     atoms = []
@@ -19,8 +36,7 @@ def read_from_file(file):
             elem = line.split()[0].capitalize()
             location = np.array([float(line.split()[1]), float(
                 line.split()[2]), float(line.split()[3])])
-
-            radius = element(elem).vdw_radius / 100
+            radius = get_radius(elem)
             atoms.append(Atom(elem, location, radius))
 
     return atoms
@@ -43,6 +59,17 @@ def generate_fourier_descriptions(slices, order):
         fourier.append(np.dstack(channels))
 
     return np.array(fourier)
+
+
+def roling_average_time(prefix=''):
+    e_time = time.time()
+    if not hasattr(roling_average_time, 's_time'):
+        roling_average_time.s_time = e_time
+        roling_average_time.average = 0
+        roling_average_time.iterations = 0
+    else:
+        roling_average_time.average += e_time - roling_average_time.s_time
+        roling_average_time.iterations += 1
 
 
 def main():
@@ -70,18 +97,25 @@ def main():
     parser.add_argument('--channels', default="X",
                         help='Channels of the feature vector. X=All Atoms, Atom Letter for specific atom. As String, e.g. XHC')
 
-    parser.add_argument('--combine_files', default=False, help='Combine all feature vectors into a single file. This improves reading speed on some systems.', action='store_true')
+    parser.add_argument('--combine_files', default=False,
+                        help='Combine all feature vectors into a single file. This improves reading speed on some systems.', action='store_true')
+
+    parser.add_argument('--track_time', default=False,
+                        help='Prints the average time to encode each molecule after process is finished.', action='store_true')
 
     args, other_args = parser.parse_known_args()
 
-    os.makedirs(args.out_dir , exist_ok=True)
+    os.makedirs(args.out_dir, exist_ok=True)
 
-
+    track_time = args.track_time
     combine_files = args.combine_files
     if combine_files:
         features = []
         labels = []
 
+    if track_time:
+        roling_average_time()
+    
     for f in tqdm(os.listdir(args.data_dir)):
         if f.endswith(".xyz"):
             atoms = read_from_file(args.data_dir + f)
@@ -90,15 +124,24 @@ def main():
                                      args.z_start, args.z_end, args.contour_res, args.channels)
 
             fourier = generate_fourier_descriptions(slices, args.order)
+
             if combine_files:
                 features.append(fourier)
                 labels.append(f[:-4])
             else:
                 np.save(args.out_dir + f.replace(".xyz", ".npy"), fourier)
 
+            if track_time:
+                roling_average_time('iteration')
+
+
+    if track_time: 
+       print("Average encoding time: " + str(roling_average_time.average / roling_average_time.iterations))
+
     if combine_files:
         np.save(args.out_dir + "features.npy", np.array(features))
         np.save(args.out_dir + "labels.npy", np.array(labels))
-        
+
+
 if __name__ == "__main__":
     main()
