@@ -17,8 +17,8 @@ def fourier_descriptor(contour, order):
     normals = normalize_efd(fourier, size_invariant=False)
     A0, C0 = calculate_dc_coefficients(contour)
 
-    normals[0][1] = A0
-    normals[0][2] = C0
+    #normals[0][1] = A0
+    #normals[0][2] = C0
 
     return normals.flatten()
 
