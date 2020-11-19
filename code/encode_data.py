@@ -50,6 +50,9 @@ def generate_slices(atoms, layer_height, z_start, z_end, resolution, channels):
 
 
 def generate_fourier_descriptions(slices, order):
+    """
+    Generates an invariant feature vector from fourier coefficients
+    """
     fourier = []
     for slice in slices:
         channels = []
@@ -59,6 +62,37 @@ def generate_fourier_descriptions(slices, order):
         fourier.append(np.dstack(channels))
 
     return np.array(fourier)
+
+
+def num_element(atoms, element):
+    x = 0
+    for atom in atoms:
+        if atom.element == element:
+            x += 1
+
+    return x
+
+def generate_feature_vector(atoms):
+    """
+    Generates feature vector that holds aditional inforamtion about the molecule.
+    This feature vector does not contain information abpout the shape of the molecule but rather features independent of the molecules shape.
+    """
+    features = []
+    
+    # add metal atom number
+    features.append(element(atoms[0].element).atomic_number)
+    features.append(len(atoms))
+    features.append(num_element(atoms, "H"))
+    features.append(num_element(atoms, "C"))
+    features.append(num_element(atoms, "O"))
+    features.append(num_element(atoms, "As"))
+    features.append(num_element(atoms, "N"))
+    features.append(num_element(atoms, "F"))
+    features.append(num_element(atoms, "S"))
+    features.append(num_element(atoms, "Cl"))
+    features.append(num_element(atoms, "Br"))
+
+    return np.array(features)
 
 
 def roling_average_time(prefix=''):
@@ -120,16 +154,20 @@ def main():
         if f.endswith(".xyz"):
             atoms = read_from_file(args.data_dir + f)
 
+
             slices = generate_slices(atoms, args.layer_height,
                                      args.z_start, args.z_end, args.contour_res, args.channels)
 
             fourier = generate_fourier_descriptions(slices, args.order)
 
+            feature_vector = generate_feature_vector(atoms)
+
             if combine_files:
-                features.append(fourier)
+                features.append([fourier, feature_vector])
                 labels.append(f[:-4])
             else:
-                np.save(args.out_dir + f.replace(".xyz", ".npy"), fourier)
+                np.save(args.out_dir + f.replace(".xyz", "-fourier.npy"), fourier)
+                np.save(args.out_dir + f.replace(".xyz", "-features.npy"), feature_vector)
 
             if track_time:
                 roling_average_time('iteration')
@@ -139,7 +177,7 @@ def main():
        print("Average encoding time: " + str(roling_average_time.average / roling_average_time.iterations))
 
     if combine_files:
-        np.save(args.out_dir + "features.npy", np.array(features))
+        np.save(args.out_dir + "features.npy", np.array(features, dtype=object))
         np.save(args.out_dir + "labels.npy", np.array(labels))
 
 
