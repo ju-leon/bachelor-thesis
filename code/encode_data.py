@@ -6,7 +6,7 @@ from tqdm import tqdm
 from mendeleev import element
 
 from feature_generation.definitions import Point, Atom
-from feature_generation.create_slices import slice_catalyst
+from feature_generation.create_slices import slice_to_contour
 from feature_generation.contour_descriptor import fourier_descriptor
 from feature_generation.alignment import align_catalyst
 
@@ -44,7 +44,7 @@ def read_from_file(file):
 
 def generate_slices(atoms, layer_height, z_start, z_end, resolution, channels):
     aligned_atoms = align_catalyst(atoms)
-    slices = slice_catalyst(aligned_atoms, layer_height,
+    slices = slice_to_contour(aligned_atoms, layer_height,
                             z_start, z_end, resolution, channels)
     return slices
 
@@ -57,6 +57,7 @@ def generate_fourier_descriptions(slices, order):
     for slice in slices:
         channels = []
         for channel in slice:
+            print(channel)
             channels.append(fourier_descriptor(channel, order))
 
         fourier.append(np.dstack(channels))

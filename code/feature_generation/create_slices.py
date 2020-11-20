@@ -7,6 +7,7 @@ import math
 from .contour_finder import find_contour
 from .definitions import Atom, Circle
 
+
 def radius_at_height(radius, height):
     """
     Returns the radius of a sphere at a height.
@@ -21,7 +22,7 @@ def radius_at_height(radius, height):
     return np.sin(np.arccos(relativeHeight)) * radius
 
 
-def slice_catalyst(atoms, layer_height, z_start, z_end, resolution, channels=["X"]):
+def slice_to_contour(atoms, layer_height, z_start, z_end, resolution, channels=["X"]):
     """
     Slices a single catalyst.
     The reaction pocket is ignored and not added to the slices.
@@ -34,8 +35,8 @@ def slice_catalyst(atoms, layer_height, z_start, z_end, resolution, channels=["X
     slice_heights = np.arange(z_start, z_end, layer_height)
 
     # Remove reaction pocket from slices
-    atoms[1] = Atom("H", [0,0,0], 0)
-    atoms[2] = Atom("H", [0,0,0], 0)
+    atoms[1] = Atom("H", [0, 0, 0], 0)
+    atoms[2] = Atom("H", [0, 0, 0], 0)
 
     slices = []
     for height in slice_heights:
@@ -51,7 +52,5 @@ def slice_catalyst(atoms, layer_height, z_start, z_end, resolution, channels=["X
             channel_circles.append(find_contour(circles, resolution))
 
         slices.append(channel_circles)
-        
-    return slices
-    
 
+    return slices

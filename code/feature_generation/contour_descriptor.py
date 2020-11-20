@@ -21,4 +21,3 @@ def fourier_descriptor(contour, order):
     #normals[0][2] = C0
 
     return normals.flatten()
-
