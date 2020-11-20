@@ -128,7 +128,7 @@ def main():
     parser.add_argument('--contour_res', default=0.1,
                         help='Resolution of the contour. Smaller number is higher resolution', type=float)
 
-    parser.add_argument('--channels', default="X",
+    parser.add_argument('--channels', nargs="+", default=["X"], 
                         help='Channels of the feature vector. X=All Atoms, Atom Letter for specific atom. As String, e.g. XHC')
 
     parser.add_argument('--combine_files', default=False,
@@ -137,7 +137,7 @@ def main():
     parser.add_argument('--track_time', default=False,
                         help='Prints the average time to encode each molecule after process is finished.', action='store_true')
 
-    args, other_args = parser.parse_known_args()
+    args = parser.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
 
