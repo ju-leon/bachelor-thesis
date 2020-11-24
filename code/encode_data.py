@@ -6,11 +6,12 @@ from tqdm import tqdm
 from mendeleev import element
 
 from feature_generation.definitions import Point, Atom
-from feature_generation.create_slices import slice_to_contour
+from feature_generation.create_slices import slice_to_contour, slice_to_map
 from feature_generation.contour_descriptor import fourier_descriptor
 from feature_generation.alignment import align_catalyst
 
 import time
+import csv
 
 
 radii = dict()
@@ -42,10 +43,14 @@ def read_from_file(file):
     return atoms
 
 
-def generate_slices(atoms, layer_height, z_start, z_end, resolution, channels):
+def generate_slices(atoms, layer_height, z_start, z_end, resolution, channels, bitmap):
     aligned_atoms = align_catalyst(atoms)
-    slices = slice_to_contour(aligned_atoms, layer_height,
-                            z_start, z_end, resolution, channels)
+    if bitmap:
+        slices = slice_to_map(aligned_atoms, layer_height,
+                              z_start, z_end, resolution, channels)
+    else:
+        slices = slice_to_contour(aligned_atoms, layer_height,
+                                  z_start, z_end, resolution, channels)
     return slices
 
 
@@ -57,7 +62,6 @@ def generate_fourier_descriptions(slices, order):
     for slice in slices:
         channels = []
         for channel in slice:
-            print(channel)
             channels.append(fourier_descriptor(channel, order))
 
         fourier.append(np.dstack(channels))
@@ -73,27 +77,27 @@ def num_element(atoms, element):
 
     return x
 
-def generate_feature_vector(atoms):
+
+def read_csv():
+    read_csv.auto_dict = dict()
+    with open('/Users/leon/Files/bachelor-thesis/data/vaskas_features_properties_smiles_filenames.csv', 'r') as file:
+        reader = csv.reader(file)
+        next(reader)
+        for row in reader:
+            auto_feats = []
+            for x in range(30, 60):
+                auto_feats.append(float(row[x]))
+            read_csv.auto_dict[row[93]] = auto_feats
+
+
+def generate_feature_vector(atoms, filename):
     """
     Generates feature vector that holds aditional inforamtion about the molecule.
     This feature vector does not contain information abpout the shape of the molecule but rather features independent of the molecules shape.
     """
-    features = []
-    
-    # add metal atom number
-    features.append(element(atoms[0].element).atomic_number)
-    features.append(len(atoms))
-    features.append(num_element(atoms, "H"))
-    features.append(num_element(atoms, "C"))
-    features.append(num_element(atoms, "O"))
-    features.append(num_element(atoms, "As"))
-    features.append(num_element(atoms, "N"))
-    features.append(num_element(atoms, "F"))
-    features.append(num_element(atoms, "S"))
-    features.append(num_element(atoms, "Cl"))
-    features.append(num_element(atoms, "Br"))
+    features = read_csv.auto_dict[filename.replace("_ts.xyz", "")]
 
-    return np.array(features)
+    return np.array(features).flatten()
 
 
 def roling_average_time(prefix=''):
@@ -129,7 +133,7 @@ def main():
     parser.add_argument('--contour_res', default=0.1,
                         help='Resolution of the contour. Smaller number is higher resolution', type=float)
 
-    parser.add_argument('--channels', nargs="+", default=["X"], 
+    parser.add_argument('--channels', nargs="+", default=["X"],
                         help='Channels of the feature vector. X=All Atoms, Atom Letter for specific atom. As String, e.g. XHC')
 
     parser.add_argument('--combine_files', default=False,
@@ -138,9 +142,14 @@ def main():
     parser.add_argument('--track_time', default=False,
                         help='Prints the average time to encode each molecule after process is finished.', action='store_true')
 
+    parser.add_argument('--bitmap', default=False,
+                        help='Use map features instead of fourier contour description features.', action='store_true')
+
     args = parser.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
+
+    read_csv()
 
     track_time = args.track_time
     combine_files = args.combine_files
@@ -150,35 +159,39 @@ def main():
 
     if track_time:
         roling_average_time()
-    
+
     for f in tqdm(os.listdir(args.data_dir)):
         if f.endswith(".xyz"):
             atoms = read_from_file(args.data_dir + f)
 
-
             slices = generate_slices(atoms, args.layer_height,
-                                     args.z_start, args.z_end, args.contour_res, args.channels)
+                                     int(args.z_start), int(args.z_end), args.contour_res, args.channels, args.bitmap)
 
-            fourier = generate_fourier_descriptions(slices, args.order)
+            if args.bitmap:
+                feature_map = slices
+            else:
+                feature_map = generate_fourier_descriptions(slices, args.order)
 
-            feature_vector = generate_feature_vector(atoms)
+            feature_vector = generate_feature_vector(atoms, f)
 
             if combine_files:
-                features.append([fourier, feature_vector])
+                features.append([feature_map, feature_vector])
                 labels.append(f[:-4])
             else:
-                np.save(args.out_dir + f.replace(".xyz", "-fourier.npy"), fourier)
-                np.save(args.out_dir + f.replace(".xyz", "-features.npy"), feature_vector)
+                np.save(args.out_dir + f.replace(".xyz", "-map.npy"), feature_map)
+                np.save(args.out_dir + f.replace(".xyz",
+                                                 "-features.npy"), feature_vector)
 
             if track_time:
                 roling_average_time('iteration')
 
-
-    if track_time: 
-       print("Average encoding time: " + str(roling_average_time.average / roling_average_time.iterations))
+    if track_time:
+        print("Average encoding time: " +
+              str(roling_average_time.average / roling_average_time.iterations))
 
     if combine_files:
-        np.save(args.out_dir + "features.npy", np.array(features, dtype=object))
+        np.save(args.out_dir + "features.npy",
+                np.array(features, dtype=object))
         np.save(args.out_dir + "labels.npy", np.array(labels))
 
 
