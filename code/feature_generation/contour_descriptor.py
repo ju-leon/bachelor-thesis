@@ -1,4 +1,10 @@
-from pyefd import elliptic_fourier_descriptors, normalize_efd, calculate_dc_coefficients
+# some_file.py
+import sys
+# insert at 1, 0 is the script path (or '' in REPL)
+sys.path.insert(1, '/Users/leon/Files/pyefd')
+import pyefd
+
+from pyefd import elliptic_fourier_descriptors, normalize_efd, calculate_dc_coefficients, elliptic_fourier_features, reconstruct_contour_from_features
 import numpy as np
 
 
@@ -13,11 +19,23 @@ def fourier_descriptor(contour, order):
     if contour == []:
         return np.zeros((order, 4)).flatten()
 
-    fourier = elliptic_fourier_descriptors(np.squeeze(contour), order, normalize=False)
-    normals = normalize_efd(fourier, size_invariant=False)
-    A0, C0 = calculate_dc_coefficients(contour)
+    #fourier = elliptic_fourier_descriptors(
+    #    np.squeeze(contour), order, normalize=False)
+    #normals = normalize_efd(fourier, size_invariant=False)
+    #A0, C0 = calculate_dc_coefficients(contour)
 
-    #normals[0][1] = A0
-    #normals[0][2] = C0
+    # Get the length of the center-offset(locus) vector
+    #length = np.sqrt((A0 ** 2) + (C0 ** 2))
+    #vec = np.append(normals.flatten(), length)
 
-    return normals.flatten()
+    fourier = elliptic_fourier_features(np.squeeze(contour), order)
+
+    print(reconstruct_contour_from_features(fourier))
+    # Get the center offset of the contour
+    [A0, C0] = fourier[-2:]
+    # Calculate length from offset vecto
+    length = np.sqrt((A0 ** 2) + (C0 ** 2))
+    # Affend length to features
+    fourier = np.append(fourier[:-2], length)
+
+    return fourier
