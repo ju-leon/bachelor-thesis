@@ -66,7 +66,20 @@ def generate_fourier_descriptions(slices, order):
 
         fourier.append(np.dstack(channels))
 
-    return np.array(fourier)
+    fourier = np.array(fourier)
+    fourier = fourier.reshape((fourier.shape[0], fourier.shape[2], fourier.shape[3]))
+
+    reference_angle = 0
+    for x in range(len(fourier)):
+        if fourier[x][-1][0] > reference_angle:
+            reference_angle = fourier[x][-1][0]
+    
+    for slice in fourier:
+        for channel in slice[-2]:
+            if channel != 0:
+                channel = (channel - reference_angle) % (2 * np.pi) 
+
+    return fourier
 
 
 def num_element(atoms, element):
@@ -154,7 +167,8 @@ def main():
     track_time = args.track_time
     combine_files = args.combine_files
     if combine_files:
-        features = []
+        features_vectors = []
+        features_maps = []
         labels = []
 
     if track_time:
@@ -175,7 +189,8 @@ def main():
             feature_vector = generate_feature_vector(atoms, f)
 
             if combine_files:
-                features.append([feature_map, feature_vector])
+                features_vectors.append(feature_vector)
+                features_maps.append(feature_map)
                 labels.append(f[:-4])
             else:
                 np.save(args.out_dir + f.replace(".xyz", "-map.npy"), feature_map)
@@ -190,8 +205,11 @@ def main():
               str(roling_average_time.average / roling_average_time.iterations))
 
     if combine_files:
-        np.save(args.out_dir + "features.npy",
-                np.array(features, dtype=object))
+        # Autocorreltation features
+        np.save(args.out_dir + "features_vectors.npy",
+                np.array(features_vectors))
+        np.save(args.out_dir + "features_maps.npy",
+                np.array(features_maps))
         np.save(args.out_dir + "labels.npy", np.array(labels))
 
 

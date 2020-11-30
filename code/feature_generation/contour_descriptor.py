@@ -30,7 +30,6 @@ def fourier_descriptor(contour, order):
 
     fourier = elliptic_fourier_features(np.squeeze(contour), order)
 
-    print(reconstruct_contour_from_features(fourier))
     # Get the center offset of the contour
     [A0, C0] = fourier[-2:]
     # Calculate length from offset vecto
