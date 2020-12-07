@@ -7,6 +7,8 @@ import math
 from .contour_finder import find_contour
 from .definitions import Atom, Circle
 import cv2 as cv
+from mendeleev import element
+
 
 def radius_at_height(radius, height):
     """
@@ -63,6 +65,20 @@ def coordinate_to_grid(point, box, scale=1):
     return [(x * scale) + (x_box / 2), (y * scale) + (y_box / 2)]
 
 
+
+atomic_number = dict()
+
+def get_atomic_number(atom):
+    """
+    Getting radii from mendeleev seems to be reallly slow. Buffer them to speed up exectuion
+    """
+    if atom in atomic_number:
+        return atomic_number[atom]
+    else:
+        radius = element(atom).atomic_number
+        atomic_number[atom] = radius
+        return radius
+
 def slice_to_map(atoms, layer_height, z_start, z_end, resolution, channels=["X"]):
     """
     Slices a single catalyst into a map for each channel.
@@ -82,20 +98,19 @@ def slice_to_map(atoms, layer_height, z_start, z_end, resolution, channels=["X"]
     for height in slice_heights:
         channel_maps = []
         for channel in channels:
-            circles = []
+            box = [25,25]
+            slice_map = np.zeros(box)
+            scale = 2
+    
             for (element, (x, y, z), radius) in atoms:
                 delta_z = height - z
                 circle_radius = radius_at_height(radius, delta_z)
                 if circle_radius != 0 and (channel == "X" or element == channel):
-                    circles.append(Circle([x, y], circle_radius))
-
-            box = [100,100]
-            slice_map = np.zeros(box)
-            scale = 8
-
-            for circle in circles:
-                ellipse_float = (coordinate_to_grid(circle.point, box, scale), (2 * circle.radius * scale, 2 * circle.radius * scale), 0.0)
-                cv.ellipse(slice_map, ellipse_float, 1, -1)
+                    circle = Circle([x, y], circle_radius)
+                    ellipse_float = (coordinate_to_grid(circle.point, box, scale), (2 * circle.radius * scale, 2 * circle.radius * scale), 0.0)
+                    slice_map_buff = np.zeros(box)
+                    cv.ellipse(slice_map_buff, ellipse_float, get_atomic_number(element), -1)
+                    slice_map += slice_map_buff
 
             channel_maps.append(slice_map)
 

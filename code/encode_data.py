@@ -91,18 +91,6 @@ def num_element(atoms, element):
     return x
 
 
-def read_csv():
-    read_csv.auto_dict = dict()
-    with open('/Users/leon/Files/bachelor-thesis/data/vaskas_features_properties_smiles_filenames.csv', 'r') as file:
-        reader = csv.reader(file)
-        next(reader)
-        for row in reader:
-            auto_feats = []
-            for x in range(30, 60):
-                auto_feats.append(float(row[x]))
-            read_csv.auto_dict[row[93]] = auto_feats
-
-
 def generate_feature_vector(atoms, filename):
     """
     Generates feature vector that holds aditional inforamtion about the molecule.
@@ -181,12 +169,12 @@ def main():
             slices = generate_slices(atoms, args.layer_height,
                                      int(args.z_start), int(args.z_end), args.contour_res, args.channels, args.bitmap)
 
+            feature_vector = generate_feature_vector(atoms, f)
+
             if args.bitmap:
                 feature_map = slices
             else:
                 feature_map = generate_fourier_descriptions(slices, args.order)
-
-            feature_vector = generate_feature_vector(atoms, f)
 
             if combine_files:
                 features_vectors.append(feature_vector)
