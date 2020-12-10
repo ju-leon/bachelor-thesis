@@ -1,0 +1,9 @@
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.1
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.2
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.3
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.4
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.5
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.6
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.7
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.8
+python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.9
