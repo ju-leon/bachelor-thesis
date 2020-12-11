@@ -187,7 +187,7 @@ def main():
     save_loss(H, args.out_dir + "loss_" + str(args.test_split) + "_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
 
     # Save R2, MAE
-    r2, mae = reg_stats(trainY, model.predict(trainX_cnn), barrierScaler)
+    r2, mae = reg_stats(testY, model.predict(testX_cnn), barrierScaler)
     file = open(args.out_dir + "out.csv", "a")
     file.write(str(args.test_split))
     file.write(",")
