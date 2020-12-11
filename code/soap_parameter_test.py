@@ -60,13 +60,16 @@ def save_loss(history, location):
 def save_scatter(train_y_real, train_y_pred, test_y_real, test_y_pred, location):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(train_y_real, train_y_pred, marker="o", c="C1", label="Training")
-    ax.scatter(test_y_real, test_y_pred, marker="o", c="C3", label="Validation")
+    ax.scatter(train_y_real, train_y_pred,
+               marker="o", c="C1", label="Training")
+    ax.scatter(test_y_real, test_y_pred, marker="o",
+               c="C3", label="Validation")
     ax.set_aspect('equal')
     ax.set_xlabel("Calculated barrier [kcal/mol]")
     ax.set_ylabel("Predicted barrier [kcal/mol]")
     ax.legend(loc="upper left")
     plt.savefig(location)
+
 
 def get_model():
     model_full = Sequential()
@@ -107,6 +110,11 @@ def main():
     parser.add_argument('--test_split', default=0.2,
                         help='Size of test fraction from training data', type=float)
 
+    parser.add_argument('--nmax', default=2,
+                        help='Size of test fraction from training data', type=int)
+
+    parser.add_argument('--lmax', default=0,
+                        help='Size of test fraction from training data', type=int)
 
     args = parser.parse_args()
 
@@ -119,8 +127,8 @@ def main():
 
     species = ["H", "C", "O", "N", "Ir", "As", "S", "P", "Br", "Cl", "F", "I"]
     rcut = 8.0
-    nmax = 3
-    lmax = 1
+    nmax = args.nmax
+    lmax = args.lmax
 
     # Setting up the SOAP descriptor
     soap = SOAP(
@@ -174,22 +182,25 @@ def main():
     model.compile(loss="mean_squared_error", optimizer=opt)
 
     H = model.fit(x=trainX_cnn, y=trainY, validation_data=(testX_cnn, testY),
-                       epochs=1000, batch_size=64, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
+                  epochs=1000, batch_size=64, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
 
-
-    save_loss(H, args.out_dir + "loss_" + str(args.test_split) + ".pdf")
+    save_loss(H, args.out_dir + "loss_" + str(args.test_split) + "_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
 
     # Save R2, MAE
     r2, mae = reg_stats(trainY, model.predict(trainX_cnn), barrierScaler)
-    file = open(args.out_dir  + "out.csv","a")
+    file = open(args.out_dir + "out.csv", "a")
     file.write(str(args.test_split))
+    file.write(",")
+    file.write(str(args.nmax))
+    file.write(",")
+    file.write(str(args.lmax))
     file.write(",")
     file.write(str(r2))
     file.write(",")
     file.write(str(mae))
     file.write("\n")
     file.close()
-    
+
     # Scale back
     train_y_pred = barrierScaler.inverse_transform(model.predict(trainX_cnn))
     train_y_real = barrierScaler.inverse_transform(trainY)
@@ -197,7 +208,7 @@ def main():
     test_y_pred = barrierScaler.inverse_transform(model.predict(testX_cnn))
     test_y_real = barrierScaler.inverse_transform(testY)
 
-    save_scatter(train_y_real, train_y_pred, test_y_real, test_y_pred, args.out_dir + "scatter_" + str(args.test_split) + ".pdf")
+    save_scatter(train_y_real, train_y_pred, test_y_real, test_y_pred, args.out_dir + "scatter_" + str(args.test_split) + "_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
 
 
 if __name__ == "__main__":
