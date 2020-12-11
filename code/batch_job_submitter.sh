@@ -1,8 +1,8 @@
 #!/bin/bash 
 
-for NMAX in 2 3 4 5 6 7
+for NMAX in 2 3 4
 do
-    for LMAX in 0 1 2 3 4
+    for LMAX in 2 3 4 5
     do
         python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.1 --nmax=$NMAX --lmax=$LMAX
         python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.2 --nmax=$NMAX --lmax=$LMAX
