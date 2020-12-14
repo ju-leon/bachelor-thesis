@@ -127,12 +127,6 @@ def main():
     parser.add_argument('--rcut', default=6.0,
                     help='Size of test fraction from training data', type=float)
 
-    parser.add_argument('--lmax', default=0,
-                help='Size of test fraction from training data', type=int)
-
-    parser.add_argument('--lmax', default=0,
-                        help='Size of test fraction from training data', type=int)
-
     args = parser.parse_args()
 
     names = []
