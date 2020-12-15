@@ -71,20 +71,28 @@ def save_scatter(train_y_real, train_y_pred, test_y_real, test_y_pred, location)
     plt.savefig(location)
 
 
-def get_model():
-    model_full = Sequential()
-    model_full.add(keras.layers.Flatten())
+def get_model(input_shape):
+    inputs = tf.keras.Input(shape=(input_shape,))
 
-    model_full.add(Dense(256, activation="relu", kernel_regularizer='l2'))
-    model_full.add(keras.layers.Dropout(0.5))
+    x = tf.keras.layers.Dense(400, activation="relu",
+                              kernel_regularizer=regularizers.l2(0.005))(inputs)
+    x = tf.keras.layers.Dropout(0.4)(x)
 
-    model_full.add(Dense(128, activation="relu", kernel_regularizer='l2'))
-    model_full.add(keras.layers.Dropout(0.3))
+    x = tf.keras.layers.Dense(220, activation="relu",
+                              kernel_regularizer=regularizers.l2(0.01))(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
 
-    model_full.add(Dense(64, activation="relu", kernel_regularizer='l2'))
-    model_full.add(keras.layers.BatchNormalization())
+    x = tf.keras.layers.Dense(128, activation="relu",
+                              kernel_regularizer=regularizers.l2(0.02))(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
 
-    model_full.add(Dense(1, kernel_regularizer='l2'))
+    x = tf.keras.layers.Dense(64, activation="relu",
+                              kernel_regularizer=regularizers.l2(0.02))(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Dense(1, kernel_regularizer='l2')(x)
+
+    model_full = tf.keras.Model(inputs=inputs, outputs=x)
 
     return model_full
 
@@ -113,8 +121,11 @@ def main():
     parser.add_argument('--nmax', default=2,
                         help='Size of test fraction from training data', type=int)
 
-    parser.add_argument('--lmax', default=0,
+    parser.add_argument('--lmax', default=5,
                         help='Size of test fraction from training data', type=int)
+
+    parser.add_argument('--rcut', default=6.0,
+                    help='Size of test fraction from training data', type=float)
 
     args = parser.parse_args()
 
@@ -126,7 +137,7 @@ def main():
             names.append(f)
 
     species = ["H", "C", "O", "N", "Ir", "As", "S", "P", "Br", "Cl", "F", "I"]
-    rcut = 8.0
+    rcut = args.rcut
     nmax = args.nmax
     lmax = args.lmax
 
@@ -177,23 +188,26 @@ def main():
         features_cnn, labels, test_size=args.test_split, random_state=32)
 
     # Train model
-    model = get_model()
+    model = get_model(features_cnn.shape[1])
     opt = keras.optimizers.Adam(learning_rate=0.001)
     model.compile(loss="mean_squared_error", optimizer=opt)
 
     H = model.fit(x=trainX_cnn, y=trainY, validation_data=(testX_cnn, testY),
                   epochs=1000, batch_size=64, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
 
-    save_loss(H, args.out_dir + "loss_" + str(args.test_split) + "_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
+    save_loss(H, args.out_dir + "loss_" + str(args.test_split) +
+              "_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
 
     # Save R2, MAE
-    r2, mae = reg_stats(trainY, model.predict(trainX_cnn), barrierScaler)
+    r2, mae = reg_stats(testY, model.predict(testX_cnn), barrierScaler)
     file = open(args.out_dir + "out.csv", "a")
     file.write(str(args.test_split))
     file.write(",")
     file.write(str(args.nmax))
     file.write(",")
     file.write(str(args.lmax))
+    file.write(",")
+    file.write(str(args.rcut))
     file.write(",")
     file.write(str(r2))
     file.write(",")
@@ -208,7 +222,8 @@ def main():
     test_y_pred = barrierScaler.inverse_transform(model.predict(testX_cnn))
     test_y_real = barrierScaler.inverse_transform(testY)
 
-    save_scatter(train_y_real, train_y_pred, test_y_real, test_y_pred, args.out_dir + "scatter_" + str(args.test_split) + "_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
+    save_scatter(train_y_real, train_y_pred, test_y_real, test_y_pred, args.out_dir +
+                 "scatter_" + str(args.test_split) + "_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
 
 
 if __name__ == "__main__":
