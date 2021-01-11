@@ -115,7 +115,7 @@ def get_model(input_shape):
     #x = tf.keras.layers.Dropout(0.3)(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
-    x = tf.keras.layers.Dense(100, activation="relu",
+    x = tf.keras.layers.Dense(220, activation="relu",
                               kernel_regularizer=regularizers.l2(0.02))(x)
     #x = tf.keras.layers.Dropout(0.5)(x)
     x = tf.keras.layers.BatchNormalization()(x)
@@ -228,7 +228,7 @@ def main():
 
     # Train the model
     H = model.fit(x=trainX, y=trainY, validation_data=(testX, testY), epochs=800,
-                  batch_size=60, verbose=2, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
+                  batch_size=256, verbose=2, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
 
     # Save loss of current model
     save_loss(H, args.out_dir + "loss__augment_steps=" + str(args.augment_steps) +
