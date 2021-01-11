@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-for RCUT in 11 12 13 14 15 16
+for ASTEP in 1 3 5 8 10 12 16 20 50
 do
-    python3 soap_parameter_test.py ../data/ ../out/ --test_split=0.8 --rcut=$RCUT
+    python3 soap_parameter_test.py ../data/ ../out/ --augment_steps=$ASTEP
 done

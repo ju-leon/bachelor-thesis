@@ -152,10 +152,10 @@ def main():
     parser.add_argument('--augment_steps', default=5,
                         help='NUmber of augmentations around Z axis for every sample', type=int)
 
-    parser.add_argument('--nmax', default=2,
+    parser.add_argument('--nmax', default=3,
                         help='Size of test fraction from training data', type=int)
 
-    parser.add_argument('--lmax', default=5,
+    parser.add_argument('--lmax', default=3,
                         help='Size of test fraction from training data', type=int)
 
     parser.add_argument('--rcut', default=6.0,
@@ -208,7 +208,7 @@ def main():
         number_samples, args.augment_steps, -1)
 
     (trainX, testX, trainY, testY) = train_test_split(
-        features_soap, labels, test_size=0.2, random_state=32)
+        features_soap, labels, test_size=args.test_split, random_state=32)
 
     trainX = trainX.reshape(-1, features_soap.shape[2])
     testX = testX.reshape(-1, features_soap.shape[2])
