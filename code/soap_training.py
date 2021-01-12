@@ -97,31 +97,30 @@ def step_decay(epoch):
 def get_model(input_shape):
     inputs = tf.keras.Input(shape=input_shape)
 
-    x = tf.keras.layers.Dense(800, activation="relu",
-                              kernel_regularizer=regularizers.l2(0.07))(inputs)
-    x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.Dense(550, activation="relu", kernel_regularizer=regularizers.l2(0.15))(inputs)
+    x = tf.keras.layers.Dropout(0.6)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    #x = tf.keras.layers.Dense(450, activation="relu", kernel_regularizer=regularizers.l2(0.08))(x)
+    #x = tf.keras.layers.Dropout(0.6)(x)
     #x = tf.keras.layers.BatchNormalization()(x)
 
     #x = tf.keras.layers.Dense(300, activation="relu", kernel_regularizer=regularizers.l2(0.02))(x)
     #x = tf.keras.layers.Dropout(0.4)(x)
 
-    x = tf.keras.layers.Dense(340, activation="relu",
-                              kernel_regularizer=regularizers.l2(0.03))(x)
-    x = tf.keras.layers.Dropout(0.4)(x)
+    x = tf.keras.layers.Dense(340, activation="relu", kernel_regularizer=regularizers.l2(0.08))(x)
+    x = tf.keras.layers.Dropout(0.5)(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
-    x = tf.keras.layers.Dense(220, activation="relu",
-                              kernel_regularizer=regularizers.l2(0.02))(x)
-    #x = tf.keras.layers.Dropout(0.3)(x)
+    x = tf.keras.layers.Dense(220, activation="relu", kernel_regularizer=regularizers.l2(0.02))(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
-    x = tf.keras.layers.Dense(220, activation="relu",
-                              kernel_regularizer=regularizers.l2(0.02))(x)
-    #x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.Dense(110, activation="relu", kernel_regularizer=regularizers.l2(0.02))(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
-    x = tf.keras.layers.Dense(64, activation="relu",
-                              kernel_regularizer=regularizers.l2(0.01))(x)
+    x = tf.keras.layers.Dense(64, activation="relu", kernel_regularizer=regularizers.l2(0.01))(x)
     #x = tf.keras.layers.Dropout(0.3)(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
@@ -228,7 +227,7 @@ def main():
 
     # Train the model
     H = model.fit(x=trainX, y=trainY, validation_data=(testX, testY), epochs=1000,
-                  batch_size=256, verbose=2, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
+                  batch_size=1024, verbose=2, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
 
     # Save loss of current model
     save_loss(H, args.out_dir + "loss__augment_steps=" + str(args.augment_steps) +
