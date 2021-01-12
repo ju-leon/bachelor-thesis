@@ -1,7 +1,6 @@
 import numpy as np
-from scipy.special import gamma
-from scipy.linalg import sqrtm, inv
-from scipy.special import sph_harm
+from scipy.linalg import inv, sqrtm
+from scipy.special import gamma, sph_harm
 
 
 class SOAPDecoder():
@@ -65,7 +64,7 @@ class SOAPDecoder():
 
         return alphas_full, betas_full
 
-    def get_basis_poly(rcut, nmax):
+    def get_basis_poly(self, rcut, nmax):
         """Used to calculate discrete vectors for the polynomial basis functions.
 
         Args:
