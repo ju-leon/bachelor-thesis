@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-for ASTEP in 1 5 10 12 16 20 25 30 50 100
+for ASTEP in 20 50 100 200 400 800 1000 5000
 do
     python3 soap_training.py ../data/ ../out/ --augment_steps=$ASTEP
 done

@@ -97,8 +97,8 @@ def step_decay(epoch):
 def get_model(input_shape):
     inputs = tf.keras.Input(shape=input_shape)
 
-    x = tf.keras.layers.Dense(540, activation="relu",
-                              kernel_regularizer=regularizers.l2(0.04))(inputs)
+    x = tf.keras.layers.Dense(800, activation="relu",
+                              kernel_regularizer=regularizers.l2(0.07))(inputs)
     x = tf.keras.layers.Dropout(0.5)(x)
     #x = tf.keras.layers.BatchNormalization()(x)
 
@@ -227,7 +227,7 @@ def main():
     model.compile(loss="mean_squared_error", optimizer=opt)
 
     # Train the model
-    H = model.fit(x=trainX, y=trainY, validation_data=(testX, testY), epochs=800,
+    H = model.fit(x=trainX, y=trainY, validation_data=(testX, testY), epochs=1000,
                   batch_size=256, verbose=2, callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay)])
 
     # Save loss of current model
