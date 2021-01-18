@@ -52,8 +52,6 @@ def align_elements(elems):
         positions = element.get_positions()
         mean = ((positions[1] - positions[2]) / 2)
 
-        mean = positions[1]
-
         normal = get_normal([0, 0, 1], mean, positions[0])
 
         angle_vec = angle(mean, [0, 0, 1], normal)
