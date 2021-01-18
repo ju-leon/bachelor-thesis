@@ -54,9 +54,9 @@ def align_elements(elems):
             np.linalg.norm((positions[1] + positions[2] / 2))
 
         normal = get_normal(
-            mean, np.array([0, 0, 1]), np.array([0, 0, 0]))
+            mean, np.array([1, 0, 0]), np.array([0, 0, 0]))
 
-        angle_vec = angle(mean, [0, 0, 1], normal)
+        angle_vec = angle(mean, [1, 0, 0], normal)
 
         rotation = get_rotation_matrix(normal, angle_vec)
 
