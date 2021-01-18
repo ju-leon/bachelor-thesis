@@ -2,8 +2,11 @@ import numpy as np
 import math
 from ase.io import read
 from ase.build import molecule
-from ase import Atoms
+from ase import Atom, Atoms
 from ase.visualize import view
+
+from numpy import cross, eye, dot
+from scipy.linalg import expm, norm
 
 
 def dotproduct(v1, v2):
@@ -14,75 +17,50 @@ def length(v):
     return math.sqrt(dotproduct(v, v))
 
 
-def angle(v1, v2):
-    angle = np.arccos(dotproduct(v1, v2) / (length(v1) * length(v2)))
-    if(np.amin(np.cross(v1, v2)) < 0):
+def angle(v1, v2, normal):
+    cross = np.cross(v1, v2)
+    dot = np.dot(v1, v2)
+
+    angle = np.arctan2(length(cross), dot)
+
+    if np.dot(normal, cross) < 0:
         angle = -angle
-    return(angle)
+
+    return angle
 
 
-def cosAngle(v1, v2):
-    return dotproduct(v1, v2) / (length(v1) * length(v2))
+def get_normal(p1, p2, p3):
+    v1 = p3 - p1
+    v2 = p2 - p1
+
+    # the cross product is a vector normal to the plane
+    cp = np.cross(v1, v2)
+
+    return cp
 
 
-def sinAngle(v1, v2):
-    return dotproduct(v1, v2) / (length(v1) * length(v2))
-
-
-def get_rotation_matrix(mean):
-    """
-    Returns a rotation matrix that rotates the space so that mean is on the y axis, so mean has
-    coordinates [0,0,z] after transformation.
-    """
-
-    # If mean is already alligned with z-axis rotation around z can be ignored
-    if (mean[0] == 0 and mean[1] == 0):
-        rotZ = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    else:
-        angleZ = 1 * (angle([1, 0, 0], [mean[0], mean[1], 0]))
-        rotZ = np.matrix([[np.cos(angleZ), np.sin(angleZ), 0],
-                          [-np.sin(angleZ), np.cos(angleZ), 0],
-                          [0, 0, 1]])
-
-    angleY = 1 * (angle([0, 0, 1], mean))
-    rotY = np.matrix([[np.cos(angleY), 0, np.sin(angleY)],
-                      [0, 1, 0],
-                      [-np.sin(angleY), 0, np.cos(angleY)]])
-
-    rot = np.matmul(rotY, rotZ)
-
-    result = np.array(rot) @ mean
-
-    if result[0] > 1e-12:
-        rotZ = np.matrix([[np.cos(-angleZ), np.sin(-angleZ), 0],
-                          [-np.sin(-angleZ), np.cos(-angleZ), 0],
-                          [0, 0, 1]])
-        rot = np.matmul(rotY, rotZ)
-
-    return rot
+def get_rotation_matrix(axis, theta):
+    return expm(cross(eye(3), axis/norm(axis)*theta))
 
 
 def align_elements(elems):
 
-    for p in range(5):
-        for element in elems:
-            mean = (element.get_positions()[1] - element.get_positions()[0])
+    for element in elems:
+        # Center elements
+        element.positions -= element.get_positions()[0]
 
-            rotation = get_rotation_matrix(mean)
-            positions = element.get_positions()
+        positions = element.get_positions()
+        mean = ((positions[1] - positions[2]) / 2)
 
-            for x in range(len(positions)):
-                element.positions[x] = rotation @ (positions[x] - positions[0])
+        mean = positions[1]
 
-    for p in range(5):
-        for element in elems:
-            mean = ((element.get_positions()[
-                    1] + element.get_positions()[2]) / 2) - element.get_positions()[0]
+        normal = get_normal([0, 0, 1], mean, positions[0])
 
-            rotation = get_rotation_matrix(mean)
-            positions = element.get_positions()
+        angle_vec = angle(mean, [0, 0, 1], normal)
 
-            for x in range(len(positions)):
-                element.positions[x] = rotation @ (positions[x] - positions[0])
+        rotation = get_rotation_matrix(normal, angle_vec)
+
+        for x in range(len(positions)):
+            element.positions[x] = rotation @ positions[x]
 
     return elems
