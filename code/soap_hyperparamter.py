@@ -115,30 +115,28 @@ def get_model(hp):
     else:
         filter_size_limit = [4, 8, 2]
 
-    for i in range(hp.Int('conv_blocks', 1, 3, default=1)):
+    for i in range(hp.Int('conv_blocks', 0, 3, default=1)):
         filters = hp.Int('filters_' + str(i), 1, 8, step=1)
 
         filter_size = hp.Int('filter_size_' + str(i), 1,
                              filter_size_limit[i], step=1)
 
-
-        filter_quadratic = hp.Choice(
-            'quadratic',
-            values=[True, False],
-            default=False,
-        )
-
-        if filter_quadratic:
-            x = tf.keras.layers.Conv2D(filters, [filter_size, filter_size])(x)
-        else:
-            x = tf.keras.layers.Conv2D(filters, [filter_size, 1])(x)
+        x = tf.keras.layers.Conv2D(filters, [filter_size, 1])(x)
 
         dropout = hp.Float('conv_dropout_' + str(i), 0,
                            0.6, step=0.1, default=0.2)
         x = tf.keras.layers.Dropout(dropout)(x)
 
     x = tf.keras.layers.Flatten()(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+
+    normalise_after_conv = hp.Choice(
+        'normalise_after_conv',
+        values=[False, True],
+        default=True,
+    )
+
+    if normalise_after_conv:
+        x = tf.keras.layers.BatchNormalization()(x)
 
     for i in range(hp.Int('hidden_layers', 1, 6, default=3)):
         size = hp.Int('hidden_size_' + str(i), 10, 700, step=40)
