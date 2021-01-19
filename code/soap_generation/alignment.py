@@ -50,8 +50,8 @@ def align_elements(elems):
         element.positions -= element.get_positions()[0]
 
         positions = element.get_positions()
-        mean = ((positions[1] + positions[2]) / 2) / \
-            np.linalg.norm((positions[1] + positions[2] / 2))
+
+        mean = positions[-1] / np.linalg.norm(positions[-1])
 
         normal = get_normal(
             mean, np.array([0, 0, 1]), np.array([0, 0, 0]))
