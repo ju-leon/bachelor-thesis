@@ -10,7 +10,7 @@
 %%
 %% Version 1.3.5, 2020-06-26
 
-\chapter{Feature generation}
+\chapter{Feature generation using fourier descriptors}
 \label{ch:Content1}
 %% ==============
 
@@ -338,7 +338,7 @@ $\alpha \leftarrow 0$
   \endminipage\hfill
   \minipage{0.32\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/contour/c2copy.pdf}
-    \caption{Finiding middle contour section}\label{fig:contour2}
+    \caption{Finding middle contour section}\label{fig:contour2}
   \endminipage\hfill
   \minipage{0.32\textwidth}%
     \includegraphics[width=1.0\textwidth]{figures/contour/c3copy.pdf}
@@ -347,25 +347,146 @@ $\alpha \leftarrow 0$
 \end{figure}
 
 
+\chapter{Feature generation using smooth normalized atomic positions}
 
-\chapter{Second Content Chapter}
-\label{ch:SecondContent}
+In a second approach, the molecule was encoded using by smoothing the atmoic positions, 
+and then combining a set of functions describing the 3D space around the metal center.
 
-\dots
+This method is partly similar to the Smooth Overlap of Atomic Positions (SOAP) descriptor, that produces a 
+fully rotational invariant description for the space surrounding one or more atomic centers \cite{Bart_k_2013}.
+The disadvantage of SOAP ist that the 3D environment cannot be reconstructed from the generated features.
 
-\section{First Section}
-\label{sec:SecondContent:FirstSection}
+The Smooth Normalized Atomic Positions (SNAP) descriptor proposed here allows for a reconstruction of the 3D space from the coefficients, 
+while partly keeping the rotational invariance of SOAP. 
+In addition, instead of describing the overlap of species in the molecule, the
+density of different species in 3D space is encoded.
 
-\dots
+\section{SNAP requirements}
 
-\section{Second Section}
-\label{sec:SecondContent:SecondSection}
+The general idea of SNAP is to describe the density surrounding a cental atom using a fixed set of coefficients.
+Rotational invariance therefor cannot be guaranteed, unless the encoded molecule itself can be rotated in a way to explicitly set it's rotation.
 
-\dots
+For catalyst molecules, this natural axis can be defined by setting the reaction pocket to the top, and the central Iridium atom as a center.
 
-Add additional content chapters if required by adding new .tex files in the
-\code{sections/} directory and adding an appropriate 
-\code{\textbackslash input} statement in \code{thesis.tex}. 
-%% ---------------------
-%% | / Example content |
-%% ---------------------
+For other molecule classes, defining a natural axis might not be as trivial.
+
+When no clear axis of alignment can be found, the SNAP output may be augmented by rotating the input along all axis of freedom.
+If there are multiple axis of freedom SOAP may be preferable since in naturally offers a fully rotationally invariant description.
+
+\section{SNAP}
+
+In SNAP, the atomic structure is first aligned according to the specified axis. 
+In the case of the catalyst molecules, we define our central metal atom as our center. 
+The entire structure will then be rotated so that the reaction pocket will have coordinates $(0,0,z)$.
+
+With $\alpha$ being the angle between the vector $a = p_{Ir} - p_{Pocket}$ and the z-Axis, the rotation $R$ is defined as
+
+$$
+R(\alpha) = I_3 + C \sin(\alpha) + C^2(1 - \cos(\alpha)), C =
+\begin{pmatrix}
+  0 & -q_0 & q_1 \\
+  q_2 & 0 & -q_0\\
+  -q_1 & q_0 & 0
+\end{pmatrix}
+$$
+
+with $q$ being the normal of the plane though the points $[(0,0,1), (0,0,0), a]$, so 
+
+$$
+q = \frac{ (0,0,1) \times a } { \| (0,0,1) \times a \|  }
+$$
+
+The rotation $R(\alpha)$ can then be applied to all atoms in the dataset after centering them, so 
+
+$$
+p^t_i = R(\alpha) (p_i - p_{Ir}),  \space \forall p_i \in E
+$$
+
+The coordinates $p^t_i$ are now rotationally invariant under 2 axes. 
+The only degree of freedom left is rotations around the vector $a$. 
+This will later be fixed using data augmentation.
+
+The transformed coordinates will now create a density distribution in space using 3D gaussians.
+This process is based heavily on the original proposal of the SOAP descriptor.
+Big parts of the implementation are therefor taken directly from an open-source implementation of SOAP in the chemical descriptor library Dscribe \cite{dscribe}.
+\\
+Since the basis set we're using to describe the space is using spherical coordinates, the first step is to transform the cartesian into spherical coordinates.
+
+$$
+r = \sqrt{x^2 + y^2 + z^2}
+,
+\theta = \arccos(\frac{z}{r})
+,
+\varphi = \arctan(y / x)
+$$
+
+For each species $Z$ in the dataset, the density at any point $(r, \theta, \varphi)$ is described as
+
+$$\rho^Z(r, \theta, \varphi) = \sum_i^{|Z|} e^{- \frac{1}{2\sigma^2} \vert r - R_i \vert^2 }$$
+%TODO: What is R_i??
+
+The summation $i$ runs over all the atmos of that species. $R_i$ is the center of that atom.
+This density space can then be approximated using a combination of basis functions.
+
+One of the basis function is defined by spherical harmonics. 
+Spherical harmonics are a set of 3D functions.
+A set of orthonomalized special harmonics is used, defined as
+
+$$
+Y_{lm}(\theta, \varphi) = (-1)^m \sqrt{\frac{2l + 1}{4 \pi} \frac{(l - m)!}{(l + m)!}} P_{lm}(\cos(\theta)) e^{im\theta}
+$$
+%TODO: Add plot of first n spherical harmonics
+
+Here, $P_{lm}$ are the associated Legendre polynomials, defined as
+
+$$
+P_{lm}(x) = (-1)^m (1-x^2)^{m/2} \frac{\partial^{l+m}}{\partial x^{l+m}}(x^2 - 1)^l
+$$ %TODO: Looks at derivative
+
+%TODO: Add plot of legendre polynomials.
+
+This gives us a way to encode a sphere around our central atom. 
+To encode density information along the radial direction, we combine spherical harmonics with radial basis functions.
+
+A variety of radial functions can be used for this application.
+For easy and fast computations in this implementation spherical gaussian type orbitals are used. 
+These gaussian type orbitals are defined as
+
+$$g_{nl}(r) = \sum_{n'}{n_{max}} \beta_{nn'l} \phi_{n'lr}(r) $$
+
+with 
+
+$$\phi_{nl}(r) = r^l e^{-\alpha_{nl}r^2} $$ %TODO: phi of n oder phi of nl?? / alpha_n oder alpha_nl
+
+$\alpha$ and $\beta$ are constants that only need to be computed once for every pair of $l,m, r_{cut}$.
+$\alpha_{nl}$ is a set of decay parameters chosen so that each non orthonormalized function $\phi_{nl}$ 
+will decay to a threshold value of $10^-3$ at the cutoff radius $r_{cut}$.
+
+The weights $\beta_{nn'l}$ are chosen so that the radial basis functions are orthonormal.
+For each $l$ the weights $\beta_{nn'l}$ can be computed using the Löwdin orthonormalization:
+
+$$\beta = S(l)^{-1/2} $$
+
+with the entries of the matrix $S$ being defined as
+
+$$S(l)_{nn'} = \langle \phi_{nl} | \phi_{n'l} \rangle  $$
+
+Combining spherical harmonics with radial basis functions we can approximate the density space surrounding our central atom.
+Generally, the higher we choose $l, m$ the more accurate we can encode the space.
+For radial basis functions we need to define a cutoff radius $r_{cut}$.
+Densities outside this cutoff radius will not ne encoded in the features of our space.
+
+Finally, we can approximate the density space for every element type $Z$.
+We therefor define the features we will later use for regression as
+
+$$ c_{nlm}^Z = \iiint_{R^3} g_{nl}(r) Y_{lm}(\theta, \varphi) \rho^Z(r, \theta, \phi)  \,dr\theta\phi   $$
+% TODO: Integrate to infinity or r_cut?
+
+The 3 dimensional integral goes over all spherical coordinates within our cutoff sphere.
+The coefficients $c_{nlm}$ now fully describe our 3d space within a fixed size sphere.
+
+The key difference to the features produced by the SOAP descriptor being that the set of coefficients 
+can now be used to reconstruct the density at any given point within the cutoff sphere.
+The density can be obtained from the coefficients by using the formula.
+
+$$ \rho^Z(r) = \sum_{nlm} c^Z_{nlm} g_{nl}(r) Y_{lm}(\theta, \varphi) $$
