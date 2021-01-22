@@ -252,7 +252,6 @@ def main():
         objective='val_mean_squared_error',
         max_trials=5000,
         project_name="RandomSearch",
-        distribution_strategy=tf.distribute.MirroredStrategy(),
     )
 
     tuner.search(trainX, trainY,
