@@ -42,6 +42,8 @@ from sklearn.preprocessing import StandardScaler
 from soap_generation.alignment import align_elements
 from soap_generation.augment import augment_elements
 
+import pickle
+
 
 def read_data(data_dir):
     barriers = dict()
@@ -103,20 +105,9 @@ def get_model(hp):
     inputs = tf.keras.Input(shape=input_shape)
 
     x = inputs
-
-    filter_config = hp.Choice(
-        'filter_config',
-        values=[0, 1],
-        default=0,
-    )
-
-    if filter_config == 0:
-        filter_size_limit = [4, 6, 4]
-    else:
-        filter_size_limit = [4, 8, 2]
-
-    for i in range(hp.Int('conv_blocks', 0, 3, default=1)):
-        filters = hp.Int('filters_' + str(i), 1, 8, step=1)
+    filter_size_limit = [4, 6, 4]
+    for i in range(hp.Int('conv_blocks', 1, 3, default=1)):
+        filters = hp.Int('filters_' + str(i), 2, 12, step=2)
 
         filter_size = hp.Int('filter_size_' + str(i), 1,
                              filter_size_limit[i], step=1)
@@ -129,20 +120,14 @@ def get_model(hp):
 
     x = tf.keras.layers.Flatten()(x)
 
-    normalise_after_conv = hp.Choice(
-        'normalise_after_conv',
-        values=[False, True],
-        default=True,
-    )
+    x = tf.keras.layers.BatchNormalization()(x)
 
-    if normalise_after_conv:
-        x = tf.keras.layers.BatchNormalization()(x)
-
-    for i in range(hp.Int('hidden_layers', 1, 6, default=3)):
-        size = hp.Int('hidden_size_' + str(i), 10, 700, step=40)
+    for i in range(hp.Int('hidden_layers', 1, 8, default=3)):
+        size = hp.Int('hidden_size_' + str(i), 10, 900, step=40)
         reg = hp.Float('hidden_reg_' + str(i), 0, 0.1, step=0.01, default=0.02)
         dropout = hp.Float('hidden_dropout_' + str(i),
                            0, 0.5, step=0.1, default=0.2)
+
         x = tf.keras.layers.Dense(size, activation="relu",
                                   kernel_regularizer=regularizers.l2(reg))(x)
         x = tf.keras.layers.Dropout(dropout)(x)
@@ -154,7 +139,7 @@ def get_model(hp):
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(
-            hp.Float('learning_rate', 1e-4, 1e-2, sampling='log')),
+            hp.Float('learning_rate', 1e-5, 1e-2, sampling='log')),
         loss='mean_squared_error',
         metrics=[tf.keras.metrics.MeanSquaredError()])
 
@@ -199,9 +184,18 @@ def main():
 
     elems, labels = read_data(args.data_dir)
 
-    number_samples = len(elems)
-
     elems = align_elements(elems)
+
+    (elems, elems_val, labels, labels_val) = train_test_split(
+        elems, labels, test_size=0.1, random_state=444)
+
+    with open('elems_val.lst', 'wb') as fp:
+        pickle.dump(elems_val, fp)
+
+    with open('labels_val.lst', 'wb') as fp:
+        pickle.dump(labels_val, fp)
+
+    number_samples = len(elems)
 
     elems, labels = augment_elements(elems, labels, args.augment_steps)
 
@@ -251,22 +245,41 @@ def main():
     trainY = trainY.flatten()
     testY = testY.flatten()
 
-    tuner = kt.Hyperband(
+    tuner = kt.RandomSearch(
         get_model,
         objective='val_mean_squared_error',
-        max_epochs=1000,
-        hyperband_iterations=2)
+        max_trials=5000,
+        project_name="RandomSearch"
+    )
 
     tuner.search(trainX, trainY,
                  validation_data=(testX, testY),
-                 epochs=1000,
+                 epochs=1500,
                  callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=20)])
 
-    models = tuner.get_best_models(num_models=2)
     tuner.results_summary()
 
-    for model, index in zip(models, len(models)):
-        model.save("hypermodel_" + str(index) + ".h5")
+    # Retrieve the best model.
+    best_model = tuner.get_best_models(num_models=1)[0]
+
+    # Evaluate the best model.
+
+    # Create soap coefficients
+    atom_index = [[0]] * len(elems)
+    features_soap_val = soap.create_coeffs(elems_val, positions=atom_index)
+
+    # Scale coefficents
+    features_soap_val = soapScaler.transform(features_soap_val)
+
+    # Scale labels
+    labels_val = barrierScaler.transform(labels_val.reshape(-1, 1))
+
+    features_soap_val = features_soap_val.reshape(
+        -1, 12, int(features_soap_val.shape[2] / 12), 1)
+    loss, accuracy = best_model.evaluate(
+        features_soap_val, labels_val.flatten())
+    print("Validation loss: " + str(loss))
+    print("Validation accuracy: " + str(accuracy))
 
 
 if __name__ == "__main__":
