@@ -195,6 +195,8 @@ def main():
     with open('labels_val.lst', 'wb') as fp:
         pickle.dump(labels_val, fp)
 
+
+
     number_samples = len(elems)
 
     elems, labels = augment_elements(elems, labels, args.augment_steps)
@@ -249,7 +251,8 @@ def main():
         get_model,
         objective='val_mean_squared_error',
         max_trials=5000,
-        project_name="RandomSearch"
+        project_name="RandomSearch",
+        distribution_strategy=tf.distribute.MirroredStrategy(),
     )
 
     tuner.search(trainX, trainY,
