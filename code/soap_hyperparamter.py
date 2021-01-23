@@ -106,10 +106,11 @@ def get_model(hp):
 
     x = inputs
     filter_size_limit = [4, 6, 4]
-    for i in range(hp.Int('conv_blocks', 1, 3, default=1)):
+    conv_blocks = hp.Int('conv_blocks', 0, 3, default=1)
+    for i in range(conv_blocks):
         filters = hp.Int('filters_' + str(i), 2, 12, step=2)
 
-        filter_size = hp.Int('filter_size_' + str(i), 1,
+        filter_size = hp.Int('filter_size_' + str(i), 2,
                              filter_size_limit[i], step=1)
 
         x = tf.keras.layers.Conv2D(filters, [filter_size, 1])(x)
@@ -120,18 +121,24 @@ def get_model(hp):
 
     x = tf.keras.layers.Flatten()(x)
 
-    x = tf.keras.layers.BatchNormalization()(x)
+    if conv_blocks > 0:
+        x = tf.keras.layers.BatchNormalization()(x)
 
-    for i in range(hp.Int('hidden_layers', 1, 8, default=3)):
-        size = hp.Int('hidden_size_' + str(i), 10, 900, step=40)
-        reg = hp.Float('hidden_reg_' + str(i), 0, 0.1, step=0.01, default=0.02)
+    for i in range(hp.Int('hidden_layers', 1, 4, default=3)):
+        size = hp.Int('hidden_size_' + str(i), 10, 700, step=40)
+        reg = hp.Float('hidden_reg_' + str(i), 0,
+                       0.06, step=0.01, default=0.02)
         dropout = hp.Float('hidden_dropout_' + str(i),
                            0, 0.5, step=0.1, default=0.2)
 
         x = tf.keras.layers.Dense(size, activation="relu",
                                   kernel_regularizer=regularizers.l2(reg))(x)
         x = tf.keras.layers.Dropout(dropout)(x)
-        x = tf.keras.layers.BatchNormalization()(x)
+
+        norm = hp.Choice('hidden_batch_norm_' + str(i), values=[True, False])
+
+        if norm:
+            x = tf.keras.layers.BatchNormalization()(x)
 
     x = tf.keras.layers.Dense(1, kernel_regularizer='l2')(x)
 
@@ -139,7 +146,7 @@ def get_model(hp):
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(
-            hp.Float('learning_rate', 1e-5, 1e-2, sampling='log')),
+            hp.Float('learning_rate', 1e-6, 1e-4, sampling='log')),
         loss='mean_squared_error',
         metrics=[tf.keras.metrics.MeanSquaredError()])
 
@@ -177,7 +184,7 @@ def main():
     parser.add_argument('--lmax', default=3,
                         help='Size of test fraction from training data', type=int)
 
-    parser.add_argument('--rcut', default=6.0,
+    parser.add_argument('--rcut', default=10.0,
                         help='Size of test fraction from training data', type=float)
 
     args = parser.parse_args()
@@ -194,8 +201,6 @@ def main():
 
     with open('labels_val.lst', 'wb') as fp:
         pickle.dump(labels_val, fp)
-
-
 
     number_samples = len(elems)
 
@@ -247,11 +252,11 @@ def main():
     trainY = trainY.flatten()
     testY = testY.flatten()
 
-    tuner = kt.RandomSearch(
+    tuner = kt.Hyperband(
         get_model,
         objective='val_mean_squared_error',
-        max_trials=5000,
-        project_name="RandomSearch",
+        max_epochs=1200,
+        project_name="Hyperband",
     )
 
     tuner.search(trainX, trainY,
