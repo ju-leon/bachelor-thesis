@@ -101,3 +101,17 @@ target/
 /code/test_data
 
 docs/sections/__latexindent_temp.tex
+
+code/features_test.npy
+
+code/features_train.npy
+
+code/features_val.npy
+
+code/labels_test.npy
+
+code/labels_train.npy
+
+code/labels_val.npy
+
+code/conv_20:3:3.h5
