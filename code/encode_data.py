@@ -150,7 +150,7 @@ def main():
 
     os.makedirs(args.out_dir, exist_ok=True)
 
-    read_csv()
+    #read_csv()
 
     track_time = args.track_time
     combine_files = args.combine_files
@@ -169,7 +169,7 @@ def main():
             slices = generate_slices(atoms, args.layer_height,
                                      int(args.z_start), int(args.z_end), args.contour_res, args.channels, args.bitmap)
 
-            feature_vector = generate_feature_vector(atoms, f)
+            #feature_vector = generate_feature_vector(atoms, f)
 
             if args.bitmap:
                 feature_map = slices
@@ -177,13 +177,13 @@ def main():
                 feature_map = generate_fourier_descriptions(slices, args.order)
 
             if combine_files:
-                features_vectors.append(feature_vector)
+                #features_vectors.append(feature_vector)
                 features_maps.append(feature_map)
                 labels.append(f[:-4])
             else:
                 np.save(args.out_dir + f.replace(".xyz", "-map.npy"), feature_map)
-                np.save(args.out_dir + f.replace(".xyz",
-                                                 "-features.npy"), feature_vector)
+                #np.save(args.out_dir + f.replace(".xyz",
+                #                                 "-features.npy"), feature_vector)
 
             if track_time:
                 roling_average_time('iteration')
