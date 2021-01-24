@@ -12,6 +12,18 @@
 
 \Abstract
 
-The goal of this thesis is to finds rotationally invariant features of catalysts using their 3D representation. 
-Using a catalysts unique shape, features are extracted so that spacial orientation of the molecule is of no significance. 
-The generated features are then used to train a neural network that predicts properties of the molecule.
+Metal Catalysts are crucial to a variety of applications, from water splitting to CO2 reduction.
+Catalysts can be created by combining different parts of a molecule around a metal atom.
+Depending on the structure of the resulting ligand, the activation barrier will vary.
+
+Computing this activation barrier is highly complex and therefor very costly. 
+Machine learning can bridge the gap and allow for fast and easy computation of a ligands activation barrier.
+Additionally, using transfer learning approaches, other properties of the molecule can then be computed with limited effort.
+
+In this bachelor's thesis a machine learning model to predicting activation barriers from the 3D structure of a metal catalyst is found. 
+Different ways of encoding a catalysts into a format understandable for a neural notwork are proposed.
+Using the special structure of catalyst, the features extracted from the molecules are either fully or partly rotationally invariant.
+A neural network is then trained to predict the activation barrier from these features.
+
+Using neural network explainers, the model is analyzed to find which part of the ligands structure are responsible for the activation barrier.
+This allows for intuition on how a catalyst might have to be changed for the activation barrier to change in a desired direction.

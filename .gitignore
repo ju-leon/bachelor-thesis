@@ -99,3 +99,5 @@ target/
 /code/out
 /docs/thesis.pdf
 /code/test_data
+
+docs/sections/__latexindent_temp.tex

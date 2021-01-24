@@ -268,7 +268,6 @@ This process of going along the outside ignores all "holes" in the shape, so onl
 \ForAll{$(c_1,c_2) \in \C \times \C$}{
   \If{distance$(c_1, c_2) < c_1.radius + c_2.radius$}{
     \G.\insertEdge{$c_1, c_2$}
-
   }
 }
 
@@ -443,7 +442,6 @@ $$
 P_{lm}(x) = (-1)^m (1-x^2)^{m/2} \frac{\partial^{l+m}}{\partial x^{l+m}}(x^2 - 1)^l
 $$ %TODO: Looks at derivative
 
-%TODO: Add plot of legendre polynomials.
 
 This gives us a way to encode a sphere around our central atom. 
 To encode density information along the radial direction, we combine spherical harmonics with radial basis functions.
@@ -457,6 +455,14 @@ $$g_{nl}(r) = \sum_{n'}{n_{max}} \beta_{nn'l} \phi_{n'lr}(r) $$
 with 
 
 $$\phi_{nl}(r) = r^l e^{-\alpha_{nl}r^2} $$ %TODO: phi of n oder phi of nl?? / alpha_n oder alpha_nl
+
+
+\begin{figure} [h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/snap/gaus_orb.png} % for .pdf files etc use \includegraphics{test.pdf}
+  \caption{Spherical gaussian orbital functions for a cutoff radius $r_{cut}=2$, $2$, $n_{max}=2$ and $l_{max}=2$. }
+  \label{fig:gaussians}
+\end{figure}
 
 $\alpha$ and $\beta$ are constants that only need to be computed once for every pair of $l,m, r_{cut}$.
 $\alpha_{nl}$ is a set of decay parameters chosen so that each non orthonormalized function $\phi_{nl}$ 
@@ -487,6 +493,6 @@ The coefficients $c_{nlm}$ now fully describe our 3d space within a fixed size s
 
 The key difference to the features produced by the SOAP descriptor being that the set of coefficients 
 can now be used to reconstruct the density at any given point within the cutoff sphere.
-The density can be obtained from the coefficients by using the formula.
+The density can be obtained by multiplying the coefficients with our basis functions.
 
 $$ \rho^Z(r) = \sum_{nlm} c^Z_{nlm} g_{nl}(r) Y_{lm}(\theta, \varphi) $$

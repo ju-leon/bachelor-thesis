@@ -253,3 +253,7 @@
 \usepackage[ruled, vlined, linesnumbered]{algorithm2e}
 \setlength{\algomargin}{2em}	% Leave space for line numbering
 \numberwithin{algocf}{chapter}	% Algorithms numbered as Chapternumber.Algonumber
+
+%tikz
+\usepackage{tikz}
+\usetikzlibrary{matrix,chains,positioning,decorations.pathreplacing,arrows}
