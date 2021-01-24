@@ -193,17 +193,7 @@ def main():
 
     elems = align_elements(elems)
 
-    (elems, elems_val, labels, labels_val) = train_test_split(
-        elems, labels, test_size=0.1, random_state=444)
-
-    with open('elems_val.lst', 'wb') as fp:
-        pickle.dump(elems_val, fp)
-
-    with open('labels_val.lst', 'wb') as fp:
-        pickle.dump(labels_val, fp)
-
     number_samples = len(elems)
-
     elems, labels = augment_elements(elems, labels, args.augment_steps)
 
     species = ["H", "C", "N", "O", "F", "P", "S", "Cl", "As", "Br", "I", "Ir"]
@@ -244,20 +234,22 @@ def main():
     labels = labels.reshape(
         number_samples, args.augment_steps, -1)
 
+    # Reserve 10% as validation
+    (features_soap, features_soap_test, labels, labels_test) = train_test_split(
+        features_soap, labels, test_size=0.1, random_state=32)
+
+    # Split the rest of the data
     (trainX, testX, trainY, testY) = train_test_split(
         features_soap, labels, test_size=args.test_split, random_state=32)
 
-    with open('trainX.lst', 'wb') as fp:
-        pickle.dump(trainX, fp)
+    np.save("features_train.npy", trainX)
+    np.save("labels_train.npy", trainY)
 
-    with open('testX.lst', 'wb') as fp:
-        pickle.dump(testX, fp)
+    np.save("features_val.npy", testX)
+    np.save("labels_val.npy", testY)
 
-    with open('trainY.lst', 'wb') as fp:
-        pickle.dump(trainY, fp)
-
-    with open('testY.lst', 'wb') as fp:
-        pickle.dump(testY, fp)
+    np.save("features_test.npy", features_soap_test)
+    np.save("labels_test.npy", labels_test)
 
     trainX = trainX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
     testX = testX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
