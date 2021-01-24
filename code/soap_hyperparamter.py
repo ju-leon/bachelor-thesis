@@ -247,6 +247,18 @@ def main():
     (trainX, testX, trainY, testY) = train_test_split(
         features_soap, labels, test_size=args.test_split, random_state=32)
 
+    with open('trainX.lst', 'wb') as fp:
+        pickle.dump(trainX, fp)
+
+    with open('testX.lst', 'wb') as fp:
+        pickle.dump(testX, fp)
+
+    with open('trainY.lst', 'wb') as fp:
+        pickle.dump(trainY, fp)
+
+    with open('testY.lst', 'wb') as fp:
+        pickle.dump(testY, fp)
+
     trainX = trainX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
     testX = testX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
     trainY = trainY.flatten()
