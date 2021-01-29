@@ -35,7 +35,7 @@ import csv
 
 
 radii = dict()
-
+layers = 1
 
 def get_radius(atom):
     """
@@ -87,17 +87,18 @@ def generate_fourier_descriptions(slices, order):
         fourier.append(np.dstack(channels))
 
     fourier = np.array(fourier)
-    fourier = fourier.reshape((fourier.shape[0], fourier.shape[2], fourier.shape[3]))
+    fourier = fourier.reshape(
+        (fourier.shape[0], fourier.shape[2], fourier.shape[3]))
 
     reference_angle = 0
     for x in range(len(fourier)):
         if fourier[x][-1][0] > reference_angle:
             reference_angle = fourier[x][-1][0]
-    
+
     for slice in fourier:
         for channel in slice[-2]:
             if channel != 0:
-                channel = (channel - reference_angle) % (2 * np.pi) 
+                channel = (channel - reference_angle) % (2 * np.pi)
 
     return fourier
 
@@ -112,28 +113,11 @@ def num_element(atoms, element):
 
 
 def get_model(hp):
-    input_shape = (15, 40, 1)
+    input_shape = (layers, 40, 1)
     inputs = tf.keras.Input(shape=input_shape)
 
     x = inputs
-    filter_size_limit = [4, 6, 4]
-    conv_blocks = hp.Int('conv_blocks', 0, 2, default=1)
-    for i in range(conv_blocks):
-        filters = hp.Int('filters_' + str(i), 2, 12, step=2)
-
-        filter_size = hp.Int('filter_size_' + str(i), 2,
-                             filter_size_limit[i], step=1)
-
-        x = tf.keras.layers.Conv2D(filters, [filter_size, 1])(x)
-
-        dropout = hp.Float('conv_dropout_' + str(i), 0,
-                           0.6, step=0.1, default=0.2)
-        x = tf.keras.layers.Dropout(dropout)(x)
-
     x = tf.keras.layers.Flatten()(x)
-
-    if conv_blocks > 0:
-        x = tf.keras.layers.BatchNormalization()(x)
 
     for i in range(hp.Int('hidden_layers', 1, 3, default=3)):
         size = hp.Int('hidden_size_' + str(i), 10, 300, step=40)
@@ -182,69 +166,76 @@ def main():
         for row in reader:
             barriers[row[93]] = float(row[91])
 
+    layer_heights = [4, 2, 0.2, 0.5, 0.75, 1.5]
 
-    features_maps = []
-    labels = []
+    for layer_height in layer_heights:
+        features_maps = []
+        labels = []
 
-    layer_height = 1
+        for f in tqdm(os.listdir(args.data_dir + "/coordinates_molSimplify/")):
+            if f.endswith(".xyz"):
+                atoms = read_from_file(
+                    args.data_dir + "/coordinates_molSimplify/" + f)
 
-    for f in tqdm(os.listdir(args.data_dir + "/coordinates_molSimplify/")):
-        if f.endswith(".xyz"):
-            atoms = read_from_file(args.data_dir + "/coordinates_molSimplify/" + f)
+                slices = generate_slices(atoms, layer_height,
+                                         -10, 5, 0.1, ["X"], False)
 
-            slices = generate_slices(atoms, layer_height,
-                                     -10, 5, 0.1, ["X"], False)
+                feature_map = generate_fourier_descriptions(slices, 10)
+                features_maps.append(feature_map)
 
-            feature_map = generate_fourier_descriptions(slices, 10)
-            features_maps.append(feature_map)
-            
-            labels.append(barriers[f[:-4]])
-            
+                labels.append(barriers[f[:-4]])
 
-    features_maps = np.array(features_maps)
-    # Scale coefficents
-    fourierScaler = StandardScaler()
-    fourierScaler.fit(features_maps.reshape(len(features_maps), -1))
-    features_maps = fourierScaler.transform(features_maps.reshape(len(features_maps), -1))
+        features_maps = np.array(features_maps)
 
-    features_maps = features_maps.reshape(len(features_maps), -1, 40, 1)
+        # Scale coefficents
+        fourierScaler = StandardScaler()
+        fourierScaler.fit(features_maps.reshape(len(features_maps), -1))
+        features_maps = fourierScaler.transform(
+            features_maps.reshape(len(features_maps), -1))
 
-    # Scale labels
-    labels = np.array(labels)
-    barrierScaler = StandardScaler()
-    barrierScaler.fit(labels.reshape(-1, 1))
-    labels = barrierScaler.transform(labels.reshape(-1, 1))
+        features_maps = features_maps.reshape(len(features_maps), -1, 40, 1)
 
-    # Reserve 10% as validation
-    (features_maps, features_maps_test, labels, labels_test) = train_test_split(
-        features_maps, labels, test_size=0.1, random_state=32)
+        global layers
+        layers = features_maps.shape[1]
 
-    # Split the rest of the data
-    (trainX, testX, trainY, testY) = train_test_split(
-        features_maps, labels, test_size=0.2, random_state=32)
+        # Scale labels
+        labels = np.array(labels)
+        barrierScaler = StandardScaler()
+        barrierScaler.fit(labels.reshape(-1, 1))
+        labels = barrierScaler.transform(labels.reshape(-1, 1))
 
-    np.save("fourier_features_train.npy", trainX)
-    np.save("fourier_labels_train.npy", trainY)
+        # Reserve 10% as validation
+        (features_maps, features_maps_test, labels, labels_test) = train_test_split(
+            features_maps, labels, test_size=0.1, random_state=32)
 
-    np.save("fourier_features_val.npy", testX)
-    np.save("fourier_labels_val.npy", testY)
+        # Split the rest of the data
+        (trainX, testX, trainY, testY) = train_test_split(
+            features_maps, labels, test_size=0.2, random_state=32)
 
-    np.save("fourier_features_test.npy", features_maps_test)
-    np.save("fourier_labels_test.npy", labels_test)
+        np.save("fourier_features_train_" + str(layer_height) + ".npy", trainX)
+        np.save("fourier_labels_train_" + str(layer_height) + ".npy", trainY)
 
-    tuner = kt.Hyperband(
-        get_model,
-        objective='val_mean_squared_error',
-        max_epochs=600,
-        project_name="Hyperband_Fourier",
-    )
+        np.save("fourier_features_val_" + str(layer_height) + ".npy", testX)
+        np.save("fourier_labels_val_" + str(layer_height) + ".npy", testY)
 
-    tuner.search(trainX, trainY,
-                 validation_data=(testX, testY),
-                 epochs=500,
-                 callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=20)])
+        np.save("fourier_features_test_" +
+                str(layer_height) + ".npy", features_maps_test)
+        np.save("fourier_labels_test_" +
+                str(layer_height) + ".npy", labels_test)
 
-    tuner.results_summary()
+        tuner = kt.Hyperband(
+            get_model,
+            objective='val_mean_squared_error',
+            max_epochs=600,
+            project_name="Hyperband_Fourier_" + str(layer_height),
+        )
+
+        tuner.search(trainX, trainY,
+                     validation_data=(testX, testY),
+                     epochs=500,
+                     callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=20)])
+
+        tuner.results_summary()
 
 
 if __name__ == "__main__":
