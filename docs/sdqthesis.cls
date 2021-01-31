@@ -257,3 +257,7 @@
 %tikz
 \usepackage{tikz}
 \usetikzlibrary{matrix,chains,positioning,decorations.pathreplacing,arrows}
+
+\usepackage{nameref}
+\DeclareMathOperator{\arctantwo}{arctan2}
+\usepackage{svg}
