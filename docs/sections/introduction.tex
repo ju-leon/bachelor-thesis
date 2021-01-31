@@ -138,6 +138,21 @@ While these features succeed at predicting reaction barriers, information what p
 The feature extractors introduced in this thesis aim to solve this problem by extracting features that allow for a
 partly reconstruction of the chemical space and thus knowing which region of the molecule contributes to a prediction.
 
+Feature extraction is a common problem for machine learning methods in chemical spaces.
+Multiple approaches have been proposed for general molecule encoding, 
+ranging from encoding properties of molecules, such as the Coulomb Matrix encoder encoding electrostatic interaction of atoms \cite{PhysRevLett.108.058301}
+to encoding 3D structures of atomic environments \cite{Bart_k_2013}.
+
+3d structural encoders usually create a fully invariant features description.
+In the case of SOAP proposed by \citeauthor{Bart_k_2013}, this is achieved by encoding information about the interaction of 
+different species rather than encoding the 3d space itself.
+Fully invariant 3d descriptors have the advantage of being universally applicable for any kind of molecule, since they have no requirements to the element being encoded.
+The disadvantages are that, once the features are generated, a transformation back to 3D space is not possible.
+In many applications, this is not a problem since the generated features are used only for prediction of an elements properties.
+In our case, the features however should later allow us to interpret the 3D space surrounding the molecule and ideally give an idea on how the molecule can be changed to alter it's properties.
+
+The idea of using a catalysts special structure for this task, and therefor removing some axes of freedom from the feature space, seems to be an unexplored approach.
+
 
 \section{Objectives}
 
@@ -155,10 +170,15 @@ This means, given the features, it should be possible to approximate the general
 
 The global location and rotation of the element should not influence the features or have only limited influence on the features.
 
-\subsection{Regression and interpretation}
+\subsection{Regression}
 
-The second step is to predict the activation barrier from these features using a neural network.
-The neural network can then be used to backpropagate and see which features have a big influence on the prediction.
+The second step is to predict the activation barrier from these features using an artificial neural network.
+The goal was to find a network able to to predict the activation barrier with accuracy similar or better to the machine learning methods proposed by \citeauthor{friederich_dos}.
+The networks proposed here achieve higher accuracy's than the best regression methods proposed in \cite{friederich_dos}.
 
-Since the features should be able to allow a inversion back to the 3D space, meaning it's possible to approximate which areas in 3D space are responsible for the prediction.
-The location of the atoms in a molecule is known, so from the approximation of the influence of 3D space we'll be able to guess which atoms mostly influence the prediction.
+
+\subsection{Explaining the feature space}
+Since the features should be able to allow a inversion back to the 3D space, it's possible to approximate which areas in 3D space are responsible for the prediction.
+Using neural networks explainers, in  a last step the regions in 3d space that influence the regression will be analyzed.
+This gives an idea on how different atoms in the dataset influence the prediction.
+In further work, this might give intuition on how a molecule needs to be changed to alter it's activation barrier in a desired way.

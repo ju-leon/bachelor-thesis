@@ -24,19 +24,105 @@
 		
 \setcounter{figure}{0}
 		
-\begin{figure} [ht]
-  \centering
-  \caption{A figure}
-  \label{fig:anotherfigure}
-\end{figure}
 
-\begin{figure} [h]
-  \centering
-  \includegraphics[width=0.5\textwidth]{figures/slice-iso.png} % for .pdf files etc use \includegraphics{test.pdf}
-  \caption{A slice with isolates.}
-  \label{fig:slice}
-\end{figure}
-
+\begin{algorithm}[p]
+  \caption{\textsc{CircleSetContour}}\label{alg:CircleSetContour}
+  
+  
+  % Some settings
+  \DontPrintSemicolon %dontprintsemicolon
+  \SetFuncSty{textsc}
+  \SetKwFor{ForAll}{forall}{do}
+  
+  
+  % Declaration of data containers and functions
+  \SetKwData{Q}{Q}
+  \SetKwData{C}{C}
+  \SetKwData{G}{G}
+  \SetKwData{L}{L}
+  \SetKwData{dist}{d}
+  \SetKwData{pred}{pred}
+  \SetKwFunction{queueDeleteMin}{deleteMin}
+  \SetKwFunction{append}{append}
+  \SetKwFunction{queueInsert}{insert}
+  \SetKwFunction{queueDecreaseKey}{decreaseKey}
+  \SetKwFunction{queueContains}{contains}
+  \SetKwFunction{insertEdge}{addEdge}
+  \SetKwFunction{queueContains}{contains}
+  \SetKwFunction{location}{location}
+  \SetKwFunction{angleBt}{angle}
+  \SetKwFunction{angleToVec}{angleToVec}
+  \SetKwFunction{vecToAngle}{vecToAngle}
+  \SetKwFunction{intersect}{intersections}
+  \SetKwFunction{neigh}{neighbors}
+  \SetKwFunction{points}{pointsInRange}
+  
+  \SetKwRepeat{Do}{do}{while}
+  
+  % Algorithm interface
+  \KwIn{Set \C of circles}
+  \KwData{Graph $\G = (\C, \emptyset)$}
+  \KwOut{List of contour sections $\C$ in order}
+  
+  % The algorithm
+  \BlankLine
+  \tcp{Generate graph}
+  \ForAll{$(c_1,c_2) \in \C \times \C$}{
+    \If{distance$(c_1, c_2) < c_1.radius + c_2.radius$}{
+      \G.\insertEdge{$c_1, c_2$}
+    }
+  }
+  
+  \BlankLine
+  \tcp{Find contour sections}
+  $c_{max} \in \{c_i \in \C | \forall m \in \{1..|\C|\}: c_m.x + c_m.radius \leqslant c_i.x + c_i.radius\}$
+  
+  $c\leftarrow c_{max}$
+  
+  $\vec{p} \leftarrow \begin{pmatrix}
+    1 \\
+    0
+  \end{pmatrix}$
+  
+  $\alpha \leftarrow 0$
+  
+  \Do{$c_{max} \neq c$}{
+    \tcp{Find adjacent circle with intersection of smallest angle}
+    $ \left(c_{next}, \beta \right) \leftarrow 
+    \min_2{\left\{ 
+      (n, \gamma)\ \middle\vert 
+      \begin{array}{l}
+        n \in \G.\neigh\left(c\right), \\
+        \gamma  = 
+          \min\left\{
+            \angleBt{
+              p, \intersect{n,c}
+            }
+          \right\}
+      \end{array}
+    \right\}} 
+    $
+  
+    $\C.\append \left(
+        \left(c , \alpha , \beta \right)
+      \right)
+    $
+  
+    \tcp{Calculate start direction vector of the next circle}
+    $ \vec{p} \leftarrow \left( c.center + (\angleToVec(\beta) * c.radius ) - c_{next}.center\right)$
+    
+    $ c \leftarrow c_{next} $
+    
+    $  a \leftarrow \vecToAngle(\vec{p}) $
+  
+    }
+  
+    \tcp{Finish contour of last circle}
+    $\C.\append \left( c_{max}, \alpha, 0 \right)$
+  
+  \end{algorithm}
+  
+  
 
 \dots
 %% ---------------------
