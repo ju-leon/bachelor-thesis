@@ -115,3 +115,6 @@ code/labels_train.npy
 code/labels_val.npy
 
 code/conv_20:3:3.h5
+
+#Numpy
+*.npy
