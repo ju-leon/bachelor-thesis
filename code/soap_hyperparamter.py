@@ -108,26 +108,8 @@ def get_model(hp):
     inputs = tf.keras.Input(shape=input_shape)
 
     x = inputs
-    filter_size_limit = [4, 6, 4]
-    conv_blocks = hp.Int('conv_blocks', 0, 3, default=1)
-    for i in range(conv_blocks):
-        filters = hp.Int('filters_' + str(i), 2, 12, step=2)
 
-        filter_size = hp.Int('filter_size_' + str(i), 2,
-                             filter_size_limit[i], step=1)
-
-        x = tf.keras.layers.Conv2D(filters, [filter_size, 1])(x)
-
-        dropout = hp.Float('conv_dropout_' + str(i), 0,
-                           0.6, step=0.1, default=0.2)
-        x = tf.keras.layers.Dropout(dropout)(x)
-
-    x = tf.keras.layers.Flatten()(x)
-
-    if conv_blocks > 0:
-        x = tf.keras.layers.BatchNormalization()(x)
-
-    for i in range(hp.Int('hidden_layers', 1, 4, default=3)):
+    for i in range(hp.Int('hidden_layers', 1, 6, default=3)):
         size = hp.Int('hidden_size_' + str(i), 10, 700, step=40)
         reg = hp.Float('hidden_reg_' + str(i), 0,
                        0.06, step=0.01, default=0.02)
