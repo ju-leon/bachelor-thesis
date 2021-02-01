@@ -108,6 +108,7 @@ def get_model(hp):
     inputs = tf.keras.Input(shape=input_shape)
 
     x = inputs
+    x = tf.keras.layers.Flatten()(x)
 
     for i in range(hp.Int('hidden_layers', 1, 6, default=3)):
         size = hp.Int('hidden_size_' + str(i), 10, 700, step=40)
