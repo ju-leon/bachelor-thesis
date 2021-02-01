@@ -45,6 +45,8 @@ from soap_generation.augment import augment_elements
 import pickle
 
 
+input_shape = 0
+
 def read_data(data_dir):
     barriers = dict()
 
@@ -101,7 +103,8 @@ def step_decay(epoch):
 
 
 def get_model(hp):
-    input_shape = (12, 48, 1)
+    global input_shape
+    #input_shape = (12, 48, 1)
     inputs = tf.keras.Input(shape=input_shape)
 
     x = inputs
@@ -242,25 +245,30 @@ def main():
     (trainX, testX, trainY, testY) = train_test_split(
         features_soap, labels, test_size=args.test_split, random_state=32)
 
-    np.save("features_train.npy", trainX)
-    np.save("labels_train.npy", trainY)
+    np.save("features_train_" + str(nmax) + ":" + str(lmax) + ".npy", trainX)
+    np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ".npy", trainY)
 
-    np.save("features_val.npy", testX)
-    np.save("labels_val.npy", testY)
+    np.save("features_val_" + str(nmax) + ":" + str(lmax) + ".npy", testX)
+    np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", testY)
 
-    np.save("features_test.npy", features_soap_test)
-    np.save("labels_test.npy", labels_test)
+    np.save("features_test_" + str(nmax) + ":" + str(lmax) + ".npy", features_soap_test)
+    np.save("labels_test_" + str(nmax) + ":" + str(lmax) + ".npy", labels_test)
 
     trainX = trainX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
     testX = testX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
     trainY = trainY.flatten()
     testY = testY.flatten()
 
+    global input_shape
+    input_shape = trainX[0].shape
+
+    print(input_shape)
+
     tuner = kt.Hyperband(
         get_model,
         objective='val_mean_squared_error',
         max_epochs=1200,
-        project_name="Hyperband",
+        project_name="Hyperband_SNAP_" + str(nmax) + ":" + str(lmax)
     )
 
     tuner.search(trainX, trainY,
@@ -269,28 +277,6 @@ def main():
                  callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=20)])
 
     tuner.results_summary()
-
-    # Retrieve the best model.
-    best_model = tuner.get_best_models(num_models=1)[0]
-
-    # Evaluate the best model.
-
-    # Create soap coefficients
-    atom_index = [[0]] * len(elems)
-    features_soap_val = soap.create_coeffs(elems_val, positions=atom_index)
-
-    # Scale coefficents
-    features_soap_val = soapScaler.transform(features_soap_val)
-
-    # Scale labels
-    labels_val = barrierScaler.transform(labels_val.reshape(-1, 1))
-
-    features_soap_val = features_soap_val.reshape(
-        -1, 12, int(features_soap_val.shape[2] / 12), 1)
-    loss, accuracy = best_model.evaluate(
-        features_soap_val, labels_val.flatten())
-    print("Validation loss: " + str(loss))
-    print("Validation accuracy: " + str(accuracy))
 
 
 if __name__ == "__main__":
