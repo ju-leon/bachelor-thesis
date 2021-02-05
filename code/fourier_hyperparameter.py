@@ -160,18 +160,21 @@ def main():
     args = parser.parse_args()
 
     barriers = dict()
+    auto = dict()
     with open(args.data_dir + 'vaskas_features_properties_smiles_filenames.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)
         for row in reader:
             barriers[row[93]] = float(row[91])
+            auto[row[93]] = row[0:30]
 
-    layer_heights = [4, 2, 0.2, 0.5, 0.75, 1.5]
 
+
+    layer_heights = [0.5]
     for layer_height in layer_heights:
         features_maps = []
         labels = []
-
+        autocor = []
         for f in tqdm(os.listdir(args.data_dir + "/coordinates_molSimplify/")):
             if f.endswith(".xyz"):
                 atoms = read_from_file(
@@ -184,8 +187,21 @@ def main():
                 features_maps.append(feature_map)
 
                 labels.append(barriers[f[:-4]])
+                autocor.append(auto[f[:-4]])
+
+        labels = np.array(labels).reshape(-1)
 
         features_maps = np.array(features_maps)
+
+        autocor = np.array(autocor).astype(np.float)
+
+        print(autocor)
+
+        np.save("fourier_features_input.npy", features_maps)
+        np.save("fourier_features_autocor.npy", autocor)
+        np.save("fourier_features_labels.npy", labels)
+
+        exit()
 
         # Scale coefficents
         fourierScaler = StandardScaler()
