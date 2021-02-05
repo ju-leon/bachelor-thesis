@@ -18,9 +18,8 @@
 %% -------------------
 
 Metal Catalysts are crucial to a variety of applications, from water splitting to CO2 reduction.
-% TODO: Elaborate
 Catalyst are used in combination with chemical reactions to lower their activation energies.
-Catalysts have an activation energy them self that needs to be overcome in oder to start the reaction.
+They have an activation energy that needs to be overcome in oder to start the reaction, the so called reaction barrier.
 
 The reaction barrier depends on the structure of the catalyst, and varies greatly between different catalyst molecules.
 Intuitively no rule for the activation barrier can be found.
@@ -28,17 +27,17 @@ Seemingly small changes in the catalysts shape can have a large influence on the
 Knowing how to change catalyst molecules in order to lower their activation barrier is a difficult challenge, even to humans.
 While the activation barrier can be computed, this process is highly complex and takes a lot of computing power.
 This means computing the activation barrier for large dataset of catalysts is currently not feasible.
-
-In this Bachelor's thesis, different approaches top use machine learning to compute the activation barrier of catalyst molecules are explored.
-Different methods of encoding catalyst molecules into machine-understandable formats are proposed.
+\\
+In this Bachelor's thesis, different approaches to use machine learning to compute the activation barrier of catalyst molecules are explored.
+Multiple methods of encoding catalyst molecules into machine-understandable formats are proposed.
 Using a combination of machine learning techniques, mostly artificial neural networks, the activation barrier is predicted from the catalysts shape.
 
-After being able to predict the activation barrier with high accuracy, different techniques to explain machine learning results are used.
+After being able to predict the activation barrier with high accuracy, different techniques to explain the 
+outputs of the neural network are used.
 This allows for intuition of which parts of the catalyst molecule contribute to the prediction of the activation barrier.
 This intuition may be helpful in further chemical analysis of the metal catalyst and can help to give the 
 chemist an idea on how an element needs to be changed in oder to lower it's activation barrier.
 \\
-
 
 \begin{figure}
   \centering
@@ -46,7 +45,7 @@ chemist an idea on how an element needs to be changed in oder to lower it's acti
   \caption{Two elements with seemingly very similar chemical structures. The chemical structure 1 and it's corresponding 3d structure 2 have an activation barrier of $3.6 kcal/mol$.
   Molecule 3 and it's corresponding 3d structure 4 have an activation barrier of $18.0 kcal/mol$.
   The only difference in the 3d structure of the 2 is the fluorine arm is being replaced by a nitrogen arm.
-  The difference is significant considering the standard deviation shown in \ref{fig:barriers}.  }
+  The difference is significant considering the distribution of the activation barriers in \ref{fig:barriers}.  }
   \label{fig:struct-diff}
 \end{figure}
 
@@ -58,7 +57,7 @@ For all catalysts in the dataset the activation barrier, along with other proper
 Since calculating the activation barrier is very costly, a total of 1947 species with different structures are constructed.
 \\
 As with many machine learning tasks, feature selection is one of the big challenges in this project.
-While there are many universal techniques to extract extract features from chemical structures, they all have their drawbacks.
+While there are many universal techniques to extract features from chemical structures, they all have their drawbacks.
 
 In previous works, multiple different techniques are proposed to extract features from a catalyst molecule \cite{friederich_dos}.
 While these techniques are based on the chemical structure of a molecule, they do not take into account its 3D spacial structure.
@@ -67,8 +66,16 @@ The idea being that the 3D structure plays an important role in the activation b
 Additionally encoding the 3D structure will allow to learn about the space surrounding the central 
 Iridium atom to understand the importance of location of the atoms in our molecule.
 
+In order to use feature explainers on the neural network, a mapping between feature space and chemical space needs to be possible.
 There currently is no widespread way to encode catalyst molecules that also allows for 
 reconstruction of the 3d space and by that an intuition on how the molecule needs to be changed in order ot lower the activation barrier.
+Since most chemical feature generators do not specifically focus on catalyst molecules,
+but rather provide features for a wide variety of molecules, they generally tend to generate a fully rotationally invariant output.
+This full rotational invariance means that information about the location of single atoms is often lost or only implicitly encoded in the features.
+A reconstruction of the molecule only from the features is therefore not possible.
+The descriptors proposed here allow make use of a catalysts special structure.
+This allows for the reconstruction of the 3d shape of the molecule and could in the future be used to also encode 
+other properties of the molecule.
 \\
 The seemingly arbitrary distribution of activation barriers among catalyst molecules  was reason to use neural networks for prediction from the generated features.
 Neural networks have become the go-to method for high dimensional regression and classification for their ability to adapt well to complex data.

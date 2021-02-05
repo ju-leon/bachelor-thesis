@@ -15,10 +15,14 @@
 %% ==============
 Neural networks and other machine learning techniques have strict requirements on their input data.
 For ANNs specifically, the input needs to be of fixed size and ideally as low dimensional as possible.
-In order to learn all the data required to predict the molecular properties, in this case the activation barrier, should be encoded.
+In order to learn, all the data required to predict molecular properties, in this case the activation barrier, should be encoded.
 
-Approaches by state of the art chemical encoders are to encode a fixed amount of chemical properties,
-or encoding the space surrounding central points into features.
+Simple encoders extract well know features of molecules such as their mean electro negativity or atomic numbers \cite{LO20181538}.
+Approaches by state-of-the-art chemical encoders include using graph convolutions to parse the chemical structure into fixed size features \cite{GNN_ENCODER}.
+Others try to encode interaction of different atoms or species of atoms into their features \cite{PhysRevLett.108.058301}
+The feature generators relevant to this project are spacial encoders.
+Spacial encoders in chemistry generally focus on describing the interaction of chemical elements within a certain radius, rather 
+than the space itself \cite{Bart_k_2013}.
 Since global rotation translation of an element generally does not influence it's chemical properties, 
 encoders try to produce rotationally invariant representations.
 This however usually limits the possibilities of reconstructing the input data.
@@ -30,6 +34,8 @@ All catalyst molecules in out dataset have a central metal atom and a reaction p
 By the centers of these 2 atoms a unique axis is formed.
 This axis is used to align the molecules.
 
+The use of this special structure of catalyst molecules seems to be a novel approach.
+
 \section{Alignment of catalyst molecules}
 
 Every catalyst molecule $\mathbb{E}$ in the dataset has a central Iridium atom with position $p_{Ir} \in \mathbb{E}$.
@@ -39,12 +45,15 @@ We set out Iridium atom to be the center, and align all other atoms accordingly.
 $$ \forall p_i \in \mathbb{E}: p_i' = p_i - p_{Ir}$$
 
 Now that our element is centered, the next step is rotating it.
+Every catalysts has a reaction pocket attached to the central metal atom.
+This reaction pocket is defined by a hydrogen atom.
+The goal is to rotate the entire molecule so that the reaction pocket is aligned with the $z$-Axis.
 We define our axis to be aligned by the vector running from the center to the reaction pocket and normalize it, so
 
 $$ v = \frac{p_{Pocket}'}{\| p_{Pocket}'\| } $$
 
 The vector $v$ is now rotated so that it aligns with the $z$-Axis.
-This rotation can be defined no matter how every element is aligned initially, effectively removing rotational invariances.
+Since this rotation can be defined no matter the elements initial alignment, it effectively removes rotational invariances.
 We define a plane through the points $(0,0,0), (0,0,1), v$.
 The normal $n$ is the axis we will rotate the molecule around.
 
@@ -79,7 +88,7 @@ $$
 
 
 The rotation $R(\alpha)$ can then be applied to all centered atom.
-The aligned and centered dataset can therefor be described as
+The aligned and centered molecule can therefor be described as
 
 $$ 
 \mathbb{E}^R = \left\{ R(\alpha) (p_i - p_{Ir}) |  p_i \in \mathbb{E} \right\}
@@ -88,6 +97,8 @@ $$
 The coordinates $p^R_i \in \mathbb{E}^R$ are now rotationally invariant under 2 axes. 
 The only degree of freedom left is rotations around the vector $v$. 
 
+We will repeat this normalization for every element in the dataset.
+
 Since there's no natural way to align the elements around $v$, different approaches will be used.
 In a first attempt, features are generated using a descriptor that is invariant under rotations around $v$.
 The second descriptor is using data augmentation to teach the network about possible rotations of the molecule.
@@ -95,12 +106,12 @@ The second descriptor is using data augmentation to teach the network about poss
 \section{Fourier descriptors for invariant feature generation}
 
 The first attempt at feature generation was using a fully rotational invariant feature descriptor.
-The method used is an Elliptic Fourier Descriptor.
+The method used is an Elliptic Fourier Descriptor (EFD).
 Elliptic fourier descriptors approximate a 2D contour with a set of coefficients.
 The higher the order of the descriptor, the better a contour can be approximated.
 
-To be able to describe a 3D object using fourier contour descriptors the object is sliced different $z$ locations.
-These slices can then be described using a fourier descriptor.
+To be able to describe a 3D object using fourier contour descriptors the object is sliced at different $z$ locations.
+These slices can then be described using an EFD.
 
 \subsubsection{Slicing}
 
@@ -111,8 +122,8 @@ These slices can then be described using a fourier descriptor.
   \label{fig:slice3d}
 \end{figure}
 
-Along the $z$-axis, starting from $z_{start}$ to $z_{end}$, the molecule is sliced in a distance of $layer_{height}$.
-$z_{start}, z_{end}, layer_{height}$ are tuning parameters.
+Along the $z$-axis, starting from $z_{start}$ to $z_{end}$, the molecule is sliced in a distance of $z_{height}$.
+$z_{start}, z_{end}, z_{height}$ are tuning parameters.
 Here, $z_{start}, z_{end}$ are chosen so that all molecules from the dataset fully fit into the boundaries.
 
 A slice is computed by getting the radius of every atom $i$ in the molecule at the slice height $z$ \ref{fig:slice3d}.
@@ -140,7 +151,7 @@ However, it can only work on a closed contour, so isolate islands of circles tha
 
 To identify islands and one continuos subset of circles, for each slice a graph is constructed.
 For every atom with radius $>0$ we create a node.
-For every atom that intersects with another we create an edge between these two circles.
+For every atom that intersects with another we create an edge between these two nodes.
 Now the \texttt{Largest Connected Component}, so the connected subgraph with the most nodes, is selected.
 This gives us the most atoms forming a continuously connected shape in the current slice.
 In the next steps we will only only use this subset to describe the contour.
@@ -339,7 +350,7 @@ density of different species in 3D space is encoded.
 \subsection{SNAP requirements}
 
 The general idea of SNAP is to describe the density surrounding a cental atom using a fixed set of coefficients.
-Rotational invariance therefor cannot be guaranteed, unless the encoded molecule itself can be rotated in a way to explicitly set it's rotation.
+Rotational invariance therefore cannot be guaranteed, unless the encoded molecule itself can be rotated in a way to explicitly set it's rotation.
 
 For catalyst molecules, this natural axis can be defined by setting the reaction pocket to the top, and the central Iridium atom as a center.
 
@@ -350,14 +361,7 @@ If there are multiple axis of freedom SOAP may be preferable since in naturally 
 
 \subsection{SNAP}
 
-In SNAP, the atomic structure is first aligned according to the specified axis. 
-In the case of the catalyst molecules, we define our central metal atom as our center. 
-The entire structure will then be rotated so that the reaction pocket will have coordinates $(0,0,z)$.
-
-The transformed coordinates will now create a density distribution in space using 3D gaussians.
-This process is based heavily on the original proposal of the SOAP descriptor.
-Big parts of the implementation are therefor taken directly from an open-source implementation of SOAP in the chemical descriptor library Dscribe \cite{dscribe}.
-\\
+Using the centered and aligned molecules, we will create the density space surrounding out central atom.
 Since the basis set we're using to describe the space is using spherical coordinates, the first step is to transform the cartesian into spherical coordinates.
 
 $$
@@ -368,22 +372,27 @@ r = \sqrt{x^2 + y^2 + z^2}
 \varphi = \arctan(y / x)
 $$
 
+Using 3D gaussian distributions for every atom in the element, we can calculate the density at any point within $r_{cut}$.
 For each species $Z$ in the dataset, the density at any point $(r, \theta, \varphi)$ is described as
 
-$$\rho^Z(r, \theta, \varphi) = \sum_i^{|Z|} e^{- \frac{1}{2\sigma^2} \vert r - R_i \vert^2 }$$
+$$\rho^Z(r, \theta, \varphi) = \sum_i^{|Z|} e^{- \frac{1}{2\sigma^2} \vert r - R_i \vert^2 }$$ %TODO: Should r be bold(r)?
 %TODO: What is R_i??
 
-The summation $i$ runs over all the atmos of that species. $R_i$ is the center of that atom.
-This density space can then be approximated using a combination of basis functions.
+The summation $i$ runs over all the atmos of that species. $R_i$ is the center of that atom. %TODO: Is it?
+In further enhancements of the SNAP encoder, describing other molecular properties in the same way are thinkable.
+Even describing 3D features not associated with a single species but rather describing the interaction or overlap of species 
+or molecules are thinkable.
 
-One of the basis function is defined by spherical harmonics. 
-Spherical harmonics are a set of 3D functions.
-A set of orthonomalized special harmonics is used, defined as
-
+The density space can then be expanded using a combination of basis functions.
+To expand the radial degrees of freedom, spherical harmonics are used.
+Spherical harmonics are a complete set of orthonormal basis functions describing the surface of a sphere.
+We use the Laplacian SphericalHarmonicas, defined as:
 $$
-Y_{lm}(\theta, \varphi) = (-1)^m \sqrt{\frac{2l + 1}{4 \pi} \frac{(l - m)!}{(l + m)!}} P_{lm}(\cos(\theta)) e^{im\theta}
+Y_{lm}(\theta, \varphi) = (-1)^m \sqrt{\frac{2l + 1}{4 \pi} \frac{(l - m)!}{(l + m)!}} P_{lm}\left(\cos(\theta) \right) e^{im\theta}
 $$
 %TODO: Add plot of first n spherical harmonics
+
+
 
 Here, $P_{lm}$ are the associated Legendre polynomials, defined as
 
@@ -393,10 +402,19 @@ $$ %TODO: Looks at derivative
 
 
 This gives us a way to encode a sphere around our central atom. 
-To encode density information along the radial direction, we combine spherical harmonics with radial basis functions.
 
+\begin{figure} [h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/snap/sph-harm.png} % for .pdf files etc use \includegraphics{test.pdf}
+  \caption{Some spherical harmonics plotted on a sphere.}
+  \label{fig:sphharm}
+\end{figure}
+
+To encode density information along the radial direction, we combine spherical harmonics with radial basis functions.
 A variety of radial functions can be used for this application.
-For easy and fast computations in this implementation spherical gaussian type orbitals are used. 
+In \cite{KUHL1982236} the use of polynomial radial function is suggested.
+However here a set of primitive gaussian type orbitals are used.
+This set allows for analytical integration which allows for a significant speedup over numerical integration since it can be precomputed.  
 These gaussian type orbitals are defined as
 
 $$g_{nl}(r) = \sum_{n'}{n_{max}} \beta_{nn'l} \phi_{n'lr}(r) $$
@@ -415,7 +433,8 @@ $$\phi_{nl}(r) = r^l e^{-\alpha_{nl}r^2} $$ %TODO: phi of n oder phi of nl?? / a
 
 $\alpha$ and $\beta$ are constants that only need to be computed once for every pair of $l,m, r_{cut}$.
 $\alpha_{nl}$ is a set of decay parameters chosen so that each non orthonormalized function $\phi_{nl}$ 
-will decay to a threshold value of $10^-3$ at the cutoff radius $r_{cut}$.
+will decay to a threshold value of $10^{-3}$ at the cutoff radius $r_{cut}$.
+%TODO: What does the 10^-3 mean?
 
 The weights $\beta_{nn'l}$ are chosen so that the radial basis functions are orthonormal.
 For each $l$ the weights $\beta_{nn'l}$ can be computed using the Löwdin orthonormalization:
@@ -426,22 +445,37 @@ with the entries of the matrix $S$ being defined as
 
 $$S(l)_{nn'} = \langle \phi_{nl} | \phi_{n'l} \rangle  $$
 
-Combining spherical harmonics with radial basis functions we can approximate the density space surrounding our central atom.
-Generally, the higher we choose $l, m$ the more accurate we can encode the space.
-For radial basis functions we need to define a cutoff radius $r_{cut}$.
-Densities outside this cutoff radius will not ne encoded in the features of our space.
+The implementation of $\alpha$ and $\beta$ prefactors is taken from \cite{dscribe} where they are precomputed up to $l \leq 9$.
+Higher order factors could be added if needed.
 
-Finally, we can approximate the density space for every element type $Z$.
-We therefor define the features we will later use for regression as
+
+Combining spherical harmonics with radial basis functions we can describe the density space surrounding our central atom.
+In theory, choosing infinitely high $n, l$ we could approximate the space with infinitely high precision.
+To get a fixed amount of coefficients, $n_{max}$ and $l_{max}$ need to be chosen that determine the
+accuracy of the encoding.
+Generally, the higher we choose $l, m$ the more accurate we can approximate the space.
+%TODO Add figure of the space being described with different n, l , cutoff
+
+For radial basis functions we need to define a cutoff radius $r_{cut}$.
+Densities outside this cutoff radius will not be encoded in the features of our space.
+
+The density for every species $Z$ in within the cutoff sphere can be expanded as:
+
+$$ \rho^Z(r) = \sum_{nlm} c^Z_{nlm} g_{nl}(r) Y_{lm}(\theta, \varphi) $$
+
+The coefficients $c_{nlm}^Z$ are features generated by the SNAP descriptor.
 
 $$ c_{nlm}^Z = \iiint_{R^3} g_{nl}(r) Y_{lm}(\theta, \varphi) \rho^Z(r, \theta, \phi)  \,dr\theta\phi   $$
 % TODO: Integrate to infinity or r_cut?
 
 The 3 dimensional integral goes over all spherical coordinates within our cutoff sphere.
-The coefficients $c_{nlm}$ now fully describe our 3d space within a fixed size sphere.
-
-The key difference to the features produced by the SOAP descriptor being that the set of coefficients 
-can now be used to reconstruct the density at any given point within the cutoff sphere.
-The density can be obtained by multiplying the coefficients with our basis functions.
-
-$$ \rho^Z(r) = \sum_{nlm} c^Z_{nlm} g_{nl}(r) Y_{lm}(\theta, \varphi) $$
+The coefficients $c_{nlm}$ now describe the 3d space within a fixed size sphere.
+\\
+The key difference between SNAP and other chemical descriptors is the bi-directional mapping between feature space and 
+density space.
+From the coefficients, the density space encoded can be easily reconstructed.
+This allows for a partial reconstruction of the molecule from the features encoded by SNAP.
+‚
+When used in combination with machine learning techniques, this allows for computational exploration of chemical spaces.
+Generative algorithms that generate SNAP features are thinkable.
+These features could then be translated back to chemical space and used for chemical exploration of elements.

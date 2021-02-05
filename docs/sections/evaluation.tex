@@ -213,12 +213,21 @@ In the case of fourier coefficients, the filter therefor were only stretched alo
 Multiple tests were performed with various filter sizes and convolution layers.
 The regression accuracy was falling short of expectations, and the general shape of the network did not seem to change the prediction accuracy significantly.
 
+\begin{figure} [h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/regression/fourier/cnn/fourier_conv_layout.png} 
+    \caption{
+        Architecture of the convolutional neural network used for predicting the activation barrier from fourier coefficients.
+    }
+    \label{fig:cnn-architecture}
+\end{figure}
+
 In first network architectures, overfitting was a mayor problem.
 With regularization and other techniques the issue of overfitting could be reduced.
 What became clear pretty early in the tests was that convolution layers did not improve prediction accuracy as expected.
 When testing different filter configurations, the network performed best the smaller the filters got, and the fewer convolution layers were used.
 In the end, the best performing Convolutional Neural Network found had two Convolution Steps with a filter size of $2 \times 1$ for the first layer, and a filter size
-of $4 \times 1$ for the second layer.
+of $4 \times 1$ for the second layer \ref{fig:cnn-architecture}.
 After the convolution layers 3 fully connected layers and the output layer followed.
 Dropout and batch normalization layers were added in between to help with fighting overfitting.
 The prediction accuracy of the CNN was similar yet slightly worse than the prediction accuracy achieved on autocorrelation features \cite{friederich_dos}.
@@ -308,13 +317,13 @@ Compared the convolution approach, the network took longer to converge, the over
 The network achieved a $r^2=0.874$ and a $MAE=1.139$ when trained on 80\% of the data \ref{fig:transfer_final}.
 
 \begin{figure}[!htb]
-    \minipage{0.333\textwidth}
+    \minipage{0.3333\textwidth}
       \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/lossTransferAutocor.png}
     \endminipage\hfill
-    \minipage{0.333\textwidth}
+    \minipage{0.3333\textwidth}
       \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/lossTransferFull.png}
-    \endminipage
-    \minipage{0.333\textwidth}
+    \endminipage\hfill
+    \minipage{0.3333\textwidth}
       \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/scatterTransferFull.png}
     \endminipage
     \caption{
@@ -325,14 +334,57 @@ The network achieved a $r^2=0.874$ and a $MAE=1.139$ when trained on 80\% of the
     \label{fig:transfer_final}
 \end{figure}
 
-In an attempt to find a good network architecture, a hyperparameter optimization was used.
+In an attempt to find a better network architecture, a hyperparameter optimization was performed.
 Hyperparameter optimization is a way of finding good hyperparameter for the underlying problem.
 A searchspace need to be defined manually first, an optimization algorithm is then run to find good parameters within the search space.
 Generally a bigger search space mean longer computation time for the hyperparameter algorithm.
 The search space here was limited by the findings of manual hyperparamter tuning.
-Notable optimization values given to the hyperparamter tuner were the number of layers, 
-the regularization rate of these layers, and the dropout rate for the layers.
+Notable optimization values given to the hyperparamter tuner were the number of convolution layers, 
+the number and size of fully connected layers, the regularization rate of these layers, and the dropout rate for the layers.
 
+
+\begin{figure}[!htb]
+    \minipage{0.3333\textwidth}
+      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/mae_layer.png}
+    \endminipage\hfill
+    \minipage{0.3333\textwidth}
+      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/r2_layer.png}
+    \endminipage\hfill
+    \minipage{0.3333\textwidth}
+      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/scatterHyperparam.png}
+    \endminipage
+    \caption{
+    The $r^2$ values and $MAE$ for different layer heights.
+    For all layer heights a separate hyperparameter optimization wa run, resulting in different network architectures.
+    All networks are trained using 80\% on the data. The $r^2$ scores and $MAE$ were evaluated later using a test dataset.
+    The on the right the prediction of the best performing network found in the hyperparameter optimization step is plotted.
+    The best network was found using a input layer height of $0.2 \AA$ resulting in $75$ layers. 
+    The $MAE=1.096$ and $r^2=0.882$ are the highest accuracy so far.
+    }
+    \label{fig:fourier_final}
+\end{figure}
+
+
+In addition, multiple hyperparameter optimizations were performed for different layer heights $l$.
+Since the layer heigh also changes the input size of the neural network, an assumption about the 
+architecture across different layer heights is not feasible.
+For ever layer height a separate hyperparamter optimization was run \ref{fig:fourier_final}.
+The best hyperparameters found for every input site vary substantially.
+
+After a certain layer height the prediction accuracy seems to no longer improve.
+The step from 30 to 75 layers does not change the accuracy significancy, while more than doubling input size.
+The small improvement in accuracy from 30 to 75 layers might not necessarily mean a higher overall classification accuracy of the network,
+but could also be to randomness when selecting training and test examples or randomness during training.
+
+The process shows that performing regression on fourier features is possible.
+The accuracy however is not significantly higher than the accuracy achieved on graph convolutions.
+Since the goal of this thesis is to learn from the 3D structure of the molecule, the similar performance 
+indicates that the information learned from the 3d structure is limited.
+This assumption is further validated by the fact that the transfer learning approach that 
+basically eliminates spacial information about the network in the middle of the network, achieves similar accuracy to the 
+network trained on features that do not include any information about the 3d structure.
+
+Due to these results, a different feature extractor, SNAP, was developed.
 
 \section{Regression on SNAP features}
 \label{sec:Evaluation:snap}
@@ -341,26 +393,55 @@ Similar to the feature space for fourier coefficients, the size of the SNAP feat
 The first is the number of elements in the dataset.
 The second is the resolution of the encoding for each type of element, defined by $n_{max}$ and $l_{max}$.
 
-While the number of elements is fixed by the elements appearing in the dataset, $n_{max}$ and $l_{max}$ are hyperparameters that need to be choosen manually.
-$n_{max}$ and $l_{max}$ also influence the resolution of the reconstruction of the element.
-A plain hyperparamter optimization is therefor not viable, since the main objective in the end
-is to reconstruct the 3d space to identify the areas important to the prediction.
+Other hyperparameters, such as the choice of radial basis functions, might influence the prediction accuracy further.
 
-A good balance between interpretability and accuracy was found with $l_{max}=n_{max}=3$. 
-The network architecture and hyperparameter optimization will therefor be focused on these values.
+The number of radial basis functions $n_{max}$ and the maximum degree of spherical harmonics $l_{max}$ do both influence
+the input dimension.
+The ideal network architecture for different values will therefor vary too.
+Since the values determine the accuracy with which accuracy the space is encoded, choosing these values purely 
+based on which combination achieves the highest classification accuracy is not feasible.
+The higher the degree of the spherical harmonics and radial basis functions, the more precise the element can be described.
+The higher number of coefficients might however come at the price of noise when trying to explain the prediction later on.
+A good balance between interpretability and accuracy was found with $l_{max}=n_{max}=3$. %TODO: Really? 
 
-Adapting $n_{max}$ and $l_{max}$ may further imprrove prediction accuracy.
-However since hyperparameter analysis is very computationally expensive and can take multiple days on a multi-GPU cluster, hyper paramerter analysis was focused on fixed $n_{max}, l_{max}$ values.
+Hyperparameter analysis was performed on different combinations of $n_{max}$, $l_{max}$.
+Since hyperparameter optimization is very computationally expensive, taking up to multiple days on modern high-performance 
+server hardware, the number of combinations that could be explored is limited.
 
 \subsection{Normalization}
 
 In a first step, the features generated by SNAP and the labels were normalized.
 Normalize means scaling both labels and features independently so that mean is equal to $0$ and the standard deviation is equal to $1$.
-Normalization helps the network to better adapt to the data and improves network stability to noise in the input data.
-% TODO: Ellaborate
+Normalization is performed on each feature independently of each other.
+This helps the network to generalize from the data better since no large biases have to be learned.
+
+Since the data is normalized, the output from the network will not be the activation barrier directly.
+Instead, the output needs to be scaled back to compute the performance of the network.
 
 \subsection{Convolutional Neural Network}
 
+Similar to the features generated by EFD, the output of SNAP can be shaped into a feature matrix again.
+Here, each layer will correspond to one species of atoms.
+Since the dataset the model is trained on consists of 12 different species of atoms, the feature matrix will have a height of 12.
+Each row will then hold the coefficients describing the density of this species around the iridium center.
+Depending on the choice of $n_{max}$ and $l_{max}$, the number of coefficients will change.
+
+Since a coefficient of the $k$-th row will correspond to $c^k_{nlm}$, meaning every coefficient in the same colum has the same spacial meaning,
+a convolutional neural network was the first idea to reduce the size of the input space and allow the network to learn structure in the input data.
+
+Since not every molecule in the dataset consists of every atom, the input matrix will generally be sparse.
+Rows that correspond to atoms not in the dataset will be filled with 0.
+A filter that learns the general structure of the space and that is moved over the different species, therefor 
+being able to ignore sparse inputs seemed to be a good choice.
+
+Using a hyperparameter optimization to find the ideal filter size and number of convolution layers however showed
+the a fully connected approach reaches higher accuracy than convolutional layers.
+The hyperparameter optimizer not only gravitated towards a small amount of filters, but also towards 
+the smallest possible filter size allowed in the hyperparameter space.
+
+In further optimization the idea of convolution layers was therefor dropped in favour of fully connected layers.
+
+\subsection{Fully connected neural network}
 
 
 \section{Comparison}

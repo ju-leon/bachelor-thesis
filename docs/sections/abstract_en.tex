@@ -13,17 +13,18 @@
 \Abstract
 
 Metal Catalysts are crucial to a variety of applications, from water splitting to CO2 reduction.
-Catalysts can be created by combining different parts of a molecule around a metal atom.
-Depending on the structure of the resulting ligand, the activation barrier will vary.
+Catalysts can be constructed by combining different ligands around a metal atom.
+Depending on the structure of the resulting element, the activation barrier will vary.
 
-Computing this activation barrier is highly complex and therefor very costly. 
-Machine learning can bridge the gap and allow for fast and easy computation of a ligands activation barrier.
-Additionally, using transfer learning approaches, other properties of the molecule can then be computed with limited effort.
+Computing this activation barrier is highly complex and therefore very costly. 
+Machine learning can bridge the gap and allow for fast prediction of a ligands activation barrier.
+The methods proposed here are capable of performing high accuracy predictions of a catalysts activation barrier based on
+its 3d shape.
 
-In this bachelor's thesis a machine learning model to predicting activation barriers from the 3D structure of a metal catalyst is found. 
-Different ways of encoding a catalysts into a format understandable for a neural notwork are proposed.
+Different ways of encoding a catalysts into a format understandable for a neural network are explored.
 Using the special structure of catalyst, the features extracted from the molecules are either fully or partly rotationally invariant.
-A neural network is then trained to predict the activation barrier from these features.
+Additionally, the features allow for a bi-directional mapping between feature space and chemical space.
 
-Using neural network explainers, the model is analyzed to find which part of the ligands structure are responsible for the activation barrier.
-This allows for intuition on how a catalyst might have to be changed for the activation barrier to change in a desired direction.
+A neural network is then trained to predict the activation barrier from these features.
+This neural network is then used to analyze what part of the catalyst molecule is responsible for the prediction of the model.
+With this information an intuition on how the structure has to be changed in order to lower the activation barrier can be given.
