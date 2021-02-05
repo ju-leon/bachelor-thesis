@@ -23,7 +23,7 @@ def get_radius(atom):
     """
     if atom in radii:
         return radii[atom]
-    else:
+    else:  
         radius = element(atom).vdw_radius / 100
         radii[atom] = radius
         return radius
