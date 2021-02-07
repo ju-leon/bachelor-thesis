@@ -47,6 +47,7 @@ import sys
 
 input_shape = 0
 
+
 def read_data(data_dir):
     barriers = dict()
 
@@ -170,7 +171,7 @@ def main():
 
     args = parser.parse_args()
 
-    ## Check if hyperparam optimization was run for given pair
+    # Check if hyperparam optimization was run for given pair
     if not path.exists("Hyperband_SNAP_" + str(args.nmax) + ":" + str(args.lmax)):
         print("Skipping " + str(args.nmax) + ":" + str(args.lmax))
         sys.exit()
@@ -185,6 +186,13 @@ def main():
     species = ["H", "C", "N", "O", "F", "P", "S", "Cl", "As", "Br", "I", "Ir"]
     nmax = args.nmax
     lmax = args.lmax
+
+    # Scale labels
+    labels = np.array(labels)
+    barrierScaler = StandardScaler()
+    barrierScaler.fit(labels.reshape(-1, 1))
+    labels = barrierScaler.transform(labels.reshape(-1, 1))
+    labels = labels.reshape(number_samples, args.augment_steps, -1)
 
     for rcut in [5, 10, 20, 30]:
         for test_split in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.95]:
@@ -209,38 +217,33 @@ def main():
             soapScaler.fit(features_soap)
             features_soap = soapScaler.transform(features_soap)
 
-            # Scale labels
-            labels = np.array(labels)
-            barrierScaler = StandardScaler()
-            barrierScaler.fit(labels.reshape(-1, 1))
-            labels = barrierScaler.transform(labels.reshape(-1, 1))
-
             # Reshape so all auguemented data for every sample are either in training or in test data
             features_soap = features_soap.reshape(
                 number_samples, args.augment_steps, -1)
 
             print(features_soap.shape)
 
-            labels = labels.reshape(
-                number_samples, args.augment_steps, -1)
-
             # Reserve 10% as validation
-            (features_soap, testX, labels, testY) = train_test_split(
+            (features_soap, testX, labels_split, testY) = train_test_split(
                 features_soap, labels, test_size=0.1, random_state=32)
 
             # Split the rest of the data
             (trainX, valX, trainY, valY) = train_test_split(
-                features_soap, labels, test_size=test_split, random_state=32)
+                features_soap, labels_split, test_size=test_split, random_state=32)
 
-            np.save("features_train_" + str(nmax) + ":" + str(lmax) + ".npy", trainX)
-            np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ".npy", trainY)
+            np.save("features_train_" + str(nmax) +
+                    ":" + str(lmax) + ".npy", trainX)
+            np.save("labels_train_" + str(nmax) +
+                    ":" + str(lmax) + ".npy", trainY)
 
-            np.save("features_val_" + str(nmax) + ":" + str(lmax) + ".npy", valX)
+            np.save("features_val_" + str(nmax) +
+                    ":" + str(lmax) + ".npy", valX)
             np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", valY)
 
             np.save("features_test_" + str(nmax) + ":" +
                     str(lmax) + ".npy", testX)
-            np.save("labels_test_" + str(nmax) + ":" + str(lmax) + ".npy", testY)
+            np.save("labels_test_" + str(nmax) +
+                    ":" + str(lmax) + ".npy", testY)
 
             trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
             valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
@@ -273,18 +276,19 @@ def main():
                 x=trainX,
                 y=trainY,
                 validation_data=(valX, valY),
-                epochs=2000,
+                epochs=20,
                 batch_size=1024,
                 verbose=2,
                 callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay),
-                        tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=200)]
+                           tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=200)]
             )
 
             # Save loss of current model
             save_loss(H, args.out_dir + "loss__" + file_identifier + ".pdf")
 
             # Scale back
-            train_y_pred = barrierScaler.inverse_transform(model.predict(trainX))
+            train_y_pred = barrierScaler.inverse_transform(
+                model.predict(trainX))
             train_y_real = barrierScaler.inverse_transform(trainY)
 
             val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
@@ -294,7 +298,7 @@ def main():
             test_y_real = barrierScaler.inverse_transform(testY)
 
             save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
-                        test_y_real, test_y_pred, args.out_dir + file_identifier + ".pdf")
+                         test_y_real, test_y_pred, args.out_dir + file_identifier + ".pdf")
 
             # Save R2, MAE
             r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
