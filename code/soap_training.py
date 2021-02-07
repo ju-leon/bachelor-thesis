@@ -70,6 +70,7 @@ def read_data(data_dir):
 
 
 def save_loss(history, location):
+    fig = plt.figure()
     plt.plot(history.history['loss'], label='loss')
     plt.plot(history.history['val_loss'], label='val_loss')
     plt.ylim([0, 1])
@@ -298,7 +299,7 @@ def main():
             test_y_real = barrierScaler.inverse_transform(testY)
 
             save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
-                         test_y_real, test_y_pred, args.out_dir + file_identifier + ".pdf")
+                         test_y_real, test_y_pred, args.out_dir + "scatter" file_identifier + ".pdf")
 
             # Save R2, MAE
             r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
