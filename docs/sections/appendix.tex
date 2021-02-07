@@ -120,11 +120,28 @@
     \tcp{Finish contour of last circle}
     $\C.\append \left( c_{max}, \alpha, 0 \right)$
   
-  \end{algorithm}
+\end{algorithm}
   
   
 
-\dots
-%% ---------------------
-%% | / Example content |
-%% ---------------------
+\begin{figure*}
+  \begin{multicols}{2}
+      \includegraphics[width=\linewidth]{figures/regression/snap/rot0.png}\par 
+      \includegraphics[width=\linewidth]{figures/regression/snap/rot90.png}\par 
+  \end{multicols}
+  \begin{multicols}{2}
+      \includegraphics[width=\linewidth]{figures/regression/snap/rot180.png}\par
+      \includegraphics[width=\linewidth]{figures/regression/snap/rot270.png}\par
+  \end{multicols}
+  \caption{Visualization of SNAP descriptor output for the same element over different rotations.}
+  \label{fig:snap_roation_out}
+\end{figure*}
+
+
+\begin{figure} [h]
+  \centering
+  \includegraphics[width=0.65\textwidth]{figures/regression/snap/network_3_3.png} 
+  \caption{Network architecture for SNAP regression network trained on $l_{max} = n_{max} =3$. 
+  }
+  \label{fig:transferlearn}
+\end{figure}

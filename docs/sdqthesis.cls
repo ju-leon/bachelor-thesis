@@ -261,3 +261,5 @@
 \usepackage{nameref}
 \DeclareMathOperator{\arctantwo}{arctan2}
 \usepackage{svg}
+
+\usepackage{multicol}
