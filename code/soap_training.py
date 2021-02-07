@@ -276,7 +276,7 @@ def main():
                 x=trainX,
                 y=trainY,
                 validation_data=(valX, valY),
-                epochs=20,
+                epochs=2000,
                 batch_size=1024,
                 verbose=2,
                 callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay),
