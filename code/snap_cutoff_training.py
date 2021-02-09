@@ -323,7 +323,7 @@ def main():
 
         # Save R2, MAE
         r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
-        file = open(args.out_dir + "out_delrad_" + str(args.augment_steps) + ".csv", "a")
+        file = open(args.out_dir + "out_delrad_" + str(args.del_rad) + ".csv", "a")
         file.write(str(args.del_rad))
         file.write(",")
         file.write(str(args.augment_steps))
