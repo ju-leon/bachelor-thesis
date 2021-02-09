@@ -196,7 +196,7 @@ def main():
     labels = labels.reshape(number_samples, args.augment_steps, -1)
 
     for rcut in [5, 10, 20, 30]:
-        for test_split in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.95]:
+        for test_split in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
             soap = dscribe.descriptors.SOAP(
                 species=species,
                 periodic=False,
@@ -224,7 +224,7 @@ def main():
 
             print(features_soap.shape)
 
-            # Reserve 10% as validation
+            # Reserve 10% as test
             (features_soap, testX, labels_split, testY) = train_test_split(
                 features_soap, labels, test_size=0.1, random_state=32)
 
@@ -232,19 +232,19 @@ def main():
             (trainX, valX, trainY, valY) = train_test_split(
                 features_soap, labels_split, test_size=test_split, random_state=32)
 
-            np.save("features_train_" + str(nmax) +
-                    ":" + str(lmax) + ".npy", trainX)
-            np.save("labels_train_" + str(nmax) +
-                    ":" + str(lmax) + ".npy", trainY)
+            #np.save("features_train_" + str(nmax) +
+            #        ":" + str(lmax) + ".npy", trainX)
+            #np.save("labels_train_" + str(nmax) +
+            #        ":" + str(lmax) + ".npy", trainY)
 
-            np.save("features_val_" + str(nmax) +
-                    ":" + str(lmax) + ".npy", valX)
-            np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", valY)
+            #np.save("features_val_" + str(nmax) +
+            #        ":" + str(lmax) + ".npy", valX)
+            #np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", valY)
 
-            np.save("features_test_" + str(nmax) + ":" +
-                    str(lmax) + ".npy", testX)
-            np.save("labels_test_" + str(nmax) +
-                    ":" + str(lmax) + ".npy", testY)
+            #np.save("features_test_" + str(nmax) + ":" +
+            #        str(lmax) + ".npy", testX)
+            #np.save("labels_test_" + str(nmax) +
+            #        ":" + str(lmax) + ".npy", testY)
 
             trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
             valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
@@ -303,7 +303,7 @@ def main():
 
             # Save R2, MAE
             r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
-            file = open(args.out_dir + "out.csv", "a")
+            file = open(args.out_dir + "out_" + str(args.augment_steps) + ".csv", "a")
             file.write(str(args.augment_steps))
             file.write(",")
             file.write(str(test_split))
@@ -320,7 +320,7 @@ def main():
             file.write("\n")
             file.close()
 
-            model.save(args.out_dir + "model__" + file_identifier + ".h5")
+            #model.save(args.out_dir + "model__" + file_identifier + ".h5")
 
 
 if __name__ == "__main__":
