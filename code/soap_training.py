@@ -170,6 +170,9 @@ def main():
     parser.add_argument('--lmax', default=3,
                         help='Size of test fraction from training data', type=int)
 
+    parser.add_argument('--rcut', default=3,
+                        help='Cutoff radius', type=int)
+
     args = parser.parse_args()
 
     # Check if hyperparam optimization was run for given pair
@@ -187,7 +190,7 @@ def main():
     species = ["H", "C", "N", "O", "F", "P", "S", "Cl", "As", "Br", "I", "Ir"]
     nmax = args.nmax
     lmax = args.lmax
-
+    rcut = args.rcut
     # Scale labels
     labels = np.array(labels)
     barrierScaler = StandardScaler()
@@ -195,132 +198,132 @@ def main():
     labels = barrierScaler.transform(labels.reshape(-1, 1))
     labels = labels.reshape(number_samples, args.augment_steps, -1)
 
-    for rcut in [5, 10, 20, 30]:
-        for test_split in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-            soap = dscribe.descriptors.SOAP(
-                species=species,
-                periodic=False,
-                rcut=rcut,
-                nmax=nmax,
-                lmax=lmax,
-                rbf="gto"
-            )
 
-            file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
-                lmax) + "_n=" + str(nmax) + "_split=" + str(test_split) + "_rcut=" + str(rcut)
+    for test_split in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+        soap = dscribe.descriptors.SOAP(
+            species=species,
+            periodic=False,
+            rcut=rcut,
+            nmax=nmax,
+            lmax=lmax,
+            rbf="gto"
+        )
 
-            # Create soap coefficients
-            atom_index = [[0]] * len(elems)
-            features_soap = soap.create_coeffs(elems, positions=atom_index)
+        file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
+            lmax) + "_n=" + str(nmax) + "_split=" + str(test_split) + "_rcut=" + str(rcut)
 
-            # Scale coefficents
-            soapScaler = StandardScaler()
-            soapScaler.fit(features_soap)
-            features_soap = soapScaler.transform(features_soap)
+        # Create soap coefficients
+        atom_index = [[0]] * len(elems)
+        features_soap = soap.create_coeffs(elems, positions=atom_index)
 
-            # Reshape so all auguemented data for every sample are either in training or in test data
-            features_soap = features_soap.reshape(
-                number_samples, args.augment_steps, -1)
+        # Scale coefficents
+        soapScaler = StandardScaler()
+        soapScaler.fit(features_soap)
+        features_soap = soapScaler.transform(features_soap)
 
-            print(features_soap.shape)
+        # Reshape so all auguemented data for every sample are either in training or in test data
+        features_soap = features_soap.reshape(
+            number_samples, args.augment_steps, -1)
 
-            # Reserve 10% as test
-            (features_soap, testX, labels_split, testY) = train_test_split(
-                features_soap, labels, test_size=0.1, random_state=32)
+        print(features_soap.shape)
 
-            # Split the rest of the data
-            (trainX, valX, trainY, valY) = train_test_split(
-                features_soap, labels_split, test_size=test_split, random_state=32)
+        # Take specified size for test and validation
+        (trainX, splitX, trainY, splitY) = train_test_split(
+            features_soap, labels, test_size=test_split, random_state=32)
 
-            #np.save("features_train_" + str(nmax) +
-            #        ":" + str(lmax) + ".npy", trainX)
-            #np.save("labels_train_" + str(nmax) +
-            #        ":" + str(lmax) + ".npy", trainY)
+        # Split the rest of the data
+        (testX, valX, testY, valY) = train_test_split(
+            splitX, splitY, test_size=0.5, random_state=32)
 
-            #np.save("features_val_" + str(nmax) +
-            #        ":" + str(lmax) + ".npy", valX)
-            #np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", valY)
+        #np.save("features_train_" + str(nmax) +
+        #        ":" + str(lmax) + ".npy", trainX)
+        #np.save("labels_train_" + str(nmax) +
+        #        ":" + str(lmax) + ".npy", trainY)
 
-            #np.save("features_test_" + str(nmax) + ":" +
-            #        str(lmax) + ".npy", testX)
-            #np.save("labels_test_" + str(nmax) +
-            #        ":" + str(lmax) + ".npy", testY)
+        #np.save("features_val_" + str(nmax) +
+        #        ":" + str(lmax) + ".npy", valX)
+        #np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", valY)
 
-            trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
-            valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
-            testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
-            trainY = trainY.flatten()
-            valY = valY.flatten()
-            testY = testY.flatten()
+        #np.save("features_test_" + str(nmax) + ":" +
+        #        str(lmax) + ".npy", testX)
+        #np.save("labels_test_" + str(nmax) +
+        #        ":" + str(lmax) + ".npy", testY)
 
-            global input_shape
-            input_shape = trainX[0].shape
+        trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
+        valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
+        testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
+        trainY = trainY.flatten()
+        valY = valY.flatten()
+        testY = testY.flatten()
 
-            print(input_shape)
+        global input_shape
+        input_shape = trainX[0].shape
 
-            tuner = kt.Hyperband(
-                get_model,
-                objective='val_mean_squared_error',
-                max_epochs=1200,
-                project_name="Hyperband_SNAP_" + str(nmax) + ":" + str(lmax)
-            )
+        print(input_shape)
 
-            best_hp = tuner.get_best_hyperparameters()[0]
+        tuner = kt.Hyperband(
+            get_model,
+            objective='val_mean_squared_error',
+            max_epochs=1200,
+            project_name="Hyperband_SNAP_" + str(nmax) + ":" + str(lmax)
+        )
 
-            model = get_model(best_hp)
+        best_hp = tuner.get_best_hyperparameters()[0]
 
-            opt = tf.keras.optimizers.Adam(learning_rate=0.001)
-            model.compile(loss="mean_squared_error", optimizer=opt)
+        model = get_model(best_hp)
 
-            # Train the model
-            H = model.fit(
-                x=trainX,
-                y=trainY,
-                validation_data=(valX, valY),
-                epochs=2000,
-                batch_size=1024,
-                verbose=2,
-                callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay),
-                           tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=200)]
-            )
+        opt = tf.keras.optimizers.Adam(learning_rate=0.001)
+        model.compile(loss="mean_squared_error", optimizer=opt)
 
-            # Save loss of current model
-            save_loss(H, args.out_dir + "loss__" + file_identifier + ".pdf")
+        # Train the model
+        H = model.fit(
+            x=trainX,
+            y=trainY,
+            validation_data=(valX, valY),
+            epochs=2000,
+            batch_size=1024,
+            verbose=2,
+            callbacks=[tf.keras.callbacks.LearningRateScheduler(step_decay),
+                        tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=200)]
+        )
 
-            # Scale back
-            train_y_pred = barrierScaler.inverse_transform(
-                model.predict(trainX))
-            train_y_real = barrierScaler.inverse_transform(trainY)
+        # Save loss of current model
+        save_loss(H, args.out_dir + "loss__" + file_identifier + ".pdf")
 
-            val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
-            val_y_real = barrierScaler.inverse_transform(valY)
+        # Scale back
+        train_y_pred = barrierScaler.inverse_transform(
+            model.predict(trainX))
+        train_y_real = barrierScaler.inverse_transform(trainY)
 
-            test_y_pred = barrierScaler.inverse_transform(model.predict(testX))
-            test_y_real = barrierScaler.inverse_transform(testY)
+        val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
+        val_y_real = barrierScaler.inverse_transform(valY)
 
-            save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
-                         test_y_real, test_y_pred, args.out_dir + "scatter" + file_identifier + ".pdf")
+        test_y_pred = barrierScaler.inverse_transform(model.predict(testX))
+        test_y_real = barrierScaler.inverse_transform(testY)
 
-            # Save R2, MAE
-            r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
-            file = open(args.out_dir + "out_" + str(args.augment_steps) + ".csv", "a")
-            file.write(str(args.augment_steps))
-            file.write(",")
-            file.write(str(test_split))
-            file.write(",")
-            file.write(str(args.nmax))
-            file.write(",")
-            file.write(str(args.lmax))
-            file.write(",")
-            file.write(str(rcut))
-            file.write(",")
-            file.write(str(r2))
-            file.write(",")
-            file.write(str(mae))
-            file.write("\n")
-            file.close()
+        save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
+                        test_y_real, test_y_pred, args.out_dir + "scatter" + file_identifier + ".pdf")
 
-            #model.save(args.out_dir + "model__" + file_identifier + ".h5")
+        # Save R2, MAE
+        r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
+        file = open(args.out_dir + "out_final.csv", "a")
+        file.write(str(args.augment_steps))
+        file.write(",")
+        file.write(str(test_split))
+        file.write(",")
+        file.write(str(args.nmax))
+        file.write(",")
+        file.write(str(args.lmax))
+        file.write(",")
+        file.write(str(rcut))
+        file.write(",")
+        file.write(str(r2))
+        file.write(",")
+        file.write(str(mae))
+        file.write("\n")
+        file.close()
+
+        #model.save(args.out_dir + "model__" + file_identifier + ".h5")
 
 
 if __name__ == "__main__":
