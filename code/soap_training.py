@@ -59,10 +59,10 @@ def read_data(data_dir):
 
     labels = []
     elems = []
-    for f in tqdm(os.listdir(data_dir + "coordinates_TS/")):
+    for f in tqdm(os.listdir(data_dir + "coordinates_molSimplify/")):
         if f.endswith(".xyz"):
-            elems.append(read(data_dir + "coordinates_TS/" + f))
-            labels.append(barriers[f[:-7]])
+            elems.append(read(data_dir + "coordinates_molSimplify/" + f))
+            labels.append(barriers[f[:-4]])
 
     labels = np.array(labels)
 
@@ -88,7 +88,7 @@ def save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred, test_y_real
                marker="o", c="C1", label="Training")
     ax.scatter(val_y_real, val_y_pred, marker="o", c="C3", label="Validation")
     ax.scatter(test_y_real, test_y_pred, marker="o",
-               c="C2", label="Validation")
+               c="C2", label="Testing")
     ax.set_aspect('equal')
     ax.set_xlabel("Calculated barrier [kcal/mol]")
     ax.set_ylabel("Predicted barrier [kcal/mol]")
@@ -323,7 +323,7 @@ def main():
         file.write("\n")
         file.close()
 
-        #model.save(args.out_dir + "model__" + file_identifier + ".h5")
+        model.save(args.out_dir + "model__" + file_identifier + ".h5")
 
 
 if __name__ == "__main__":
