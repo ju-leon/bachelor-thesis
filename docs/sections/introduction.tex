@@ -17,24 +17,27 @@
 %% | Example content |
 %% -------------------
 
-Metal Catalysts are crucial to a variety of applications, from water splitting to CO2 reduction.
-Catalyst are used in combination with chemical reactions to lower their activation energies.
-They have an activation energy that needs to be overcome in oder to start the reaction, the so called reaction barrier.
+Catalysts in combination with chemical reactions are used to speed up a reaction by lowering its activation energy. 
+Catalysts have an activation energy them self that needs to be overcome in oder to start the reaction, the so called reaction barrier.
 
 The reaction barrier depends on the structure of the catalyst, and varies greatly between different catalyst molecules.
 Intuitively no rule for the activation barrier can be found.
-Seemingly small changes in the catalysts shape can have a large influence on the catalysts activation barrier \ref{fig:struct-diff}.
-Knowing how to change catalyst molecules in order to lower their activation barrier is a difficult challenge, even to humans.
+Seemingly small changes in the catalysts shape can have a large influence on the catalysts activation barrier Figure~\ref{fig:struct-diff}.
+Knowing how to change catalyst molecules in order to lower their activation barrier is a difficult challenge, even to humans. %TODO: Elaborate
 While the activation barrier can be computed, this process is highly complex and takes a lot of computing power.
-This means computing the activation barrier for large dataset of catalysts is currently not feasible.
+This means computing the activation barrier for large datasets of catalysts is currently not feasible.
 \\
 In this Bachelor's thesis, different approaches to use machine learning to compute the activation barrier of catalyst molecules are explored.
 Multiple methods of encoding catalyst molecules into machine-understandable formats are proposed.
-Using a combination of machine learning techniques, mostly artificial neural networks, the activation barrier is predicted from the catalysts shape.
+Using artificial neural networks, the activation barrier is predicted from the catalysts shape.
 
 After being able to predict the activation barrier with high accuracy, different techniques to explain the 
 outputs of the neural network are used.
-This allows for intuition of which parts of the catalyst molecule contribute to the prediction of the activation barrier.
+Neural network explainers ave become popular in recent year for allowing an interpretation of the output
+a neural network produces. 
+This helps to better understand booth the network that is usually regarded as a black box, and the feature space.
+The explainers used here are simple gradient based methods, and SHAP explainers \cite{NIPS2017_7062}.
+This allows for intuition on which parts of the catalyst molecule contribute to the prediction of the activation barrier.
 This intuition may be helpful in further chemical analysis of the metal catalyst and can help to give the 
 chemist an idea on how an element needs to be changed in oder to lower it's activation barrier.
 \\
@@ -51,22 +54,25 @@ chemist an idea on how an element needs to be changed in oder to lower it's acti
 
 
 The metal catalysts used used here are constructed by combining different ligands around a central Iridium atom.
+As illustrated in Figure~\ref{fig:chemspace}, the central atom has multiple ports allowing different types of ligands to be attached.  
 This allows for quick generation of thousands of different catalyst molecules.
 By adding more ligands, the dataset can be increased in size with little effort.
 For all catalysts in the dataset the activation barrier, along with other properties, is then computed.
-Since calculating the activation barrier is very costly, a total of 1947 species with different structures are constructed.
+The dataset currently contains a total of 1947 different molecules.
+The structure, both chemical and spacial, and the activation barrier is know for every example in the dataset. 
 \\
 As with many machine learning tasks, feature selection is one of the big challenges in this project.
 While there are many universal techniques to extract features from chemical structures, they all have their drawbacks.
 
 In previous works, multiple different techniques are proposed to extract features from a catalyst molecule \cite{friederich_dos}.
-While these techniques are based on the chemical structure of a molecule, they do not take into account its 3D spacial structure.
+These techniques are based on the chemical structure of a molecule, but do not take into account its 3D spacial structure.
+This withholds a lot of information to the neural network that might help it to more accurately predict the activation barrier.
 The feature extracting methods developed in this bachelor thesis will rely heavily on the 3D structure of molecule.
 The idea being that the 3D structure plays an important role in the activation barrier, and encoding the 3D structure will enhance regression accuracy.
 Additionally encoding the 3D structure will allow to learn about the space surrounding the central 
 Iridium atom to understand the importance of location of the atoms in our molecule.
 
-In order to use feature explainers on the neural network, a mapping between feature space and chemical space needs to be possible.
+In order to use feature explainers on the neural network, a mapping back from feature space and chemical space needs to be possible.
 There currently is no widespread way to encode catalyst molecules that also allows for 
 reconstruction of the 3d space and by that an intuition on how the molecule needs to be changed in order ot lower the activation barrier.
 Since most chemical feature generators do not specifically focus on catalyst molecules,
@@ -74,17 +80,17 @@ but rather provide features for a wide variety of molecules, they generally tend
 This full rotational invariance means that information about the location of single atoms is often lost or only implicitly encoded in the features.
 A reconstruction of the molecule only from the features is therefore not possible.
 The descriptors proposed here allow make use of a catalysts special structure.
-This allows for the reconstruction of the 3d shape of the molecule and could in the future be used to also encode 
+This allows for partial reconstruction of the 3d shape of the molecule and could in the future be used to also encode 
 other properties of the molecule.
 \\
 The seemingly arbitrary distribution of activation barriers among catalyst molecules  was reason to use neural networks for prediction from the generated features.
 Neural networks have become the go-to method for high dimensional regression and classification for their ability to adapt well to complex data.
 \\
 A limitation of neural networks however is their fixed-size input space.
-Therefor a representation of the catalyst needs to be found that encodes our molecule into a fixed-size set of features.
+Therefor a representation of the catalyst needs to be found that encodes molecules into a fixed-size set of features.
 These features will then be fed into our neural network for training. 
 \\
-3D structural encoding however comes with its own set of challenges. 
+3D structural encoding comes with its own set of challenges. 
 One more general being neural networks sensitivity to rotation and positioning.
 Since a molecules activation barrier does not change depending on its rotation or location in space, 
 information about rotation and translation should ideally not be part of the molecules features.
@@ -97,9 +103,10 @@ Every catalyst has a reaction pocket attached to it's cental atom.
 This reaction pocket has a fixed position.
 With the vector from the center of the Iridium atom to the center of the reaction pocket, two more degrees of freedom can be removed.
 For the last degree of freedom, rotations around this vector, there is no natural way to get rid of it.
-
+%TODO: Figure
 Here, 2 different approaches to this last degree of freedom are explored.
-The first is a rotationally invariant description using fourier coefficients.
+The first is using a descriptor that is invariant under rotations around the lsat degree of freedom.
+This removes the need for further normalizations, since all features generated by this descriptor will be invariant.
 
 The second is using data augmentation to teach the neural network about all possible rotations.
 This means the molecule is rotated along the last remaining axis of freedom, and and multiple examples of the same molecule at different rotations are used as training examples for the neural network.
@@ -108,9 +115,15 @@ This ideally allows the network to learn the molecules structure independent of 
 
 \section{Dataset}
 
-The dataset contains 1947 examples of catalyst molecules.
-For each atom of the molecule, the location in space is given.
-For each molecule it's activation barrier is known.
+The dataset used for training and testing contains a total of 1947 samples.
+Each sample describes the 3D structure of one catalyst molecule, 
+holding the position for every atom in that molecule.
+Additional information about the molecule was precomputed, among it the reaction barrier focused on in this work \ref{fig:barriers}.
+The number of atoms forming one molecule varies between molecules.
+What's consistent is the central iridium atom and the reaction pocked, a single hydrogen atom, attached to the center.
+The global position and rotation of the molecule within the dataset is seemingly arbitrary.
+Global rotation and location of the element does not influence it's activation barrier.
+However the local positions of atoms in the molecule plays and important role in the activation barrier.
 
 \begin{figure}
   \centering
@@ -119,10 +132,16 @@ For each molecule it's activation barrier is known.
   \label{fig:barriers}
 \end{figure}
 
-The molecules were generated by combining ligands around a central Iridium atom as illustrated in \autoref{fig:chemspace}.
-The activation barrier was then calculated.
-Due to this combinatorial approach the dataset could later be increased with relatively low effort \ref{fig:chemspace}.
-Together this gives a dataset containing the structure and the associated activation barrier for 1947 Iridium catalysts.
+The dataset was constructed from a set of ligands.
+These ligands are placet around the iridium core in a specific order.
+There is a total of 3 ligand groups, with every group being able to attach in a different way to the metal center.
+By combining different ligands from these groups, catalysts are created \ref{fig:chemspace}.
+
+Due to this combinatorial approach the dataset could later be increased with relatively low effort.
+The biggest hurdle to increasing the dataset size is computing the activation barrier.
+This computation is highly complex and therefore not feasible for large datasets.
+However, generating a larger dataset could still be helpful when using transfer learning approaches to fine tune the network.
+This idea is further discussed in \ref{ch:Conclusion}.
 
 \begin{figure}
   \centering
@@ -133,20 +152,12 @@ Together this gives a dataset containing the structure and the associated activa
 
 When examining the dataset by hand, the connection between a molecules structure and it's activation barrier is not obvious.
 Seemingly small changes can have a big influence on it's activation barrier.
-
-A rule to guess the activation barrier from the molecules structure can not easily be found.
-
-Every single element in the dataset has consist of a number of atoms.
-The number of atoms forming one molecule varies between elements.
-Each atom has a unique position, other chemical properties can be associated with the atom, such as atmoic radius, eleoctromagnetivity and many more.
-The location and rotation of the elements in the dataset is seemingly arbitrary.
-Note that the global location and rotation of the molecule does not influnce it's activation barrier.
-Local changes in atomic position however can have effects on the activation barrier and other properties of the molecule.
-  
+A rule to guess the activation barrier from the molecules structure can not easily be found.  
 
 \section{Previous research}
 
-In previous approaches different machine learning methods were used to predict the activation barrier of elements.
+In previous approaches different machine learning methods were used to predict the activation barrier of the elements in this dataset.
+The features extracted from the elements focused on their atomic properties.
 However, the features extracted from the molecule did not take into account the spacial structure of the element.
 The elements were instead encoded by creating a graph from the chemical structure.
 The elements are then grouped by their distance from the metal center.
@@ -154,24 +165,30 @@ For each group of elements, different features are computed as sum of pairwise p
 Note that these features do not contain any information about the 3D location of the atoms.
 
 Using these autocorrelation features, a neural network and gaussian processes and other forms of regression were used to predict the activation barrier.
-Neural networks and gaussian processes both were able to predict the activation barrier within an error of $<1 kcal/mol$ for a test split of $10\%$
+Neural networks and gaussian processes both were able to predict the activation barrier within an error of $<1 kcal/mol$ for a test split of $10\%$ %TODO: Evtl genauer?
 
 Other than the obvious disadvantage of not encoding location information, another disadvantage is the lack of interpretability of results.
-While these features succeed at predicting reaction barriers, information what part of the molecule is contributing to the prediction is limited.
+While these features succeed at predicting reaction barriers, gaining 
+information about what part of the molecule is contributing to the prediction is limited or not possible.
+
+In a yet unpublished approach, the autocorrelation features were replaced by a graph structure of the molecule.
+On this graph structure, a graph convolutional neural network was trained.
+This network reached accuracies far beyond what could be achieved using autocorrelation features.
 
 The feature extractors introduced in this thesis aim to solve this problem by extracting features that allow for a
-partly reconstruction of the chemical space and thus knowing which region of the molecule contributes to a prediction.
+partial reconstruction of the chemical space.
+This helps to better understand the origin of a prediction in a spacial sense.
 
 Feature extraction is a common problem for machine learning methods in chemical spaces.
 Multiple approaches have been proposed for general molecule encoding, 
 ranging from encoding properties of molecules, such as the Coulomb Matrix encoder encoding electrostatic interaction of atoms \cite{PhysRevLett.108.058301}
 to encoding 3D structures of atomic environments \cite{Bart_k_2013}.
 
-3d structural encoders usually create a fully invariant features description.
+3D structural encoders usually create a fully invariant features description.
 In the case of SOAP proposed by \citeauthor{Bart_k_2013}, this is achieved by encoding information about the interaction of 
 different species rather than encoding the 3d space itself.
 Fully invariant 3d descriptors have the advantage of being universally applicable for any kind of molecule, since they have no requirements to the element being encoded.
-The disadvantages are that, once the features are generated, a transformation back to 3D space is not possible.
+The disadvantages are that, once the features are generated, a transformation back to 3D space is usually not possible.
 In many applications, this is not a problem since the generated features are used only for prediction of an elements properties.
 In our case, the features however should later allow us to interpret the 3D space surrounding the molecule and ideally give an idea on how the molecule can be changed to alter it's properties.
 
@@ -186,21 +203,37 @@ In point clouds approaches include representating the data as angles and distanc
 Since these features do not change depending on the rotation and translation of the points, the network does no need to 
 abstract away the rotational information of the data.
 While this method guarantees full rotational invariance, it requires extensive feature engineering.
-Some local rotations that might be helpful to the neural network can also go missing. %TODO: Remove?
-The EFD feature generator proposed here implements a fully rotationally invariant description by using 
-descriptor that can be normalized for rotation.
+Additionally, it may increase complexity of the features and in many cases 
+goes hand in hand with the loss of some data from the original dataset. %TODO: Remove?
+%The EFD feature generator proposed here implements a fully rotationally invariant description by using 
+%descriptor that can be normalized for rotation.
 
 A second approach to rotational invariance is data augmentation.
 In image recognition data augmentation has already become the go-to method.
 Data augmentation removes the need for extensive feature engineering.
 Instead, the training data is augmented along all axes of freedom.
 In the case of image recognition, this means rotating, scaling, and in some cases deforming the input images.
-By that, the dataset will be filled with more examples for every datapoint, and the model is will be able to learn to 
-abstract away these features. %TODO: Citation needed
-The SNAP feature generator proposed here produces a partially rotationally invariant output that needs to be augmented along one axis.
-All the augmentation steps are then fed to the networks in order to teach the network to abstract away the different rotations of the catalyst.
+By that, the dataset will be filled with more examples for every datapoint, and ideally the model is able to 
+abstract away these features. %TODO: Citation neededs
+%The SNAP feature generator proposed here produces a partially rotationally invariant output that needs to be augmented along one axis.
+%All the augmentation steps are then fed to the networks in order to teach the network to abstract away the different rotations of the catalyst.
 
 \section{Objectives}
+
+As with many machine learning tasks, using the raw data as input to machine learning models is not feasible.
+Features are therefore generated from the raw data that cen be fed be used to learn from.
+The typical workflow for machine learning in chemical fields reflects this approach.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=12cm]{figures/introduction/chem-descriptor.jpg}
+  \caption{Visualzation of feature generation and prediction from the generated features. 
+  A fixed size descriptor is generated from the structure. Using machine learning techniques, 
+  predictions are made from these features.
+  The feature generators propsed here should allow a partial inversion of this process to allow for interpretability of the results.
+  Reprinted from \cite{dscribe}.}
+  \label{fig:chemspace}
+\end{figure}
 
 This work can be grouped into 2 main objectives. 
 The first is to find a feature extractor that generates features from a catalyst molecule that ideally rotationally invariant.
@@ -212,10 +245,19 @@ to be adapted in order to change it's activation barrier is given.
 \subsection{Feature generation}
 
 The features should allow a regressor to make predictions from the euclidean space surrounding the central Iridium atom.
+
 Therefor features have to be of fixed length for all elements in the dataset.
+The amount of atoms in one element cannot influence the number of features.
+
 Ideally the number of features is as low as possible, helping the model to identify the relevant features better.
+The number of features cannot be too small as it should still contain all relevant information.
 For interpretability of the results, the features should allow for a partial or full reconstruction of the euclidean space they are encoding.
 This means, given the features, it should be possible to approximate the general shape of the molecule.
+
+To allow for computational exploration of the encoded space, the features should be continuos.
+Small changes in the density space should result in small changes in the 
+feature space. 
+This means hashing from chemical space to feature space is not viable.
 
 The global location and rotation of the element should not influence the features or have only limited influence on the features.
 
@@ -240,3 +282,6 @@ Using neural networks explainers, in  a last step the regions in 3d space that i
 This gives an idea on how different atoms in the dataset influence the prediction.
 Looking at the gradient of the input with respect to the activation barrier, an intuition on how the catalyst molecule needs to be 
 adapted in order to decrease the activation barrier can be given.
+
+This analysis is performed on SNAP features. 
+Due to the low resolution of SNAP features, the information that can be gained is limited.

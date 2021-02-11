@@ -30,16 +30,22 @@ A 3D representation can therefor not easily be computed from the generated featu
 
 The feature generators proposed here have the ability to partly reconstruct the 3D space they are encoding.
 In order to retain partial rotational invariance the special stricture of the input data is used.
-All catalyst molecules in out dataset have a central metal atom and a reaction pocket composed of a hydrogen atom attached to the metal center.
+All catalyst molecules in the dataset have a central metal atom and a reaction pocket composed of a hydrogen atom attached to the metal center.
 By the centers of these 2 atoms a unique axis is formed.
 This axis is used to align the molecules.
 
-The use of this special structure of catalyst molecules seems to be a novel approach.
+The use of this special structure of catalyst molecules to generate partly invariant features seems to be a novel approach.
+
+After alignment, two different approaches to feature generations are explored.
+The first method slices the molecule at certain heights.
+The slices are then described using a fully rotationally invariant descriptor.
+
+The second approach is to use a combination of different 3D basis functions to encode the space surrounding the central atom.
+Since this description is not fully invariant, data augmentation is used along the remaining axes of freedom.
 
 \section{Alignment of catalyst molecules}
 
 Every catalyst molecule $\mathbb{E}$ in the dataset has a central Iridium atom with position $p_{Ir} \in \mathbb{E}$.
-While for different kinds of metal catalysts Iridium might be replaced by a different metal, there will always be a metal center.
 We set out Iridium atom to be the center, and align all other atoms accordingly.
 
 $$ \forall p_i \in \mathbb{E}: p_i' = p_i - p_{Ir}$$
@@ -128,12 +134,12 @@ Here, $z_{start}, z_{end}$ are chosen so that all molecules from the dataset ful
 
 A slice is computed by getting the radius of every atom $i$ in the molecule at the slice height $z$ \ref{fig:slice3d}.
 
-$$ r_i(z) =\left\{\begin{array}{ll} \sqrt{R_i^2 - (z - p_i^R[2])^2} &, | z - p_i^R[2] |  > 0\\
+$$ r_i(z) =\left\{\begin{array}{ll} \sqrt{R_i^2 - (z - p_i^R[2])^2} &, | z - p_i^R[2] |  < R_i\\
   0 &, \text{otherwise}\end{array}\right.
-$$
+$$ %TODO: Der Betrag ist immer > 0 ???
 
 Here $R_i$ is the Van-der-Waals radius of element $i$, $p_i[2]$ is the $z$ component of the location vector.
-The slice is now constructed by drawing a circle with radius $r_i(z)$ around the $x,y$ coordinates for each atom for each slice \ref{fig:slice}.
+The slice is now constructed by drawing a circle with radius $r_i(z)$ around the $x,y$ coordinates for each atom for each slice Figure~\ref{fig:slice}.
 
 \begin{figure} [h]
   \centering
@@ -304,7 +310,7 @@ the rotation around $\psi$ as normalizing the rotation of the contour itself \ci
 The last step is to choose an order up to witch we want to approximate the contour.
 At the moment the infinite sum ensures a perfect approximation original contour. 
 By limiting the coefficients to an order $k_{max}$ we can set the number of coefficients describing our contour.
-Generally, the higher we choose our order, the better we can approximate small changes in the contour \ref{fig:slice}.
+Generally, the higher we choose our order, the better we can approximate small changes in the contour \ref{fig:slice-layered}.
 
 After normalizing, the values $b_1^* = c_1^* = 1$ will always be equal to 0, since we rotated the first ellipse to be aligned.
 We can therefore remove $b_1^*, c_1^*$ from the feature vector.
@@ -330,7 +336,7 @@ These features will be used for predictions of molecule in the next step.
   On the right the different slices making up on element are placed on top of each other. Slices without any volume are not rendered. 
   Wile the rotation is removed to keep it rotationally invariant, the offset from the center is encoded.
   }
-  \label{fig:slice}
+  \label{fig:slice-layered}
 \end{figure}
 
 \section{Feature generation using smooth normalized atomic positions}
@@ -340,12 +346,17 @@ and then combining a set of functions describing the 3D space around the metal c
 
 This method is partly similar to the Smooth Overlap of Atomic Positions (SOAP) descriptor, that produces a 
 fully rotational invariant description for the space surrounding one or more atomic centers \cite{Bart_k_2013}.
-The disadvantage of SOAP ist that the 3D environment cannot be reconstructed from the generated features.
+Specifically the gaussian smoothing of atomic positions and combination of radial basis functions with
+spherical harmonics to describe a 3D space is taken from SOAP.
+While SOAP describes the overlap of densities for different species, the goal here is to describe the density space directly.
+The disadvantage of SOAP is that due to the rotational invariance, the 3D environment cannot be reconstructed from the generated features.
 
 The Smooth Normalized Atomic Positions (SNAP) descriptor proposed here allows for a reconstruction of the 3D space from the coefficients, 
-while partly keeping the rotational invariance of SOAP. 
-In addition, instead of describing the overlap of species in the molecule, the
-density of different species in 3D space is encoded.
+while partly keeping the rotational invariance.
+Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts special struture.
+The SNAP descriptor therefor is less universal than SOAP. 
+In applications were no translation back to 3d space is required,
+in most instances SOAP should be chosen for it's fully rotationally invariant output.
 
 \subsection{SNAP requirements}
 
@@ -359,10 +370,28 @@ For other molecule classes, defining a natural axis might not be as trivial.
 When no clear axis of alignment can be found, the SNAP output may be augmented by rotating the input along all axis of freedom.
 If there are multiple axis of freedom SOAP may be preferable since in naturally offers a fully rotationally invariant description.
 
+Additionally, SNAP only encodes a local region within $r_{cut}$.
+Density outside this cutoff radius is not considered.
+Is a global description of the entire element is needed, SNAP might not be the best option, especially when 
+the size of the elements in the dataset varies a lot.
+
+
 \subsection{SNAP}
 
 Using the centered and aligned molecules, we will create the density space surrounding out central atom.
-Since the basis set we're using to describe the space is using spherical coordinates, the first step is to transform the cartesian into spherical coordinates.
+
+By generating 3D gaussian distributions for every atom in the element, we can calculate the density at any point within $r_{cut}$.
+For each species $Z$ in the dataset, the density at any point $p = (x,y,z)$ is described as
+
+$$\rho^Z(p) = \sum_i^{|Z|} e^{- \frac{1}{2\sigma^2} \vert p - R_i \vert^2 }$$ 
+
+The summation $i$ runs over all the atmos of that species. $R_i$ is the center of that atom.
+In further enhancements of the SNAP encoder, describing other molecular properties in the same way are thinkable.
+Even describing 3D features not associated with a single species but rather describing the interaction or overlap of species 
+or molecules are thinkable.
+
+Since the basis set we're using to describe the space is using spherical coordinates, from now on
+cartesian coordinated will be replaced by spherical coordinates.
 
 $$
 r = \sqrt{x^2 + y^2 + z^2}
@@ -372,21 +401,10 @@ r = \sqrt{x^2 + y^2 + z^2}
 \varphi = \arctan(y / x)
 $$
 
-Using 3D gaussian distributions for every atom in the element, we can calculate the density at any point within $r_{cut}$.
-For each species $Z$ in the dataset, the density at any point $(r, \theta, \varphi)$ is described as
-
-$$\rho^Z(r, \theta, \varphi) = \sum_i^{|Z|} e^{- \frac{1}{2\sigma^2} \vert r - R_i \vert^2 }$$ %TODO: Should r be bold(r)?
-%TODO: What is R_i??
-
-The summation $i$ runs over all the atmos of that species. $R_i$ is the center of that atom. %TODO: Is it?
-In further enhancements of the SNAP encoder, describing other molecular properties in the same way are thinkable.
-Even describing 3D features not associated with a single species but rather describing the interaction or overlap of species 
-or molecules are thinkable.
-
 The density space can then be expanded using a combination of basis functions.
 To expand the radial degrees of freedom, spherical harmonics are used.
 Spherical harmonics are a complete set of orthonormal basis functions describing the surface of a sphere.
-We use the Laplacian SphericalHarmonicas, defined as:
+We use the Laplacian Spherical Harmonicas, defined as:
 $$
 Y_{lm}(\theta, \varphi) = (-1)^m \sqrt{\frac{2l + 1}{4 \pi} \frac{(l - m)!}{(l + m)!}} P_{lm}\left(\cos(\theta) \right) e^{im\theta}
 $$
@@ -406,7 +424,7 @@ This gives us a way to encode a sphere around our central atom.
 \begin{figure} [h]
   \centering
   \includegraphics[width=0.5\textwidth]{figures/snap/sph-harm.png} % for .pdf files etc use \includegraphics{test.pdf}
-  \caption{Some spherical harmonics plotted on a sphere.}
+  \caption{Some spherical harmonics of low order plotted on a sphere. } %TODO: Add scale!!!
   \label{fig:sphharm}
 \end{figure}
 
@@ -475,7 +493,24 @@ The key difference between SNAP and other chemical descriptors is the bi-directi
 density space.
 From the coefficients, the density space encoded can be easily reconstructed.
 This allows for a partial reconstruction of the molecule from the features encoded by SNAP.
-‚
-When used in combination with machine learning techniques, this allows for computational exploration of chemical spaces.
-Generative algorithms that generate SNAP features are thinkable.
-These features could then be translated back to chemical space and used for chemical exploration of elements.
+
+However, due to the low number of radial basis functions and spherical harmonics usually used to describe an element, 
+the encoding of the density is far from perfect.
+While with an infinite amount of coefficients an perfect description of the space is thinkable,
+in reality the computational limits only allow for a rather low resolution of the density space \ref{fig:snap-density}. 
+\begin{figure} [h]
+  \centering
+  \includegraphics[width=1\textwidth]{figures/snap/density/dense.png} % for .pdf files etc use \includegraphics{test.pdf}
+  \caption{Visualization of the density reconstructed from $c_{nlm}^Z$ coefficients for different resolutions.
+  Top: $r_{cut} = 10$, bottom: $r_{cut} = 25$, left: $n_{max} = l_{max} = 2$, right: $n_{max} = l_{max} = 8$.
+  The density shown is visualizing the density for phosphorus only.
+  The phosphorus atom is the orange atom surrounded by the density cloud.
+  }
+  \label{fig:snap-density}
+\end{figure}
+
+This means that in many cases, the center of the encoded density and the center of the atom do not match.
+Especially when the element contains many atoms of one species, the descriptor struggles to fully encode the space.
+
+While despite these issues the prediction from SNAP features is still possible with high accuracy, it limits the ability to interpret the results.
+When using network explainers in combination with SNAP coefficients, this limited accuracy needs to be kept in mind.
