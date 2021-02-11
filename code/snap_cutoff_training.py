@@ -59,10 +59,10 @@ def read_data(data_dir):
 
     labels = []
     elems = []
-    for f in tqdm(os.listdir(data_dir + "coordinates_TS/")):
+    for f in tqdm(os.listdir(data_dir + "coordinates_molSimplify/")):
         if f.endswith(".xyz"):
-            elems.append(read(data_dir + "coordinates_TS/" + f))
-            labels.append(barriers[f[:-7]])
+            elems.append(read(data_dir + "coordinates_molSimplify/" + f))
+            labels.append(barriers[f[:-4]])
 
     labels = np.array(labels)
 
