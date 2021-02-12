@@ -235,19 +235,15 @@ def main():
         (testX, valX, testY, valY) = train_test_split(
             splitX, splitY, test_size=0.5, random_state=32)
 
-        #np.save("features_train_" + str(nmax) +
-        #        ":" + str(lmax) + ".npy", trainX)
-        #np.save("labels_train_" + str(nmax) +
-        #        ":" + str(lmax) + ".npy", trainY)
+        np.save(args.out_dir + "features_train_" + file_identifier + ".npy", trainX)
+        np.save(args.out_dir + "labels_train_" + file_identifier + ".npy", trainY)
 
-        #np.save("features_val_" + str(nmax) +
-        #        ":" + str(lmax) + ".npy", valX)
-        #np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", valY)
+        np.save(args.out_dir + "features_val_" + file_identifier + ".npy", valX)
+        np.save(args.out_dir + "labels_val_" + file_identifier + ".npy", valY)
 
-        #np.save("features_test_" + str(nmax) + ":" +
-        #        str(lmax) + ".npy", testX)
-        #np.save("labels_test_" + str(nmax) +
-        #        ":" + str(lmax) + ".npy", testY)
+        np.save(args.out_dir + "features_test_" + file_identifier + ".npy", testX)
+        np.save(args.out_dir + "labels_test_" + file_identifier +  ".npy", testY)
+
 
         trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
         valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
