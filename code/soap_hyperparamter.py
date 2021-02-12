@@ -47,6 +47,7 @@ import pickle
 
 input_shape = 0
 
+
 def read_data(data_dir):
     barriers = dict()
 
@@ -221,19 +222,25 @@ def main():
         number_samples, args.augment_steps, -1)
 
     (trainX, testX, trainY, testY) = train_test_split(
-            features_soap, labels, test_size=args.test_split, random_state=32)
+        features_soap, labels, test_size=args.test_split, random_state=32)
 
     (testX, valX, testY, valY) = train_test_split(
-            testX, testY, test_size=0.5, random_state=32)
+        testX, testY, test_size=0.5, random_state=32)
 
-    np.save("features_train_" + str(nmax) + ":" + str(lmax) + ".npy", trainX)
-    np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ".npy", trainY)
+    np.save("features_train_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", trainX)
+    np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
+            str(args.test_split) + ".npy", trainY)
 
-    np.save("features_val_" + str(nmax) + ":" + str(lmax) + ".npy", testX)
-    np.save("labels_val_" + str(nmax) + ":" + str(lmax) + ".npy", testY)
+    np.save("features_val_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", testX)
+    np.save("labels_val_" + str(nmax) + ":" + str(lmax) +
+            ":" + str(args.test_split) + ".npy", testY)
 
-    np.save("features_test_" + str(nmax) + ":" + str(lmax) + ".npy", valX)
-    np.save("labels_test_" + str(nmax) + ":" + str(lmax) + ".npy", valY)
+    np.save("features_test_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", valX)
+    np.save("labels_test_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", valY)
 
     trainX = trainX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
     testX = testX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
@@ -249,7 +256,8 @@ def main():
         get_model,
         objective='val_mean_squared_error',
         max_epochs=1200,
-        project_name="Hyperband_FINAL_SNAP_" + str(nmax) + ":" + str(lmax) + ":" + str(args.test_split)
+        project_name="Hyperband_FINAL_SNAP_" +
+        str(nmax) + ":" + str(lmax) + ":" + str(args.test_split)
     )
 
     tuner.search(trainX, trainY,
