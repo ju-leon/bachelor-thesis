@@ -516,7 +516,7 @@ For every configuration of $n_{max}$ and $l_{max}$, a networks were trained for 
 of tests splits and data augmentation steps.
 These networks were then evaluated by their performance with respect to the cutoff radius.
 
-Up to a cutoff radius of $10 \AA$, the mean network performance improved.
+Up to a cutoff radius of $10 \AA$, the mean network performance improved. %TODO: Rich
 At a training fraction of 80\%, the mean classification error among 
 all networks decreased from $0.889 \AA$ for a cutoff radius of $5 \AA$ to 
 $0.801 \AA$ for a cutoff radius of $10 \AA$.
@@ -531,16 +531,18 @@ Here, all atoms outside a cutoff sphere were removed from the element before pas
 The atoms were then encoded with a cutoff radius $2 \AA$ higher than the cutoff sphere to allow for a proper 
 encoding of atoms just inside the cutoff sphere.
 The networks were once again trained with the hyperparameters found in the initial hyperparameter analysis.
-The training was run for cutoff spheres of $2\AA, 4\AA, 6\AA, 10\AA, 15\AA$ resulting in $r_{cut}$ 
-of $4\AA, 6\AA, 8\AA, 12\AA, 17\AA$.
-The results for $r_{cut}=4$ showed a significantly higher error than the methods before.
-However for $r_{cut}=8$ the mean MAE over all networks trained on 80\% of the data was at $MAE = 0.543 \AA$. 
+The training was run for cutoff spheres of $2\AA, 4\AA, 6\AA, 10\AA, 15\AA, 20\AA$ resulting in $r_{cut}$ 
+of $4\AA, 6\AA, 8\AA, 12\AA, 17\AA, 22\AA$.
+For $r_{cut}=4$, no prediction was possible and the networks just predictied the mean of the data.
+This was to be expected since at this cutoff radius, only 20\% of the elements are encoded into the features.
+However for $r_{cut}=8$ the mean MAE over all networks trained on 80\% of the data was at $MAE = 0.834 \AA$. 
 A $r_{cut} = 8$,resulting in a cutoff sphere of $6 \AA$, 96\% of the atoms are included in the data. 
 The remaining 4\% fall outside of the cutoff sphere and are therefore ignored. 
 
-For $r_{cut}=12$ the mean MAE over all networks trained on 80\% of the data was the lowest so far 
-at $MAE = 0.539 \AA$. 
+For $r_{cut}=12$ the mean MAE over all networks trained on 80\% of the data was at $MAE = 0.836 \AA$. 
 A this cutoff radius, 100\% of the atoms are included in the data.
+While this accuracy is marginally higher, the difference is so small that is could 
+simply be explained by the optimizer falling into different local minima compared to $r_{cut}=8$. 
 
 This lead to the conclusion that, while all atoms in the dataset seem to have an effect on the prediction,
 choosing a tight $r_{cut}$ achieves the best prediction accuracies.
@@ -552,13 +554,13 @@ From now on, all cutoff radii will therefor be chosen at $r_{cut} = 12 \AA$.
 
 \begin{figure}[!htb]
   \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-all.png}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-all.png} %TODO: REPLACE!!!!
   \endminipage\hfill
   \minipage{0.3333\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-sphere.png}
   \endminipage\hfill
   \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut_12.png}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut_12.png} %TODO: REPLACE!!!
   \endminipage
   \caption{
   Networks trained on different cutoff radii. All networks are trained on a train fraction of 80\%.
@@ -602,10 +604,10 @@ This idea is further explored in \ref{ch:outlook}.
 
 \begin{figure}[!htb]
   \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-5.png}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-5steps-30per.png}
   \endminipage\hfill
   \minipage{0.3333\textwidth}
-  \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-30.png}
+  \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-30steps-30per.png}
   \endminipage\hfill  
   \minipage{0.3333\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/regression/snap/augmentation.png}
@@ -613,11 +615,13 @@ This idea is further explored in \ref{ch:outlook}.
   \caption{
   The predictions for a network on SNAP features for $n_{max}=9, l_{max}=3$ trained with 5 data augmentation steps (left) 
   and 20 augmentation steps (middle) for 4 randomly selected samples. 
-  The networks were trained on a train split of 80\%.
+  The continuos line is the prediction of the network, the dotted line is the calculated barrier.
+  The networks were trained on a train split of 70\%.
   On the right are the results for multiple models trained on different augmentation steps.
   All networks are trained on the same network architecture, at different train fractions.
   }
   \label{fig:snap_roation}
+
 \end{figure}
 
 
