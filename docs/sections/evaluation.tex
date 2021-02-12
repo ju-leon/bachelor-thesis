@@ -455,12 +455,35 @@ In further optimization the idea of convolution layers was therefor dropped in f
 
 In a next step, hyperparameter optimization was focused on fully connected layers.
 For different combinations of $n_{max}$ and $l_{max}$ hyperparameter optimizations were run.
+
+The hyperparameter optimizer was allowed to choose between 1 to 6 hidden layers.
+For each layer, the number of neurons, regularization rate and dropout rate could be chosen by the optimizer.
+Additionally, the optimizer had the option to add a batch normalization layer after each of the layers.
+The layers were then finished off with one neuron fully connected to the last hidden layer.
+
+The activation function for each of the layer was fixed to Relu activations.
+
+Hyperparameter analysis was then run using Keras Hyperband tuner.
+Keras Hyperband is an  implementation of the Hyperband algorithm propsed in \cite{li2017hyperband}.
+Hyperband focuses on an optimized search speed compared to other Hyperparameter optimization methods, such as
+Bayesian Optimization. %TODO: Mehr?
+
+Using the Hyperband Optimizer, the configurations discussed in the following sections were found.
+Since the hyperparameter space was limited, for example to the use of relu activation functions,
+the best performing models were then further enhanced manually.
+
+\paragraph{Feature size}
 The expectation was that the more accurate the density space would be described, the higher the prediction accuracy would be.
 However after a full hyperparameter optimization on a variety of combinations of $n_{max}$ and $l_{max}$,
 the differences in accuracy were not as significant as expected.
 While increasing the number of $n_{max}$ coefficients seemed to increase the prediction accuracy,
 overall the randoms of the training process seemed to have far higher influence on the models performance.
+The infleunce of $n_{max}$ seemed to dominate over the influence of $l_{max}$.
+Highest prediction accuracies where achieved by networks performing regression on features generated with $n_{max} > 6$.
 
+Since hyperparameter searches for are very costly, taking up multiple days on modern day cloud-computing hardware,
+hyperparameter analysis was run to an $l_{max} = 9$.
+Significantly increasing $n_{max}$ might further improve prediction accuracy.
 
 \begin{figure}[!htb]
   \minipage{0.3333\textwidth}
@@ -481,49 +504,124 @@ overall the randoms of the training process seemed to have far higher influence 
   \label{fig:snap_hyperparameter}
 \end{figure}
 
+\paragraph{Cutoff sphere}
+All hyperparameter searches were run with with a cutoff radius $r_{cut} = 20 \AA$.
+This cutoff sphere is large enough to fully fit every element of the dataset into it.
+However, due to the nature of the radial basis functions used, the resolution of atoms 
+further away from the center will decrease.
+Tests with different cutoff radii were therefore performed.
+The tests were run on the network architectures found by hyperparamter optimization.
 
-In return this means that for the final model selection, the choice of $n_{max}$ and $l_{max}$ is less important
-than initially though.
-The selection of these hyperparameters can therefore be focused on other criteria, and does not greatly infleunce prediction accuracy.
+For every configuration of $n_{max}$ and $l_{max}$, a networks were trained for a variety 
+of tests splits and data augmentation steps.
+These networks were then evaluated by their performance with respect to the cutoff radius.
 
-One noteable exception to this is the number of radial basis functions specified by $n_{max}$.
-Here, more radial basis functions seem to allow a higher prediction accuracy of the model \ref{fig:snap_hyperparameter}.
+Up to a cutoff radius of $10 \AA$, the mean network performance improved.
+At a training fraction of 80\%, the mean classification error among 
+all networks decreased from $0.889 \AA$ for a cutoff radius of $5 \AA$ to 
+$0.801 \AA$ for a cutoff radius of $10 \AA$.
+From there however, increasing the cutoff radius did not improve the accuracy further.
+This lead to the hypothesis that atoms closer to the metal center are more important to the activation barrier than atoms further away from the center.
+This hypothesis could also explain the slight increase in prediction error when further increasing the cutoff radius.
+Since the resolution of the feature space is limited, increasing the cutoff radius might have decreased the accuracy 
+with which the inner atoms are described in the features, thus decreasing the prediction accuracy.
 
+To verify this hypothesis, a second experiment was run.
+Here, all atoms outside a cutoff sphere were removed from the element before passing it on to the encoder.
+The atoms were then encoded with a cutoff radius $2 \AA$ higher than the cutoff sphere to allow for a proper 
+encoding of atoms just inside the cutoff sphere.
+The networks were once again trained with the hyperparameters found in the initial hyperparameter analysis.
+The training was run for cutoff spheres of $2\AA, 4\AA, 6\AA, 10\AA, 15\AA$ resulting in $r_{cut}$ 
+of $4\AA, 6\AA, 8\AA, 12\AA, 17\AA$.
+The results for $r_{cut}=4$ showed a significantly higher error than the methods before.
+However for $r_{cut}=8$ the mean MAE over all networks trained on 80\% of the data was at $MAE = 0.543 \AA$. 
+A $r_{cut} = 8$,resulting in a cutoff sphere of $6 \AA$, 96\% of the atoms are included in the data. 
+The remaining 4\% fall outside of the cutoff sphere and are therefore ignored. 
+
+For $r_{cut}=12$ the mean MAE over all networks trained on 80\% of the data was the lowest so far 
+at $MAE = 0.539 \AA$. 
+A this cutoff radius, 100\% of the atoms are included in the data.
+
+This lead to the conclusion that, while all atoms in the dataset seem to have an effect on the prediction,
+choosing a tight $r_{cut}$ achieves the best prediction accuracies.
+When looking at the nature of the encoding, this intuition is verified.
+Empty space that is indirectly included into the enocoders features.
+Since the encoder will try to encode a density of 0 in these regions, the features 
+need to include this information, and competing with the relevant information about the element.
+From now on, all cutoff radii will therefor be chosen at $r_{cut} = 12 \AA$.
 
 \begin{figure}[!htb]
-  \minipage{0.5\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/scatter_SNAP_4_4.png}
+  \minipage{0.3333\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-all.png}
   \endminipage\hfill
-  \minipage{0.46\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/rotation.png}
+  \minipage{0.3333\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-sphere.png}
+  \endminipage\hfill
+  \minipage{0.3333\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut_12.png}
+  \endminipage
+  \caption{
+  Networks trained on different cutoff radii. All networks are trained on a train fraction of 80\%.
+  The figures on the left and right show networks being trained on all atoms in the dataset.
+  For the figure in the middle, networks were trained on all data within a sphere the size of
+  $r_{cut} - 2$. Atoms outside this sphere where not encoded in the density space.
+  }
+  \label{fig:snap_hyperparameter}
+\end{figure}
+
+
+\paragraph{Sensitivity to rotation}
+Since snap features are not fully rotationally invariant, the networks ability to abstract rotation from the input is crucial.
+In order to teach the network about the possible rotations of an element, 
+the element is augmented by rotating it around the remaining axis of freedom, the $z$ axis.
+For every augmentation step, the rotated element is added to the training data.
+Tests with different augmentation steps were performed.
+All networks were trained on the previously found hyperparameters.
+The augmentation steps ranged from 5 evenly spaced rotations to 100 evenly spaced rotations.
+Both the training and the test data was augmented to allow for learning from the augmented data
+as well as to validate if the network was actually able to abstract away rotations.
+
+Even with only 5 data augmentation steps the networks achieved a mean prediction error of $MAE = 40 \AA$.
+The mean error over all networks decreased up to 40 augmentation steps.
+After 40 augmentation steps no further decrease in mean prediction error was observed ~\ref{fig:snap_roation_out}.
+For networks with higher data augmentation steps, the stability of the networks when trained on small train splits was higher.
+
+The stability higher stability of networks with larger data augmentations is an interesting property.
+While the hope was that higher numbers of data augmentation would allow the network to better abstract away rotation from the
+element, the results do not seem to support that hypothesis.
+Comparing the prediction of the network for different elements, the differences in prediction however is
+very similar between networks trained on 5 data augmentations and networks trained on 60 data augmentations.
+One interpretation here would be that the additional data points generated by augmenting the data help training the network,
+rather than teaching it about the different possible rotations of the network.
+This might explain why especially for lower train fractions the prediction accuracy is improved by more data augmentations.
+
+One way to verify this theory is to use transfer learning to pretrain the network.
+Since only the calculation of the activation barrier is costly, but not the generation of more elements,
+in the future the network might be pretrained on properties that are easy to compute with a large dataset of catalysts.
+This idea is further explored in \ref{ch:outlook}.
+
+\begin{figure}[!htb]
+  \minipage{0.3333\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-5.png}
+  \endminipage\hfill
+  \minipage{0.3333\textwidth}
+  \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-30.png}
+  \endminipage\hfill  
+  \minipage{0.3333\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/augmentation.png}
   \endminipage\hfill
   \caption{
-  The predictions for a network on SNAP features for $n_{max}=l_{max}=4$ with data augmentation on the left.
-  The different rotations for one sample result in slightly different predictions. The points therefor appear like small vertical 
-  lines. The influence of rotation is lower considering the overall distribution. 
-  On the right are the predictions of the network for different samples under 360 rotations.
-  The predictions are stable even for rotations not in the dataset.
+  The predictions for a network on SNAP features for $n_{max}=9, l_{max}=3$ trained with 5 data augmentation steps (left) 
+  and 20 augmentation steps (middle) for 4 randomly selected samples. 
+  The networks were trained on a train split of 80\%.
+  On the right are the results for multiple models trained on different augmentation steps.
+  All networks are trained on the same network architecture, at different train fractions.
   }
   \label{fig:snap_roation}
 \end{figure}
 
-Since snap features are not fully rotationally invariant, the networks ability to abstract rotation from the input is crucial.
-In order to teach the network about the possible rotations of an element, different rotations are used for training.
-In the tests here, 20 evenly spaced rotations are fed into the molecule.
-Changing the amount of rotations might increase prediction accuracy. 
-In the tests, the network seemed to be able t abstract the rotation away with high accuracy.
-For most samples, the prediction stayed within $\pm 1 kcal/mol$, while for some samples up to $\pm 1 kcal/mol$ 
-differences between the predictions were observed Figure~\ref{fig:snap_roation}.
 
-One hypothesis on why the prediction accuracy is seemingly stable to rotations is the way of encoding the density space.
-Since the encoding is only an approximation, small changes is rotation do not influence the output of the descriptor significantly.
-Specifically for the $c_{nlm}^Z$ coefficients encoding the first spherical harmonics, small changes in rotation
-should have minor effects Figure~\ref{fig:snap_roation_out}.
-Due to the symmetrical nature of the spherical harmonicas, even bigger rotations will eventually end up in a phase 
-they were originally encoded to.
-At certain rotations the phases will always align for some degree of spherical harmonics, limiting the differences in the
-generated features.
-
+\paragraph{Results}
 
 Even with slight variations in prediction accuracy, the overall results of regression performed on SNAP features is still promising.
 All models found during hyperparameter optimization for different $n_{max}, l_{max}$ were able to predict the reaction barrier with higher accuracy than any model so far.
@@ -553,7 +651,38 @@ Improving the networks stability to outliers could further increase regression a
 \section{Comparison}
 \label{sec:Evaluation:Comparison}
 
-\dots
-%% ---------------------
-%% | / Example content |
-%% ---------------------
+The neural networks proposed here were able to predict the activation barriers with high accuracies.
+In \cite{friederich_dos}, different Machine Learning approaches to the regression problem were introduced.
+While the dataset was the same, the features extracted from the molecules were different.
+The comparison of the results from \citetitle*{friederich_dos} and this thesis is therefor more 
+a comparison of feature extractors, and not a comparison of machine learning methods or network architectures.
+
+Their best neural network trained on 80\% of the data achieved a prediction accuracy of $MAE = 1.12 kcal/mol$ and a 
+coefficient of determination of $r^2 = 0.845$.
+The neural network was 4 layers deep and trained on their autocorrelation features.
+Autocorrelation features extract features from a graph representation of the chemical structure, but neglect the 
+3d structure of the molecule \cite{friederich_dos}.
+The best prediction accuracy was however in a yet unreleased paper by  a graph convolution neural network (GNN) on 
+a graph structure of the molecule.
+It achieved an accuracy of $MAE = 0.571 kcal/mol$ and $r^2=0.964$.
+These are the highest accuracies achieved on this dataset yet.
+While this was the state-of-the-art  to compare the models in this thesis to, the main objective was not to beat these numbers.
+The goal was rather to achieve similar performance with a feature descriptor that allowed for a mapping back from feature space to 3d space.
+This allows for an extensive interpretation of the results, which is impossible with current features.
+The SNAP features however not only allow for this analysis, but are also able to beat the accuracy of GNN models.
+Another important metric is the performance of the networks for different sizes of training data.
+The models performance will therefore be compared by their accuracy for different test split sizes.
+\\
+The first approach regression was using LEFD features.
+When training on 80\% of LEFD features, the best neural network achieved an accuracy of $MAE = 1.096 kcal/mol$ and $r^2=0.882$.
+While the accuracy is slightly higher than the best neural network in \cite{friederich_dos}, it still falls short 
+of the GNN.
+Interestingly, the accuracy of the model is very similar to the accuracy achieved by the neural network trained on autocorrelation 
+features.
+Additionally the autocorrelation features could be approximated from the LEFD features reasonably well.
+This could indicate that LEFD features and autocorrelation features describe
+similar information about the element that is relevant to the activation barrier.
+\\
+The best models trained on SNAP features were able to achieve accuracies well below the $0.5 kcal/mol$ barrier.
+While the final accuracies are heavily dominated by outliers, models trained on SNAP features were consistently
+able to achieve accuracies better than the best model so far.

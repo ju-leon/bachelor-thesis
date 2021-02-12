@@ -263,3 +263,5 @@
 \usepackage{svg}
 
 \usepackage{multicol}
+
+\usepackage{siunitx}

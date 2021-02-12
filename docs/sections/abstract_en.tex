@@ -12,19 +12,21 @@
 
 \Abstract
 
-Metal Catalysts are crucial to a variety of applications, from water splitting to CO2 reduction.
+Metal Catalysts are crucial to a variety of applications, from water splitting to CO2 reduction. %TODO: Besser fomulieren
 Catalysts can be constructed by combining different ligands around a metal atom.
 Depending on the structure of the resulting element, the activation barrier will vary.
 
 Computing this activation barrier is highly complex and therefore very costly. 
-Machine learning can bridge the gap and allow for fast prediction of a ligands activation barrier.
-The methods proposed here are capable of performing high accuracy predictions of a catalysts activation barrier based on
-its 3d shape.
+Machine learning can bridge the gap and allow for fast prediction of a catalysts activation barrier.
+The methods proposed here are capable of performing high accuracy predictions of the activation barrier based on
+the 3D space of the molecule.
 
 Different ways of encoding a catalysts into a format understandable for a neural network are explored.
 Using the special structure of catalyst, the features extracted from the molecules are either fully or partly rotationally invariant.
-Additionally, the features allow for a bi-directional mapping between feature space and chemical space.
+Additionally, the features allow for a semi bi-directional mapping between feature space and chemical space.
 
 A neural network is then trained to predict the activation barrier from these features.
-This neural network is then used to analyze what part of the catalyst molecule is responsible for the prediction of the model.
-With this information an intuition on how the structure has to be changed in order to lower the activation barrier can be given.
+\\
+
+In a last step, the neural network is used to analyze what parts of the catalyst responsible for the prediction of the model.
+With this information an intuition on how the structure has to be changed in order to lower the activation barrier can be learned.
