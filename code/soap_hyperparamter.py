@@ -161,7 +161,7 @@ def main():
     parser.add_argument('--test_split', default=0.2,
                         help='Size of test fraction from training data', type=float)
 
-    parser.add_argument('--augment_steps', default=20,
+    parser.add_argument('--augment_steps', default=30,
                         help='Number of augmentations around Z axis for every sample', type=int)
 
     parser.add_argument('--nmax', default=3,
@@ -170,7 +170,7 @@ def main():
     parser.add_argument('--lmax', default=3,
                         help='Size of test fraction from training data', type=int)
 
-    parser.add_argument('--rcut', default=10.0,
+    parser.add_argument('--rcut', default=12.0,
                         help='Size of test fraction from training data', type=float)
 
     args = parser.parse_args()
@@ -251,7 +251,7 @@ def main():
         get_model,
         objective='val_mean_squared_error',
         max_epochs=1200,
-        project_name="Hyperband_SNAP_" + str(nmax) + ":" + str(lmax)
+        project_name="Hyperband_FINAL_SNAP_" + str(nmax) + ":" + str(lmax)
     )
 
     tuner.search(trainX, trainY,
