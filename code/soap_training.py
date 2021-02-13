@@ -214,14 +214,14 @@ def main():
         file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
             lmax) + "_n=" + str(nmax) + "_split=" + str(test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
-        trainX = np.load(dir + "features_train_" + sample + ".npy")
-        trainY = np.load(dir + "labels_train_" + sample + ".npy")
-        ​
-        valX = np.load(dir + "features_val_" + sample + ".npy")
-        valY = np.load(dir + "labels_val_" + sample + ".npy")
-        ​
-        testX = np.load(dir + "features_test_" + sample + ".npy")
-        testY = np.load(dir + "labels_test_" + sample + ".npy")
+        trainX = np.load(args.out_dir + "features_train_" + sample + ".npy")
+        trainY = np.load(args.out_dir + "labels_train_" + sample + ".npy")
+
+        valX = np.load(args.out_dir + "features_val_" + sample + ".npy")
+        valY = np.load(args.out_dir + "labels_val_" + sample + ".npy")
+
+        testX = np.load(args.out_dir + "features_test_" + sample + ".npy")
+        testY = np.load(args.out_dir + "labels_test_" + sample + ".npy")
 
         trainX = np.concatenate((trainX, valX))
         trainY = np.concatenate((trainY, valY))
@@ -253,7 +253,7 @@ def main():
 
         model = get_model(best_hp)
 
-        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(8)[model_no]["learning_rate"]
+        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(8)[model_no]["learning_rate"])
         model.compile(loss="mean_squared_error", optimizer=opt)
 
         # Train the model
