@@ -255,12 +255,12 @@ def main():
             str(args.nmax) + ":" + str(args.lmax) + ":0.2"
         )
 
-        best_hp = tuner.get_best_hyperparameters()[0]
+        best_hp = tuner.get_best_hyperparameters(1)[0]
 
         model = get_model(best_hp)
 
-        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(8)[
-                                       model_no]["learning_rate"])
+        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(1)[
+                                       0]["learning_rate"])
         model.compile(loss="mean_squared_error", optimizer=opt)
 
         # Train the model
