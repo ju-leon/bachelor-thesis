@@ -287,7 +287,7 @@ def main():
 
         # Save R2, MAE
         r2, mae=reg_stats(testY, model.predict(testX), barrierScaler)
-        file=open(args.out_dir + "out_final.csv", "a")
+        file=open(args.out_dir + "out_final" + str(nmax) + "-" + str(lmax) + ".csv", "a")
         file.write(str(args.augment_steps))
         file.write(",")
         file.write(str(args.batch_size))
