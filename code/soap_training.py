@@ -179,7 +179,7 @@ def main():
     args = parser.parse_args()
 
     # Check if hyperparam optimization was run for given pair
-    if not path.exists("Hyperband_SNAP_FINAL_" + str(args.nmax) + ":" + str(args.lmax) + ":0.2"):
+    if not path.exists("Hyperband_FINAL_SNAP_" + str(args.nmax) + ":" + str(args.lmax) + ":0.2"):
         print("Skipping " + str(args.nmax) + ":" + str(args.lmax))
         sys.exit()
 
