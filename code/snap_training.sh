@@ -1,13 +1,9 @@
 #!/bin/bash 
 
-
-for RCUT in 12 20 8
+for BATCH in 2048 1024 512 256 128 64 32 16 8 4 2 1
 do
-	for NMAX in 2 3 4 5 6 7 8 9
-	do
-    		for LMAX in 2 3 4 5 6 7 8 9
-    		do
-        		python3 soap_training.py ../data/ ../out_$1/ --augment_steps=$1 --rcut=$RCUT --nmax=$NMAX --lmax=$LMAX
-    		done
-	done
+	python3 soap_training.py ../data/ ../out/ --augment_steps= --nmax=9 --lmax=3 --batch_size=$BATCH
+	python3 soap_training.py ../data/ ../out/ --augment_steps= --nmax=9 --lmax=3 --batch_size=$BATCH
+	python3 soap_training.py ../data/ ../out/ --augment_steps= --nmax=9 --lmax=3 --batch_size=$BATCH
+	python3 soap_training.py ../data/ ../out/ --augment_steps= --nmax=9 --lmax=3 --batch_size=$BATCH
 done
