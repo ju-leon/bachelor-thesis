@@ -216,13 +216,13 @@ def main():
 
         trainX = np.load(args.out_dir + "features_train_" +
                          str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
-        trainY = np.load(args.out_dir + "labels_train_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
+        trainY = np.load(args.out_dir + "labels_train_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
 
-        valX = np.load(args.out_dir + "features_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
-        valY = np.load(args.out_dir + "labels_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
+        valX = np.load(args.out_dir + "features_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
+        valY = np.load(args.out_dir + "labels_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
 
-        testX = np.load(args.out_dir + "features_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
-        testY = np.load(args.out_dir + "labels_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
+        testX = np.load(args.out_dir + "features_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
+        testY = np.load(args.out_dir + "labels_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
 
         trainX = np.concatenate((trainX, valX))
         trainY = np.concatenate((trainY, valY))
