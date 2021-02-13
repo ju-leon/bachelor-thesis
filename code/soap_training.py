@@ -174,7 +174,7 @@ def main():
                         help='Cutoff radius', type=int)
 
     parser.add_argument('--batch_size', default=400,
-                    help='Batch size', type=int)
+                        help='Batch size', type=int)
 
     args = parser.parse_args()
 
@@ -214,14 +214,15 @@ def main():
         file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
             lmax) + "_n=" + str(nmax) + "_split=" + str(test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
-        trainX = np.load(args.out_dir + "features_train_" + sample + ".npy")
-        trainY = np.load(args.out_dir + "labels_train_" + sample + ".npy")
+        trainX = np.load(args.out_dir + "features_train_" +
+                         str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
+        trainY = np.load(args.out_dir + "labels_train_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
 
-        valX = np.load(args.out_dir + "features_val_" + sample + ".npy")
-        valY = np.load(args.out_dir + "labels_val_" + sample + ".npy")
+        valX = np.load(args.out_dir + "features_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
+        valY = np.load(args.out_dir + "labels_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
 
-        testX = np.load(args.out_dir + "features_test_" + sample + ".npy")
-        testY = np.load(args.out_dir + "labels_test_" + sample + ".npy")
+        testX = np.load(args.out_dir + "features_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
+        testY = np.load(args.out_dir + "labels_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2 + ".npy")
 
         trainX = np.concatenate((trainX, valX))
         trainY = np.concatenate((trainY, valY))
@@ -246,18 +247,19 @@ def main():
             objective='val_mean_squared_error',
             max_epochs=1200,
             project_name="Hyperband_SNAP_FINAL_" +
-                str(args.nmax) + ":" + str(args.lmax) + ":0.2"
+            str(args.nmax) + ":" + str(args.lmax) + ":0.2"
         )
 
         best_hp = tuner.get_best_hyperparameters()[0]
 
         model = get_model(best_hp)
 
-        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(8)[model_no]["learning_rate"])
+        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(8)[
+                                       model_no]["learning_rate"])
         model.compile(loss="mean_squared_error", optimizer=opt)
 
         # Train the model
-        H=model.fit(
+        H = model.fit(
             x=trainX,
             y=trainY,
             validation_data=(valX, valY),
@@ -272,22 +274,23 @@ def main():
         save_loss(H, args.out_dir + "loss" + file_identifier + ".png")
 
         # Scale back
-        train_y_pred=barrierScaler.inverse_transform(
+        train_y_pred = barrierScaler.inverse_transform(
             model.predict(trainX))
-        train_y_real=barrierScaler.inverse_transform(trainY)
+        train_y_real = barrierScaler.inverse_transform(trainY)
 
-        val_y_pred=barrierScaler.inverse_transform(model.predict(valX))
-        val_y_real=barrierScaler.inverse_transform(valY)
+        val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
+        val_y_real = barrierScaler.inverse_transform(valY)
 
-        test_y_pred=barrierScaler.inverse_transform(model.predict(testX))
-        test_y_real=barrierScaler.inverse_transform(testY)
+        test_y_pred = barrierScaler.inverse_transform(model.predict(testX))
+        test_y_real = barrierScaler.inverse_transform(testY)
 
         save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
-                        test_y_real, test_y_pred, args.out_dir + "scatter" + file_identifier + ".png")
+                     test_y_real, test_y_pred, args.out_dir + "scatter" + file_identifier + ".png")
 
         # Save R2, MAE
-        r2, mae=reg_stats(testY, model.predict(testX), barrierScaler)
-        file=open(args.out_dir + "out_final" + str(nmax) + "-" + str(lmax) + ".csv", "a")
+        r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
+        file = open(args.out_dir + "out_final" +
+                    str(nmax) + "-" + str(lmax) + ".csv", "a")
         file.write(str(args.augment_steps))
         file.write(",")
         file.write(str(args.batch_size))
@@ -314,7 +317,7 @@ def main():
         file.write("\n")
         file.close()
 
-        plot_model(model, to_file=args.out_dir + "shape" + \
+        plot_model(model, to_file=args.out_dir + "shape" +
                    file_identifier + ".png", show_shapes=True, show_layer_names=False)
         model.save(args.out_dir + "model" + file_identifier + ".h5")
 
