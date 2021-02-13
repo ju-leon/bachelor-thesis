@@ -214,15 +214,20 @@ def main():
         file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
             lmax) + "_n=" + str(nmax) + "_split=" + str(test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
-        trainX = np.load(args.out_dir + "features_train_" +
+        trainX = np.load("features_train_" +
                          str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
-        trainY = np.load(args.out_dir + "labels_train_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
+        trainY = np.load("labels_train_" + str(nmax) + ":" +
+                         str(lmax) + ":" + "0.2" + ".npy")
 
-        valX = np.load(args.out_dir + "features_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
-        valY = np.load(args.out_dir + "labels_val_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
+        valX = np.load("features_val_" + str(nmax) + ":" +
+                       str(lmax) + ":" + "0.2" + ".npy")
+        valY = np.load("labels_val_" + str(nmax) + ":" +
+                       str(lmax) + ":" + "0.2" + ".npy")
 
-        testX = np.load(args.out_dir + "features_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
-        testY = np.load(args.out_dir + "labels_test_" + str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
+        testX = np.load("features_test_" + str(nmax) + ":" +
+                        str(lmax) + ":" + "0.2" + ".npy")
+        testY = np.load("labels_test_" + str(nmax) + ":" +
+                        str(lmax) + ":" + "0.2" + ".npy")
 
         trainX = np.concatenate((trainX, valX))
         trainY = np.concatenate((trainY, valY))
@@ -289,6 +294,7 @@ def main():
 
         # Save R2, MAE
         r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
+
         file = open(args.out_dir + "out_final" +
                     str(nmax) + "-" + str(lmax) + ".csv", "a")
         file.write(str(args.augment_steps))
@@ -303,17 +309,9 @@ def main():
         file.write(",")
         file.write(str(rcut))
         file.write(",")
-        file.write(str(r2_train))
+        file.write(str(r2))
         file.write(",")
-        file.write(str(mae_train))
-        file.write(",")
-        file.write(str(r2_val))
-        file.write(",")
-        file.write(str(mae_val))
-        file.write(",")
-        file.write(str(r2_test))
-        file.write(",")
-        file.write(str(mae_test))
+        file.write(str(mae))
         file.write("\n")
         file.close()
 
