@@ -27,8 +27,6 @@ ANNs are a composed of a set of interconnected neurons.
 Each neuron has a set of inputs $x_1 .. x_n$, a bias $b$, and an activation function $f(x)$.
 The output will be the result of the activation function applied to the sum of all inputs plus the bias.
 
-$$ y = f \left( \sum_i x_i + b \right) $$
-
 Neurons are grouped together in layers, where the output of each layer is connected to the input of the next one.
 For a single prediction, the example is applied to the input layer, the network is then flooded until the output layer is reached.
 In the case of regression used here, the value of the output layer is the prediction of the neural network.
@@ -80,59 +78,7 @@ In the case of regression used here, the value of the output layer is the predic
 \end{tikzpicture}
 
 
-
-% Listing 1: Tex for neural network layers
-\begin{tikzpicture}[
-    % define styles 
-    clear/.style={ 
-        draw=none,
-        fill=none
-    },
-    net/.style={
-        matrix of nodes,
-        nodes={ draw, circle, inner sep=10pt },
-        nodes in empty cells,
-        column sep=2cm,
-        row sep=-9pt
-    },
-    >=latex
-]
-% define matrix mat to hold nodes
-% using net as default style for cells
-\matrix[net] (mat)
-{
-% Define layer headings
-|[clear]| \parbox{1.3cm}{\centering Input\\layer} 
-   & |[clear]| \parbox{1.3cm}{\centering Hidden\\layer} 
-   & |[clear]| \parbox{1.3cm}{\centering Output\\layer} \\
-        
-$\alpha_{0}^{0}$  & |[clear]|        & |[clear]| \\
-|[clear]|         & $\alpha_{0}^{1}$ & |[clear]| \\
-$\alpha_{1}^{0}$  & |[clear]|        & |[clear]| \\
-|[clear]|         & |[clear]|        & |[clear]| \phantom{$a_{0}^{0}$} \\
-$\alpha_{2}^{0}$  & $\alpha_{1}^{1}$ & $\alpha_{0}^{2}$ \\
-|[clear]|         & |[clear]|        & |[clear]|  \phantom{$a_{0}^{0}$} \\
-$\alpha_{3}^{0}$  & |[clear]|        & |[clear]| \\
-|[clear]|         & $\alpha_{2}^{1}$ & |[clear]| \\
-$\alpha_{4}^{0}$  & |[clear]|        & |[clear]| \\ 
-};
-% left most lines into input layers
-\foreach \ai in {2,4,...,10}
-   \draw[<-] (mat-\ai-1) -- +(-2cm,0);
-% lines from a_{i}^{0} to each a_{j}^{1}
-\foreach \ai in {2,4,...,10} {
-   \foreach \aii in {3,6,9}
-       \draw[->] (mat-\ai-1) -- (mat-\aii-2);
-       }
-% lines from a_{i}^{1} to a_{0}^{2}
-\foreach \ai in {3,6,9}
- \draw[->] (mat-\ai-2) -- (mat-6-3);
-   
-% right most line with Output label
-\draw[->] (mat-6-3) -- node[above] {Output} +(2cm,0);
-\end{tikzpicture}
-
-Finding the right amount of layers and the right type of activation functions is a challenging part of neural network.
+Finding a good performing network architecture is a challenging part of neural network.
 Since generally no rule is known on what neural network architecture will work best on the given data, the space of possible networks needs to be explored.
 A variety of choices for the network architecture can be made, such as the amount of layers, size of the layers, type of activation functions, regularization, normalization, and many more.
 
@@ -143,19 +89,8 @@ This will decrease it's ability to generalize the data and make good predictions
 
 A measure to counteract overfitting is regularization.
 Regularization introduces a penalty term that punishes the network for extreme values.
-Specifically a regularization parameter $\lambda$ is introduced.
-When training the network a regularization term for every weight $w_i$ is added to the loss function.
-
-$$
-Loss_{regularized} = Loss +  \sum_i \lambda_i \cdot w_i^2 
-$$
-
-When the training algorithm calculates the derivative of the regularized loss function, it will generally gravitate towards smaller weights.
-Flatter weights result in a flatter regression reducing the ability of the noise to adapt to small noise in the input data.
-The hope is that outliers in the training data will be ignored and the relevant data will be abstracted.
-In theory, a regularization parameter $\lambda$ could be defined for every weight in the network.
-In practice, all weights in one layer are assigned the same regularization parameter.
-
+This causes the network to adapt less well to the training data, but in return can help with the network
+performance on previously unseen data.
 
 \begin{figure} [h]
     \centering
@@ -171,11 +106,51 @@ In practice, all weights in one layer are assigned the same regularization param
 \end{figure}
   
 To prevent overfitting while still getting good regression results, multiple network architectures need to be considered.
-The networks proposed here were found by trail and error first, and later improved by hyperparameter analysis.
+The networks proposed here were found by a manual exploration of the network architecture first.
+In a second step, hyperparameter analysis was run to find a good network architecture.
 
-%TODO: Introduce NNs, normalzation, regularization, overfitting, underfitting.
-% TODO: Regularization
-% TODO: Normaliztation blabla
+\paragraph{Technicalities}
+
+All networks were generated in Keras, an open-source deep learning library.
+Keras offers a high level Python API to create, train and analyse neural networks.
+
+To allow for better training and prediction results, all features and labels were standardized before being passed to the neural network.
+Standardizing is a process where each feature $f$ is scaled to independently so the mean over all samples in the dataset is 0, 
+and the every feature has unit variance.
+This can easily be achieved by indipendently subtracting the mean $\overline{f}$ over all samples, and dividing by the standard deviation $\sigma_f$.
+
+$$
+f_{norm} = \frac{f- \overline{f}}{\sigma_f}
+$$
+
+The same scaling is applied to the labels.
+This means the networks do not directly predict the activation barrier, but the networks prediction needs to be scaled back first.
+
+Hyperparameter optimization was performed using keras-tuner, a hyperparameter tuner for Keras.
+Keras tuner offerers a variety of different algorithms.
+In the hyperparameter optimizations performed here, Keras Hyperband was used.
+Keras Hyperband is an  implementation of the Hyperband algorithm propsed in \cite{li2017hyperband}.
+It focuses on an optimized search speed compared to other Hyperparameter optimization methods, such as
+Bayesian Optimization, by adaptive resource allocation and early stopping.
+
+Hyperparameter optimization took multiple hours for LEFD features, 
+and multiple days for SNAP features.
+Training and hyperparameter optimization was performed on the universtiy cluster %TODO: Notwendig?
+using a Nvidia Tesla V100-SXM2-32GBa GPU.
+
+During training and hyperparameter optimization, a test set was reserved.
+This test set was not used for training or validation, but only to evaluate the final performance of the networks.
+All data about network performance in this chapter is measured on the test set, unless specified otherwise.
+
+During training of a network it is common practice to reserve a validation split that is not used to train the network.
+Instead, the networks performance is measured on the validation data, and tuned to achieve similar accuracies on
+training and validation data.
+This helps to avoid overfitting in the network, since the network can no longer just memorize the training
+data, but instead has to achieve good performance on data not seen during training as well.
+
+This means we have a total of 3 datasets, one being used for training, the other being used to validate the networks
+performance during and after training, and the last being used after hyperparameter optimization to evaluate the final network
+performance.
 
 \section{Regression on fourier descriptor features}
 \label{sec:Evaluation:fourier}
@@ -418,16 +393,6 @@ Since the size of training examples rises linearly with the number of data augme
 high numbers of augmentations will drastically decrease training speeds.
 This will in effect also reduce the speed of hyperparameter optimization.
 
-\subsection{Normalization}
-
-In a first step, the features generated by SNAP and the labels were normalized.
-Normalize means scaling both labels and features independently so that mean is equal to $0$ and the standard deviation is equal to $1$.
-Normalization is performed on each feature independently of each other.
-This helps the network to generalize from the data better since no large biases have to be learned.
-
-Since the data is normalized, the output from the network will not be the activation barrier directly.
-Instead, the output needs to be scaled back to compute the performance of the network.
-
 \subsection{Convolutional Neural Network}
 
 Similar to the features generated by EFD, the output of SNAP can be shaped into a feature matrix again.
@@ -485,21 +450,22 @@ Since hyperparameter searches for are very costly, taking up multiple days on mo
 hyperparameter analysis was run to an $l_{max} = 9$.
 Significantly increasing $n_{max}$ might further improve prediction accuracy.
 
+%TODO: Redo with actual values
 \begin{figure}[!htb]
   \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/nmaxlmax.png}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/fixnl.png}
   \endminipage\hfill
   \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/lmax.png}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/fixl.png}
   \endminipage\hfill
   \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/nmax.png}
+    \includegraphics[width=1.0\textwidth]{figures/regression/snap/fixn.png}
   \endminipage
   \caption{
-  The $r^2$ values and $MAE$ for different $n_{max}$ and $l_{max}$.
-  The network architecture was optimized separately for each combination using hyperparameter optimization.
-  The best network was found for $n_{max}=8$ and $l_{max}=8$ with a $MAE=0.435$ and a $r^2 = 0.978$.
-  This could be an outlier due to a falling into a good local minima during either training or hyperparameter optimization.
+  Networks with specified $n_{max}$ and $l_{max}$ trained on different train fractions.
+  All networks were trained on the hyperparameters found for the corresponding $n_{max}$ and $l_{max}$.
+  Networks were trained with 20 data augmentation steps and a cutoff radius of $10 \AA$.
+  Hyperparameter search was run on a training split of 80\%.
   }
   \label{fig:snap_hyperparameter}
 \end{figure}
@@ -511,6 +477,14 @@ However, due to the nature of the radial basis functions used, the resolution of
 further away from the center will decrease.
 Tests with different cutoff radii were therefore performed.
 The tests were run on the network architectures found by hyperparamter optimization.
+Since the networks architecture is not fully optimized to the cutoff radii, the prediction accuracies
+of the networks were not up the levels found in fully hyperparameter optimized networks.
+However the assumption was made that good values for $r_{cut}$ on these not fully optimized architectures 
+will also translate to good values under fully hyperparameter optimized networks.
+This significantly decreased the number of hyperparameter search needed.
+Since hyperparameter search will take multiple days to finish, while networks with know hyperparameters
+can be trained in a matter of minutes, this meant a significant speedup.
+
 
 For every configuration of $n_{max}$ and $l_{max}$, a networks were trained for a variety 
 of tests splits and data augmentation steps.
@@ -553,21 +527,18 @@ need to include this information, and competing with the relevant information ab
 From now on, all cutoff radii will therefor be chosen at $r_{cut} = 12 \AA$.
 
 \begin{figure}[!htb]
-  \minipage{0.3333\textwidth}
+  \minipage{0.5\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-all.png} %TODO: REPLACE!!!!
   \endminipage\hfill
-  \minipage{0.3333\textwidth}
+  \minipage{0.5\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-sphere.png}
   \endminipage\hfill
-  \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut_12.png} %TODO: REPLACE!!!
-  \endminipage
   \caption{
   Networks trained on different cutoff radii. All networks are trained on a train fraction of 80\%.
-  The figures on the left and right show networks being trained on all atoms in the dataset.
-  For the figure in the middle, networks were trained on all data within a sphere the size of
-  $r_{cut} - 2$. Atoms outside this sphere where not encoded in the density space.
-  }
+  On the left a variety of networks with different $n_{max}, l_{max}$ trained on a test train split of 80\% is shown.
+  On the right are networks trained with a cutoff sphere outside of which all atoms are removed. 
+  The radius of the cutoff sphere is $r_{cut}-2$.  
+ }
   \label{fig:snap_hyperparameter}
 \end{figure}
 
@@ -588,19 +559,48 @@ The mean error over all networks decreased up to 40 augmentation steps.
 After 40 augmentation steps no further decrease in mean prediction error was observed ~\ref{fig:snap_roation_out}.
 For networks with higher data augmentation steps, the stability of the networks when trained on small train splits was higher.
 
-The stability higher stability of networks with larger data augmentations is an interesting property.
-While the hope was that higher numbers of data augmentation would allow the network to better abstract away rotation from the
-element, the results do not seem to support that hypothesis.
-Comparing the prediction of the network for different elements, the differences in prediction however is
-very similar between networks trained on 5 data augmentations and networks trained on 60 data augmentations.
-One interpretation here would be that the additional data points generated by augmenting the data help training the network,
-rather than teaching it about the different possible rotations of the network.
-This might explain why especially for lower train fractions the prediction accuracy is improved by more data augmentations.
+When looking a networks prediction over 360 different rotations, networks trained with higher data augmentation 
+are significantly more stable to rotation than networks trained on a smaller number of of rotations \ref{fig:snap_roation}.
+When comparing a network trained on 20 rotations to a network trained on just 5 rotations,
+the difference becomes clear.
+For the network trained on 5 rotations, for samples from the training data the prediction is very precise 
+for the 5 augmentation steps that were part of the training data, but diverges strongly in between the steps from the training data.
 
-One way to verify this theory is to use transfer learning to pretrain the network.
-Since only the calculation of the activation barrier is costly, but not the generation of more elements,
-in the future the network might be pretrained on properties that are easy to compute with a large dataset of catalysts.
-This idea is further explored in \ref{ch:outlook}.
+For the network trained on 20 rotations, the divergence is very limited.
+However in some cases, while the overall prediction accuracy is increased for the network trained on 
+more data augmentations, the accuracy for some rotations is more precise on the network trained on a lower number of augmentations.
+Since there is no way of knowing which rotation is the one with the closest to real prediction, in 
+a real world application therefor the network trained on a higher data augmentation size is prefreable.
+
+Between a augmentation size of 20 to 30, the networks ability to better abstract away rotation is stagnant.
+Augmenting the data by 20 to 30 steps therefor seems sufficient to teach the network about all possible rotations.
+Interestingly, for some networks while the ability to abstract away rotation no longer increases after 20 augmentation 
+steps, the overall performance increases slightly, especially for small training splits.
+
+One hypothesis here would be that the higher number of training data that comes with a bigger number of data augmentations
+helps the network to learn about the general structure of catalyst molecules.
+While the different rotations of the molecule do not include any new data, the still contain the 
+general shape of a catalyst, that might help the network learn about the general topology of the input data.
+The might be a hint that transfer learning with an enhanced dataset might be an option to further increase
+the prediction accuracy.
+In further iterations the test error might be improved by creating a second dataset with a variety of different catalysts molecules.
+Due to the combinatorial approach in which molecules surrounding Vaska's complex can be generated, 
+creating datasets with a large number catalyst molecules is relatively simple.
+The problem comes with calculating their activation barrier.
+The key advantage of a transfer learning approach to pre-train the model is that the activation barrier of the extended dataset does not have to be computed.
+Instead, properties related to the activation barrier that can be easily computed from the molecules structure are generated.
+In a first step, the network would then be taught to predict these east to compute features.
+
+In a second step, the networks topology would be slightly adapted to perform single values regression.
+However, the weights and biases will not be changed.
+The network is then trained again on the small dataset for which the activation barrier is known.
+
+This approach might help the network to gain more knowledge about the general structure of a catalyst molecule,
+and thus reduce overfitting.
+The hope is that with this approach the prediction accuracy will improve again.
+
+If this hypothesis holds true will have to be explored in further experiments.
+
 
 \begin{figure}[!htb]
   \minipage{0.3333\textwidth}
@@ -627,28 +627,34 @@ This idea is further explored in \ref{ch:outlook}.
 
 \paragraph{Results}
 
-Even with slight variations in prediction accuracy, the overall results of regression performed on SNAP features is still promising.
-All models found during hyperparameter optimization for different $n_{max}, l_{max}$ were able to predict the reaction barrier with higher accuracy than any model so far.
-With the best models for $l_{max}=n_{max}=8$ achieving accuracies of $MAE=0.435 kcal/mol$ and $r^2=0.978$.
-The hyperparameter optimization was performed on a training split of 80\%.
+With the data learned from the extensive hyperparameter and input space exploration, a final hyperparameter
+optimization was performed.
+This hyperparameter optimization took into account the values discussed previously, and therefore was run on 
+features  generated with $n_{max} = 9, l_{max} = 3, r_{cut}=12$.
+30 data augmentation steps were passed to the hyperparameter optimizer.
+For train fractions from 10\% to 90\% 9 separate hyperparameter optimizations were run 
+to ensure the optimal network architecture for each of the test splits.
 
-By manually improving the model after hyperparameter optimization, the accuracy could be increased further.
-This indicates that a bigger hyperparamter space or a smaller step size of the optimizer towards the local minima can 
-improve the results further.
+%TODO Disscuss differences in network achrichtectues
 
-The best network found after manual adjustment of the hyperparameters was at $n_{max}=l_{max}=3$.
-It achieved an accuracy of $MAE=0.376 kcal/mol$ and $r^2=0.980$ on a train split of 80\%.
+Even with slight variations in prediction accuracy due to rotations, the overall results of regression performed on SNAP features is still promising.
+All models found during hyperparameter optimization for different $n_{max}, l_{max}$ were able to predict the reaction barrier with higher accuracies in the
+range of the best models found so far.
+With the best models for $l_{max}=n_{max}=8$ achieving accuracies of $MAE=0.435 kcal/mol$ and $r^2=0.978$. %TODO: Verbessern
+
+The best network found for a train fraction of 80\% after manual adjustment of the hyperparameters was at $n_{max}=l_{max}=3$. %TODO: Verbessern
+It achieved an accuracy of $MAE=0.376 kcal/mol$ and $r^2=0.980$ on a train split of 80\%. %TODO: Verbessern
+%TODO: Verbessern
 The network used a total of 3 hidden fully connected layers, with an increasing number of neurons.
 BatchNormalization and dropout layers were used between the fully connected layers.
 Their placement was determined by the hyperparameter optimizer.
-Since the hyperparameter optimizer was only allowed to choose a between a limited number 
-of regularization rates and dropout rates, and also a limited number of batch size for training,
-optimization of these values manually further increased accuracy.
 
 Compared to other modes of encoding the data, SNAP seems to be especially susceptible to outliers.
 For all models, the regression accuracy is heavily influenced by a small number of samples with poor precision.
-Since the split between training and test dat is random, the overall accuracy of the model is 
+Since the split between training and test data is random, the overall accuracy of the model is 
 heavily influenced by the selection of samples in the test data.
+The same holds true for the randomness between training and validation data.
+
 Improving the networks stability to outliers could further increase regression accuracy.
 
 
@@ -656,8 +662,9 @@ Improving the networks stability to outliers could further increase regression a
 \label{sec:Evaluation:Comparison}
 
 The neural networks proposed here were able to predict the activation barriers with high accuracies.
-In \cite{friederich_dos}, different Machine Learning approaches to the regression problem were introduced.
-While the dataset was the same, the features extracted from the molecules were different.
+The reference values to the networks was given by \cite{friederich_dos}, where different Machine Learning 
+approaches to the regression problem were introduced.
+While the dataset was the same in \cite{friederich_dos}, the features extracted from the molecules were different.
 The comparison of the results from \citetitle*{friederich_dos} and this thesis is therefor more 
 a comparison of feature extractors, and not a comparison of machine learning methods or network architectures.
 
@@ -690,3 +697,177 @@ similar information about the element that is relevant to the activation barrier
 The best models trained on SNAP features were able to achieve accuracies well below the $0.5 kcal/mol$ barrier.
 While the final accuracies are heavily dominated by outliers, models trained on SNAP features were consistently
 able to achieve accuracies better than the best model so far.
+Another interesting property of models trained on SNAP is their ability to perform well with small amounts 
+of training data.
+Even with training fractions well below 50\% of the data, the network still achieved good accuracies.
+This could be partly due to the fact that the hyperparameter optimization was run for each split separately,
+ensuring a good fit of the model architecture to all the data in the training set.
+However even when training a network architecture found for a different test split, the 
+prediction accuracy still scales significantly better than other prediction methods.
+
+The biggest problem with SNAP features so far seems to be their sensitivity to outliers.
+While the majority of the elements in the dataset is predicted with very high accuracy, 
+there are some outlier with very poor performance.
+Depending on the application of the network, a network with a lower overall accuracy 
+that is less susceptible to outliers might be preferred.
+
+
+\section{Explaining the prediction}
+
+Traditionally neural networks are seen as a black-box approach to data analysis.
+The network is given a set of training data and trained to fit onto the data,
+the internals of the network however are set by the optimization algorithm.
+
+This makes it hard to interpret the origin of predictions of the network.
+Network explaining methods aim to help to understand the origin of a prediction in the features.
+Translating the features back into chemical space can help to better understand 
+the elements in the dataset and might give intuitions on how elements have to be adapted in order to change their activation barrier.
+
+Since SNAP features achieved significantly higher prediction accuracies,
+this analysis was focused on SNAP features only.
+
+\subsection{SHAP}
+
+The first approach to explaining the feature space was using the SHAP feature explainer.
+SHAP offers analysis of the influence of different features to the final prediction \cite{NIPS2017_7062}.
+This allows get an intuition on how different species influence the activation barrier.
+
+When using SHAP values on our model, we will be able to tell which feature contributes to the current prediction.
+The values generated by SHAP are a matrix the sitze of the input to the network.
+Summing over all SHAP values for one sample will give us the prediction of that sample.
+When labels for the features are  known, SHAP is often visualized as as features pushing in opposite direction with different force 
+to achieve the prediction of the model.
+In the case of unlabeled input matrices, we can visualized SHAP as positive for each one of out features.
+The SHAP values will not correspond to the activation barrier directly,
+but rather to the scaled activation barrier we used to train our network.
+
+Scaling issues also make the interpretation of the SHAP values vary hard.
+If we think back to the main objectives of SNAP, being able to convert the features back into 
+a 3D density was one of the key points.
+While we could use the formula describing the density space to transform the SHAP values 
+into a 3D density, it is unclear how the density generated by SHAP would have to be interpreted.
+
+Due to the nature of the SNAP encoder, a negative $c_{nlm}^Z$ values does not automatically 
+describe a negative density.
+This means a negative SHAP values for an element does not equate reduction in density
+at a point in space.
+In order to get information about the 3D space surrounding the atom, we'd have to convert back from 
+the SHAP values to density space.
+However here we run into the problem that SHAP values try to predict the output
+of an element, and therefor are in the scale of the output.
+If we were to convert SHAP values back to 3D, it is unclear how these scaling issues would 
+affect the result. 
+This uncertainty also prohibits a interpretation of the density space.
+
+The information we can extract from SHAP therefor is limited to feature space.
+
+In the case of Figure~\ref{fig:shap}, we can see that the features corresponding to bromine and arsenic seem to decrease the barrier.
+Interestingly the features encoding the absence of phosphorus seem to increase the barrier.
+The hypothesis here is that adding phosphorus to the element might help to reduce
+the barrier.
+If this holds true will have to be confirmed in further experiments.
+
+A good sign that the values have some validity is that Iridium never influences the barrier.
+Since iridium is present exactly once in all elements, it should not carry any information about the barrier,
+and therefore not influence the prediction at all.
+
+SHAP allows us to get some first intuition of the element and how it is atoms influence the barrier.
+However, the information we can gain is limited to a global representation of the element.
+
+Examining the density space for it's influence on the prediction is only possible if the scaling
+issues can be solved.
+Since the scaling issues did not seem to be easily solvable, a second attempt to explain the origin of the prediction
+was run using a gradient based method.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/evaluation/SHAP.png}
+    \caption{
+        Features($n_{max}=l_{max=3}, r_{cut}=12$) generated by the element on the right and the corresponding SHAP values.
+        The element has a calculated barrier of $10.2 kcal/mol$.
+        Because the activation barriers are scaled to achieve higher prediction accuracies,
+        the values our network predicts is $-0.494$ which scaled back results in a predicted activation 
+        barrier of $9.83 kcal/mol$.
+     }
+    \label{fig:shap}
+  \end{figure}
+  
+
+\subsection{Gradient explainer}
+
+The information we want to gain from the network is an intuition on
+how an element has to be changed in order to lower it's activation barrier.
+
+Let the model $N$ be a function from feature space $\mathbb{R}^n =: \mathbb{S}$ to the activation barrier of the element $\mathbb{R}^+_0$.
+Since we can also define a function from density space $\mathbb{D}$ to feature space $\mathbb{S}$,
+we can define a mapping from density space to the activation barrier.
+$$ \Psi : \mathbb{D} \to \mathbb{S} \to \mathbb{R}^+_0, e \mapsto \Psi(e) $$
+
+While this mapping is only an approximation, the previous chapters show that the 
+the accuracy of this approximation is very high.
+
+Looking at the derivative of $\Psi$, we get the gradient $\nabla \Psi$ that points in towards the steepest ascent.
+
+If $\mathbb{D} \to \mathbb{S}$ was a perfect bi-directional mapping, in theory we could follow the gradient until we reach 
+a local minima, an then translate back to density space.
+This would mean finding a element with similar properties but a lower activation barrier.
+This theoretical approach is not possible in practice.
+The first problem is the networks lack of understanding of the chemical space.
+A simple gradient-decent approach will therefore quickly result in illegal configurations 
+that are physically not possible.
+The second problem is the low resolution of the feature space.
+As shown before, in many cases the density encoding a single atom will not correspond perfectly to the location of this atom.
+This problem becomes even more severe when multiple atoms for one species need to be encoded.
+This means a perfect translation back from the features is not possible most of the time.
+
+Due to the limited resolution, looking at the gradient itself is more valuable.
+Instead of performing a gradient descent approach, we will look at the gradient for a single sample,
+and try to gain intuition for the gradient at this datapoint.
+When looking at the gradient, it is expected that molecules known to increase the barrier will generate a high density in the gradient.
+MOlecules known to decrease the barrier should generate a sub-zero density.
+This would indicate that removing elements generating a high density will decrease the barrier,
+while removing elements creating a negative density will increase the barrier.
+
+Since the gradient is determined by calculating the derivative of the the network $N$ with input $c$ in respect to the output $N(c): \mathbb{R^N} \to \mathbb{R}$
+the gradient vector gives us the direction of steepest ascent for a single sample.
+$$
+\nabla N: \mathbb{R}^n  \to \mathbb{R}^n 
+$$
+
+Since the gradient vector is the derivative of the $c_{nlm}^Z$ coefficients, 
+directly interpreting the gradient is challenging. 
+Due to the nature of the SNAP encoding, negative $c_{nlm}^Z$ coefficients do not necessarily correlate to negative densities and vice versa.
+
+Instead, we look at the difference in density when adding the gradient to the original features.
+Let $f \in \mathbb{S}$ be the feature vector generated by a sample, and $g = \nabla N(f)$ its gradient.
+
+If we think back to the SOAP descriptor, we can now compute the density $\rho^Z(r)$ for $f$ and $f + g$.
+The difference between these two densities should give us information about where in space density has negative or positive effects on our prediction.
+
+$$ \rho^Z_\nabla = \rho^Z_{f+g} -  \rho^Z_{f} $$
+
+This gives a 3d dimensional density space in which we can perform interpretations of the result. %TODO: Add figure with n_max=9, l_max=3
+Here we encounter the encoding limitations introduced earlier.
+While for some atoms, the encoding seems to work as expected, producing regions of negative density where we expect
+an increase in the activation barrier, for others the distribution is not precise enough for detailed analysis.
+In general, the detail of the encoding does not seem high enough for localized spacial interpretation of the gradient.
+Possible solutions to the resolution problem would be to dramatically increase the number of coefficients used to describe a single sample.
+This comes with it's own set of challenges, since the size of the features does not scale linear, but rather in $\mathcal{O}(n_{max} \cdot {l_{max}}^3)$.
+The cubic scale of $l_{max}$ implies a dramatic increase in the size of the training data, increasing computation time for booth feature generation and training of the regression model.
+
+While the local encoding does not seem the be accurate enough for detailed interpretation,
+when integrating over the entire density space, we can get a global influnce for each species.
+The output looks similar to what was achieved with SHAP values, but in this case it should allow us to interpret
+the influence of the density of a species, rather than just the influence of the features of this species.
+This means a high density of one species should indicate that adding more density of this species will increase the barrier.
+Similarly, a low density should indicate indicate that adding more density for this species will decreased the barrier.
+
+When looking at the integration over $\rho^Z_\nabla$, we can see it is heavily dominated by hydrogen and carbon
+in many cases.
+This contradicts the hypothesis on which species should mostly influence the activation barrier.
+Here the assumption was that hydrogen and carbon are more "filler-elements", and the activation 
+barrier is dominated other atoms.
+%TODO: Add figure
+It is unclear if the the chemical interpretation here should be that hydrogen and carbon play a bigger role in the activation
+barrier than what was expected, ot if this is an artifact of the neural network, an does not actually translate back into 
+the physical world.
