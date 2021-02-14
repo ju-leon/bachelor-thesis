@@ -251,15 +251,15 @@ def main():
             get_model,
             objective='val_mean_squared_error',
             max_epochs=1200,
-            project_name="Hyperband_SNAP_FINAL_" +
+            project_name="Hyperband_FINAL_SNAP_" +
             str(args.nmax) + ":" + str(args.lmax) + ":0.2"
         )
 
-        best_hp = tuner.get_best_hyperparameters(1)[0]
+        best_hp = tuner.get_best_hyperparameters(3)[0]
 
         model = get_model(best_hp)
 
-        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(1)[
+        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
                                        0]["learning_rate"])
         model.compile(loss="mean_squared_error", optimizer=opt)
 
@@ -315,8 +315,6 @@ def main():
         file.write("\n")
         file.close()
 
-        plot_model(model, to_file=args.out_dir + "shape" +
-                   file_identifier + ".png", show_shapes=True, show_layer_names=False)
         model.save(args.out_dir + "model" + file_identifier + ".h5")
 
 
