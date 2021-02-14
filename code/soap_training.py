@@ -278,6 +278,63 @@ def main():
         # Save loss of current model
         save_loss(H, args.out_dir + "loss" + file_identifier + ".png")
 
+        # Final optimization step
+
+        trainX = np.load("features_train_" +
+                         str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
+        trainY = np.load("labels_train_" + str(nmax) + ":" +
+                         str(lmax) + ":" + "0.2" + ".npy")
+
+        valX = np.load("features_val_" + str(nmax) + ":" +
+                       str(lmax) + ":" + "0.2" + ".npy")
+        valY = np.load("labels_val_" + str(nmax) + ":" +
+                       str(lmax) + ":" + "0.2" + ".npy")
+
+        trainX = np.concatenate((trainX, valX))
+        trainY = np.concatenate((trainY, valY))
+
+        train_split = 1 - test_split 
+        # Prevent errors when spliting size is illegal
+        if train_split >= 0.8:
+            train_split = 0.7999
+
+
+        (valX, trainX, valY, trainY) = train_test_split(
+            trainX, trainY, test_size=train_split / 0.8, random_state=4)
+
+        # Test set has size 0.2, so if training size is small, cut from test set have to be taken
+        if test_split < 0.2:
+            (valX, testX, valY, testY) = train_test_split(
+                testX, testY, test_size=test_split / 0.2, random_state=4)
+
+            trainX = np.concatenate((trainX, valX))
+            trainY = np.concatenate((trainY, valY))
+            
+
+        trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
+        testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
+        valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
+        trainY = trainY.flatten()
+        testY = testY.flatten()
+        valY = valY.flatten()
+
+
+        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
+                                       0]["learning_rate"])
+        model.compile(loss="mean_squared_error", optimizer=opt)
+
+        # Train the model
+        H = model.fit(
+            x=trainX,
+            y=trainY,
+            validation_data=(valX, valY),
+            epochs=2000,
+            batch_size=args.batch_size,
+            verbose=2,
+            callbacks=[tf.keras.callbacks.EarlyStopping(
+                monitor='val_loss', patience=200)]
+        )
+
         # Scale back
         train_y_pred = barrierScaler.inverse_transform(
             model.predict(trainX))
