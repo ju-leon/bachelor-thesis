@@ -233,14 +233,14 @@ def main():
             str(args.test_split) + ".npy", trainY)
 
     np.save("features_val_" + str(nmax) + ":" +
-            str(lmax) + ":" + str(args.test_split) + ".npy", testX)
+            str(lmax) + ":" + str(args.test_split) + ".npy", valX)
     np.save("labels_val_" + str(nmax) + ":" + str(lmax) +
-            ":" + str(args.test_split) + ".npy", testY)
+            ":" + str(args.test_split) + ".npy", valX)
 
     np.save("features_test_" + str(nmax) + ":" +
-            str(lmax) + ":" + str(args.test_split) + ".npy", valX)
+            str(lmax) + ":" + str(args.test_split) + ".npy", testX)
     np.save("labels_test_" + str(nmax) + ":" +
-            str(lmax) + ":" + str(args.test_split) + ".npy", valY)
+            str(lmax) + ":" + str(args.test_split) + ".npy", testY)
 
     trainX = trainX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
     testX = testX.reshape(-1, 12, int(features_soap.shape[2] / 12), 1)
@@ -261,7 +261,7 @@ def main():
     )
 
     tuner.search(trainX, trainY,
-                 validation_data=(testX, testY),
+                 validation_data=(valX, valY),
                  epochs=1500,
                  callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=20)])
 
