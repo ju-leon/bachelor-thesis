@@ -201,7 +201,7 @@ def main():
     labels = barrierScaler.transform(labels.reshape(-1, 1))
     labels = labels.reshape(number_samples, args.augment_steps, -1)
 
-    for test_split in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+    for test_split in [0.1, 0.2]:
         soap = dscribe.descriptors.SOAP(
             species=species,
             periodic=False,
@@ -290,13 +290,18 @@ def main():
         valY = np.load("labels_val_" + str(nmax) + ":" +
                        str(lmax) + ":" + "0.2" + ".npy")
 
+        testX = np.load("features_test_" + str(nmax) + ":" +
+                        str(lmax) + ":" + "0.2" + ".npy")
+        testY = np.load("labels_test_" + str(nmax) + ":" +
+                        str(lmax) + ":" + "0.2" + ".npy")
+
         trainX = np.concatenate((trainX, valX))
         trainY = np.concatenate((trainY, valY))
 
         train_split = 1 - test_split 
         # Prevent errors when spliting size is illegal
         if train_split >= 0.8:
-            train_split = 0.7999
+            train_split = 0.78
 
 
         (valX, trainX, valY, trainY) = train_test_split(
@@ -304,12 +309,12 @@ def main():
 
         # Test set has size 0.2, so if training size is small, cut from test set have to be taken
         if test_split < 0.2:
-            (valX, testX, valY, testY) = train_test_split(
+            (trainX2, testX, trainY2, testY) = train_test_split(
                 testX, testY, test_size=test_split / 0.2, random_state=4)
-
-            trainX = np.concatenate((trainX, valX))
-            trainY = np.concatenate((trainY, valY))
-            
+            print(trainX.shape)
+            print(trainX2.shape)
+            trainX = np.concatenate((trainX, trainX2))
+            trainY = np.concatenate((trainY, trainY2))
 
         trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
         testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
@@ -328,8 +333,8 @@ def main():
             x=trainX,
             y=trainY,
             validation_data=(valX, valY),
-            epochs=2000,
-            batch_size=args.batch_size,
+            epochs=50,
+            batch_size=128,
             verbose=2,
             callbacks=[tf.keras.callbacks.EarlyStopping(
                 monitor='val_loss', patience=200)]
