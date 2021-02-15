@@ -123,3 +123,5 @@ code/ann_20:3:3.h5
 code/Hyperband_SNAP_2:2/
 
 out/
+
+*.h5
