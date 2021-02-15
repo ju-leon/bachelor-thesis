@@ -21,6 +21,7 @@ Simple encoders extract well know features of molecules such as their mean elect
 Approaches by state-of-the-art chemical encoders include using graph convolutions to parse the chemical structure into fixed size features \cite{GNN_ENCODER}.
 Others try to encode interaction of different atoms or species of atoms into their features \cite{PhysRevLett.108.058301}
 The feature generators relevant to this project are spacial encoders.
+
 Spacial encoders in chemistry generally focus on describing the interaction of chemical elements within a certain radius, rather 
 than the space itself \cite{Bart_k_2013}.
 Since global rotation translation of an element generally does not influence it's chemical properties, 
@@ -29,7 +30,7 @@ This however usually limits the possibilities of reconstructing the input data.
 A 3D representation can therefor not easily be computed from the generated features.
 
 The feature generators proposed here have the ability to partly reconstruct the 3D space they are encoding.
-In order to retain partial rotational invariance the special stricture of the input data is used.
+In order to retain partial rotational invariance the special structure of the input data is used.
 All catalyst molecules in the dataset have a central metal atom and a reaction pocket composed of a hydrogen atom attached to the metal center.
 By the centers of these 2 atoms a unique axis is formed.
 This axis is used to align the molecules.
@@ -117,22 +118,25 @@ Elliptic fourier descriptors approximate a 2D contour with a set of coefficients
 The higher the order of the descriptor, the better a contour can be approximated.
 
 To be able to describe a 3D object using fourier contour descriptors the object is sliced at different $z$ locations.
-These slices can then be described using an EFD.
+For each slice, the contour is described using an EFD.
+This generates a fully rotationally invariant description.
+Since EFDs allow to approximate a contour with just a few coefficients, the generated features
+are also low dimensional.
 
 \subsubsection{Slicing}
 
 \begin{figure} [h]
   \centering
-  \includegraphics[width=0.5\textwidth]{figures/fourier/slice3d.png} % for .pdf files etc use \includegraphics{test.pdf}
+  \includegraphics[width=0.5\textwidth]{figures/fourier/slice3D.png} % for .pdf files etc use \includegraphics{test.pdf}
   \caption{A molecule is sliced by a plane. Every slice is taken at a different $z$ height.}
-  \label{fig:slice3d}
+  \label{fig:slice3D}
 \end{figure}
 
 Along the $z$-axis, starting from $z_{start}$ to $z_{end}$, the molecule is sliced in a distance of $z_{height}$.
 $z_{start}, z_{end}, z_{height}$ are tuning parameters.
 Here, $z_{start}, z_{end}$ are chosen so that all molecules from the dataset fully fit into the boundaries.
 
-A slice is computed by getting the radius of every atom $i$ in the molecule at the slice height $z$ \ref{fig:slice3d}.
+A slice is computed by getting the radius of every atom $i$ in the molecule at the slice height $z$ \ref{fig:slice3D}.
 
 $$ r_i(z) =\left\{\begin{array}{ll} \sqrt{R_i^2 - (z - p_i^R[2])^2} &, | z - p_i^R[2] |  < R_i\\
   0 &, \text{otherwise}\end{array}\right.
@@ -355,7 +359,7 @@ The Smooth Normalized Atomic Positions (SNAP) descriptor proposed here allows fo
 while partly keeping the rotational invariance.
 Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts special struture.
 The SNAP descriptor therefor is less universal than SOAP. 
-In applications were no translation back to 3d space is required,
+In applications were no translation back to 3D space is required,
 in most instances SOAP should be chosen for it's fully rotationally invariant output.
 
 \subsection{SNAP requirements}
@@ -487,7 +491,7 @@ $$ c_{nlm}^Z = \iiint_{R^3} g_{nl}(r) Y_{lm}(\theta, \varphi) \rho^Z(r, \theta, 
 % TODO: Integrate to infinity or r_cut?
 
 The 3 dimensional integral goes over all spherical coordinates within our cutoff sphere.
-The coefficients $c_{nlm}$ now describe the 3d space within a fixed size sphere.
+The coefficients $c_{nlm}$ now describe the 3D space within a fixed size sphere.
 \\
 The key difference between SNAP and other chemical descriptors is the bi-directional mapping between feature space and 
 density space.

@@ -166,7 +166,7 @@ However, an order that is chosen too high may increase the risk of overfitting,
 This problem is commonly referred to as "the curse of dimensionality".
 
 A simple numerical approach to finding the order with the highest prediction accuracy is not necessarily viable in this case.
-Since the ultimate goal is not to get the most accurate prediction possible, but instead discover which parts of 3d space 
+Since the ultimate goal is not to get the most accurate prediction possible, but instead discover which parts of 3D space 
 are responsible for prediction, an order that offerers reasonable high accuracy without being subject too to much noise when explaining the 
 prediction needs to be found. %TODO: Other reasons why order 10?
 
@@ -333,8 +333,8 @@ the number and size of fully connected layers, the regularization rate of these 
     For all layer heights a separate hyperparameter optimization wa run, resulting in different network architectures.
     All networks are trained using 80\% on the data. The $r^2$ scores and $MAE$ were evaluated later using a test dataset.
     The on the right the prediction of the best performing network found in the hyperparameter optimization step is plotted.
-    The best network was found using a input layer height of $0.2 \AA$ resulting in $75$ layers. 
-    The $MAE=1.096$ and $r^2=0.882$ are the highest accuracy so far.
+    The best network was found using a input layer height of $0.2 \AA$ resulting in $75$ fourier layers. 
+    The $MAE=1.096$ and $r^2=0.882$ are in the range of what could be achieved on autocorrelation features.
     }
     \label{fig:fourier_final}
 \end{figure}
@@ -354,10 +354,10 @@ but could also be to randomness when selecting training and test examples or ran
 The process shows that performing regression on fourier features is possible.
 The accuracy however is not significantly higher than the accuracy achieved on graph convolutions.
 Since the goal of this thesis is to learn from the 3D structure of the molecule, the similar performance 
-indicates that the information learned from the 3d structure is limited.
+indicates that the information learned from the 3D structure is limited.
 This assumption is further validated by the fact that the transfer learning approach that 
 basically eliminates spacial information about the network in the middle of the network, achieves similar accuracy to the 
-network trained on features that do not include any information about the 3d structure.
+network trained on features that do not include any information about the 3D structure.
 
 Due to these results, a different feature extractor, SNAP, was developed.
 
@@ -672,13 +672,13 @@ Their best neural network trained on 80\% of the data achieved a prediction accu
 coefficient of determination of $r^2 = 0.845$.
 The neural network was 4 layers deep and trained on their autocorrelation features.
 Autocorrelation features extract features from a graph representation of the chemical structure, but neglect the 
-3d structure of the molecule \cite{friederich_dos}.
+3D structure of the molecule \cite{friederich_dos}.
 The best prediction accuracy was however in a yet unreleased paper by  a graph convolution neural network (GNN) on 
 a graph structure of the molecule.
 It achieved an accuracy of $MAE = 0.571 kcal/mol$ and $r^2=0.964$.
 These are the highest accuracies achieved on this dataset yet.
 While this was the state-of-the-art  to compare the models in this thesis to, the main objective was not to beat these numbers.
-The goal was rather to achieve similar performance with a feature descriptor that allowed for a mapping back from feature space to 3d space.
+The goal was rather to achieve similar performance with a feature descriptor that allowed for a mapping back from feature space to 3D space.
 This allows for an extensive interpretation of the results, which is impossible with current features.
 The SNAP features however not only allow for this analysis, but are also able to beat the accuracy of GNN models.
 Another important metric is the performance of the networks for different sizes of training data.
@@ -687,29 +687,44 @@ The models performance will therefore be compared by their accuracy for differen
 The first approach regression was using LEFD features.
 When training on 80\% of LEFD features, the best neural network achieved an accuracy of $MAE = 1.096 kcal/mol$ and $r^2=0.882$.
 While the accuracy is slightly higher than the best neural network in \cite{friederich_dos}, it still falls short 
-of the GNN.
+of both the GNN and other machine learning models.
+At lower train fractions the accuracy decreases faster than other methods.
 Interestingly, the accuracy of the model is very similar to the accuracy achieved by the neural network trained on autocorrelation 
 features.
 Additionally the autocorrelation features could be approximated from the LEFD features reasonably well.
 This could indicate that LEFD features and autocorrelation features describe
-similar information about the element that is relevant to the activation barrier.
+similar information about the element that is relevant to the activation barrier. %TODO: Stimmt eher nicht, andere ML methoden sid ja besser
 \\
 The best models trained on SNAP features were able to achieve accuracies well below the $0.5 kcal/mol$ barrier.
 While the final accuracies are heavily dominated by outliers, models trained on SNAP features were consistently
-able to achieve accuracies better than the best model so far.
+able to achieve accuracies better than the best models trained on other features.
 Another interesting property of models trained on SNAP is their ability to perform well with small amounts 
 of training data.
 Even with training fractions well below 50\% of the data, the network still achieved good accuracies.
-This could be partly due to the fact that the hyperparameter optimization was run for each split separately,
-ensuring a good fit of the model architecture to all the data in the training set.
-However even when training a network architecture found for a different test split, the 
-prediction accuracy still scales significantly better than other prediction methods.
+At train fraction below $10\%$ the accuracy drastically decreases .
 
 The biggest problem with SNAP features so far seems to be their sensitivity to outliers.
 While the majority of the elements in the dataset is predicted with very high accuracy, 
 there are some outlier with very poor performance.
 Depending on the application of the network, a network with a lower overall accuracy 
 that is less susceptible to outliers might be preferred.
+
+\begin{figure}[!htb]
+  \minipage{0.5\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/regression/mae-compare.png}
+  \endminipage\hfill
+  \minipage{0.5\textwidth}
+  \includegraphics[width=1.0\textwidth]{figures/regression/r2-compare.png}
+  \endminipage\hfill  
+  \caption{
+    Learning curves of different machine learning methods on the same dataset.
+    Gaussian Process and Gaussian Boosting models were proposed in \cite{friederich_dos}.
+    The GCN is a unpublished result by \citeauthor{friederich_dos}.
+  }
+  \label{fig:snap_roation}
+
+\end{figure}
+
 
 
 \section{Explaining the prediction}
@@ -846,17 +861,51 @@ The difference between these two densities should give us information about wher
 
 $$ \rho^Z_\nabla = \rho^Z_{f+g} -  \rho^Z_{f} $$
 
-This gives a 3d dimensional density space in which we can perform interpretations of the result. %TODO: Add figure with n_max=9, l_max=3
+This gives a 3D dimensional density space in which we can perform interpretations of the result. 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/evaluation/GradientComp.png}
+  \caption{
+      Gradient of a model trained on features with $n_{max}=8, l_{max}=4$ translated into 3D space.
+      The element on the left has an activation barrier of $3.6 kcal/mol$, while the element on that right
+      has an activation barrier of $18.0 kcal/mol$.
+      The chemical structures of the molecules are identical except for the nitrogen(blue) arm of the element
+      on the left being exchanged for a fluorine(green) arm for the molecule on the right.
+      On the top, the gradient for nitrogen is plotted. On the bottom, the gradient for fluorine is plotted.
+      More angles for plot 1a can be found in Figure~\ref{fig:gradient-sides}.
+   }
+  \label{fig:snap-gradient}
+\end{figure}
+
 Here we encounter the encoding limitations introduced earlier.
-While for some atoms, the encoding seems to work as expected, producing regions of negative density where we expect
+For some atoms, the encoding seems to work as expected, producing regions of negative gradient density where we expect
 an increase in the activation barrier, for others the distribution is not precise enough for detailed analysis.
+Looking at Figure~\ref{fig:snap-gradient}, we can see a area of negative density in for the nitrogen plot 1a of element 1.
+The negativity is relativity strong in comparison with the gradient density for other elements.
+This indicates that increasing the amount of nitrogen atoms should decrease the activation barrier.
+This is confirmed by the data.
+When exchanging one nitrogen atom for fluorine, we can see the activation barrier increase from $3.6 kcal/mol$ to $18.0kcal/mol$.
+However, when looking at the other plots, the density plot becomes less clear.
+Since we know the addition of the fluorine atom increased the activation barrier, the expectation is that a region of strong positive
+density is indicated around the fluorine atom.
+While there is a region of positive density in the plot 2b, it is way off from the fluorine atom.
+This would indicate adding fluorine in this region will further increase the barrier.
+However adding more fluorine atoms in this region is chemically impossible. %TODO: Is it?
+\\
+
+It remains unclear what the proper interpretation of the 3D gradient density should be.
+While there could be some correlation between the gradient and the actual regions where density has to be added or
+removed to alter the activation barrier, differentiating between actual insight of the chemical properties and artifacts 
+of the mapping between feature space and activation barrier seems challenging.
+
 In general, the detail of the encoding does not seem high enough for localized spacial interpretation of the gradient.
 Possible solutions to the resolution problem would be to dramatically increase the number of coefficients used to describe a single sample.
 This comes with it's own set of challenges, since the size of the features does not scale linear, but rather in $\mathcal{O}(n_{max} \cdot {l_{max}}^3)$.
 The cubic scale of $l_{max}$ implies a dramatic increase in the size of the training data, increasing computation time for booth feature generation and training of the regression model.
+\\
 
 While the local encoding does not seem the be accurate enough for detailed interpretation,
-when integrating over the entire density space, we can get a global influnce for each species.
+when integrating over the entire density space, we can get an idea about the global influence for each species.
 The output looks similar to what was achieved with SHAP values, but in this case it should allow us to interpret
 the influence of the density of a species, rather than just the influence of the features of this species.
 This means a high density of one species should indicate that adding more density of this species will increase the barrier.
@@ -864,10 +913,27 @@ Similarly, a low density should indicate indicate that adding more density for t
 
 When looking at the integration over $\rho^Z_\nabla$, we can see it is heavily dominated by hydrogen and carbon
 in many cases.
-This contradicts the hypothesis on which species should mostly influence the activation barrier.
+For easier computation, instead of an integration we will computed the sum of density on a grid in space.
+The high influence of carbon and hydrogen contradicts the hypothesis on which species should mostly influence the activation barrier.
 Here the assumption was that hydrogen and carbon are more "filler-elements", and the activation 
 barrier is dominated other atoms.
-%TODO: Add figure
+
+\begin{figure}[!htb]
+  \minipage{0.5\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/evaluation/elem2-GRAD.png}
+  \endminipage\hfill
+  \minipage{0.5\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/evaluation/elem1-GRAD.png}
+  \endminipage\hfill
+  \caption{
+    Comparison of the gradient for molecule 1 (left) and 2 (right) for different species of atoms.
+  }
+  \label{fig:snap_global_gradient}
+
+\end{figure}
+
+
 It is unclear if the the chemical interpretation here should be that hydrogen and carbon play a bigger role in the activation
 barrier than what was expected, ot if this is an artifact of the neural network, an does not actually translate back into 
 the physical world.
+

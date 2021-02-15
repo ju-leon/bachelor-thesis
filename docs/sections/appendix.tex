@@ -16,16 +16,16 @@
 \label{chap:appendix}
 
 
+%\section{First Appendix Section}
+
 %% -------------------
 %% | Example content |
 %% -------------------
-\section{First Appendix Section}
-\label{sec:appendix:FirstSection}
+%\label{sec:appendix:FirstSection}
 		
 \setcounter{figure}{0}
 		
-
-\begin{algorithm}[p]
+\begin{algorithm}[h]
   \caption{\textsc{CircleSetContour}}\label{alg:CircleSetContour}
   
   
@@ -138,10 +138,55 @@
 \end{figure*}
 
 
-\begin{figure} [h]
-  \centering
-  \includegraphics[width=0.65\textwidth]{figures/regression/snap/network_3_3.png} 
-  \caption{Network architecture for SNAP regression network trained on $l_{max} = n_{max} =3$. 
+
+\begin{figure}
+  \begin{subfigure}[t]{.155\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/regression/model_3-3.png}
+    \caption{$n_{max}=3$, $l_{max}=3$}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.155\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/regression/model_9-3.png}  
+    \caption{$n_{max}=9$, $l_{max}=3$}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.155\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/regression/model_8-4.png}
+    \caption{$n_{max}=8$, $l_{max}=4$}
+  \end{subfigure}
+
+  \caption{Network architecture for best performing SNAP regression networks.
   }
   \label{fig:transferlearn}
 \end{figure}
+
+\begin{figure}
+  \begin{subfigure}[t]{.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/elem2-N.png}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/elem2-N-TOP.png}
+  \end{subfigure}
+
+  \medskip
+
+  \begin{subfigure}[t]{.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/elem2-N-SIDE.png}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/elem2-N-BACK.png}
+  \end{subfigure}
+  \caption{Gradient for nitrogen(blue) from multiple sides}
+  \label{fig:gradient-sides}
+\end{figure}
+
+

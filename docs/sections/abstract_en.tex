@@ -16,17 +16,17 @@ Metal Catalysts are crucial to a variety of applications, from water splitting t
 Catalysts can be constructed by combining different ligands around a metal atom.
 Depending on the structure of the resulting element, the activation barrier will vary.
 
-Computing this activation barrier is highly complex and therefore very costly. 
+Computing the activation barrier is highly complex and therefore very costly. 
 Machine learning can bridge the gap and allow for fast prediction of a catalysts activation barrier.
 The methods proposed here are capable of performing high accuracy predictions of the activation barrier based on
-the 3D space of the molecule.
+the 3D shape of the molecule.
 
-Different ways of encoding a catalysts into a format understandable for a neural network are explored.
+Different ways of encoding a catalysts into a format understandable to a neural network are explored.
 Using the special structure of catalyst, the features extracted from the molecules are either fully or partly rotationally invariant.
 Additionally, the features allow for a semi bi-directional mapping between feature space and chemical space.
 
 A neural network is then trained to predict the activation barrier from these features.
 \\
 
-In a last step, the neural network is used to analyze what parts of the catalyst responsible for the prediction of the model.
+In a last step, the neural network is used to analyze which parts of the catalyst are responsible for the prediction of the model.
 With this information an intuition on how the structure has to be changed in order to lower the activation barrier can be learned.

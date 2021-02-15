@@ -265,3 +265,5 @@
 \usepackage{multicol}
 
 \usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{subcaption}
