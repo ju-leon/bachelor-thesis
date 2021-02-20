@@ -12,7 +12,7 @@
 
 \chapter{Conclusion}
 \label{ch:Conclusion}
-In chapter \ref{ch:features} 2 different approaches at encoding a molecule into computer readable features are introduced.
+In chapter \ref{ch:features} 2 different approaches at encoding a molecule into machine learning compatible features are introduced.
 On the features produced by the descriptors, regression using neural networks is performed.
 
 While both methods allow for predictions with high accuracy, the results on SNAP features are more promising.
@@ -26,12 +26,11 @@ The species included in a layer are only implicitly encoded by their unique Van-
 atom itself is encoded.
 While SNAP also encodes the general shape of the element, it so for every species separately.
 
-However just from the shape alone the prediction accuracy is already on par with other machine learning methods performed on autocorrelation features.
+Just from features generated from the shape alone the prediction accuracy is already on par with other machine learning methods performed on autocorrelation features.
 This leads to the conclusion that the shape of a catalyst plays a significant role in it's activation barrier.
-Even without any direct information about the chemical properties, the regression on LEFD features achieved higher accuracies than
+Even without any direct information about the chemical properties, the regression on LEFD features achieved similar accuracies than
 the best neural networks on autocorrelation features that encode chemical properties \cite{friederich_dos},
 and SNAP neural networks achieve the highest accuracies to date on this dataset.
-This shows that machine learning is viable alternative to calculation of the activation barrier.
 
 One mayor concern about this interpretation is the relatively small size of the dataset in combination 
 with its combinatorial generation.
@@ -59,6 +58,22 @@ the prediction, the local interpretability suffered from the low resolution of t
 Getting an intuition about the influence of different species to the activation barrier is possible.
 If these intuitions hold true in the real world will have to be confirmed by further experiments.
 
+\section{Outlook}
+
+Since the size of the dataset is relatively small, the prediction accuracy might be further increased by 
+adding more examples of elements.
+Since the computation of the activation barrier for these elements might be too costly, instead the structure with some easy to compute 
+properties of the elements could be generated for each element.
+This would allow for the generation of large numbers of catalysts with different shapes.
+In a first step, a network could then be trained to predict some of the easy to compute properties of the catalysts from their shape.
+The hope is that this might allow the network to learn about the chemical structure of a catalyst.
+In a second step, the network architecture would then be slightly adapted to now predict the activation barrier.
+However the weights and biases for layers that are kept should not be changed.
+The network is then trained on the small dataset where the activation barrier for each element is known.
+In the hope that the first training iteration helped the network better understand the chemical structure of the element,
+this might help to find a better local minima for the network, and therefore increase the prediction accuracy.
+\\
+
 If a local interpretation of the molecule is required, SNAP might have to exchanged in favour of a higher resolution 
 feature generator.
 Other methods of encoding 3D spaces could include voxel representations.
@@ -70,21 +85,18 @@ Data augmentation on 3D voxel representations in convolutional neural networks s
 other fields \cite{7353481}.
 Voxel representations could therefore be a possible solution to further increasing interpretability of the model.
 
-\section{Outlook}
-
-The possibility of mapping both ways between the real world and SNAP features is what set the SNAP feature generator apart 
-from many other chemical feature generators.
-It allows for many different approaches to computational element discovery.
+The possibility of mapping both ways between the real world and features opens up new possibilities from 
+used in other areas of machine learning.
+It allows for many different approaches to better understand properties of chemical elements, 
+and might help to computational element discovery.
 \\
-Another area where SNAP features could be used is auto encoders or generative adversarial neural networks (GANs).
+When we can understand the features produced from the chemical space,
+using neural network based techniques such as auto encoders or generative adversarial neural networks (GANs) are thinkable.
 Both autoencoders and GANs are machine learning methods that can be used to produce never seen before data with similar properties
 to the training data.
-GANs and autoencoders have recently become very popular in image synthesis for their ability to generate synthetic images 
-virtually indistinguishable from real pictures \cite{karras2019stylebased} .
-Using these techniques, but applying them to SNAP features of catalysts, rather than to images, synthesis 
-of catalyst molecules is thinkable.
+For image generation, GANs and autoencoders have proven to generate output that is virtually indistinguishable from real data \cite{karras2019stylebased} .
+Using these techniques, but applying them to features of catalysts, rather than to images, computational generation of catalyst molecules is thinkable.
 The approach is again limited by the accuracy of mapping between chemical space and feature space.
-Another factor to be considered is if SNAP features actually encode all relevant information needed.
 
 While the accuracies achieved by the models trained on SNAP features indicate that 
 the majority of information needed to predict the activation barrier is encoded into the SNAP features, this does
@@ -93,10 +105,7 @@ In the future, the SNAP features might be aggregated with other properties of th
 Possible ways to add more information to the SNAP features is to encode the space surrounding the 
 central atom in the same way it is encoded now, but instead of encoding density information encoding 
 other molecular properties, such as electro negativity.
-
-While convolution layers did not prove effective in for the current SNAP features,
-when changing the feature space encoded by snap, and therefor the dimensionality of the input vector,
-convolutions might become relevant again.
+The low resolution of the SNAP descriptor will remain a challenge.
 
 In conclusion the SNAP feature extractor shows that data augmentation is possible in chemical spaces, and therefore 
 feature generators that allow for a bi-directional mapping between features and chemical space can achieve similar or higher

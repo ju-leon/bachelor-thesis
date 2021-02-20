@@ -267,3 +267,7 @@
 \usepackage{siunitx}
 \usepackage{graphicx}
 \usepackage{subcaption}
+
+\usepackage{amsmath}
+\let\oldAA\AA
+\renewcommand{\AA}{\text{\normalfont\oldAA}}
