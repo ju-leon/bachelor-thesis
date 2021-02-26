@@ -24,13 +24,13 @@ While the LEFD descriptor only describes the overall shape of the element, it do
 type of atom in each layer.
 The species included in a layer are only implicitly encoded by their unique Van-der-Waals radius, but no explicit information about the 
 atom itself is encoded.
-While SNAP also encodes the general shape of the element, it so for every species separately.
+While SNAP also encodes the general shape of the element, it does so for every species separately.
 
-Just from features generated from the shape alone the prediction accuracy is already on par with other machine learning methods performed on autocorrelation features.
+Just from features generated from the shape alone the prediction accuracy is already on a par with other machine learning methods performed on autocorrelation features.
 This leads to the conclusion that the shape of a catalyst plays a significant role in it's activation barrier.
-Even without any direct information about the chemical properties, the regression on LEFD features achieved similar accuracies than
-the best neural networks on autocorrelation features that encode chemical properties \cite{friederich_dos},
-and SNAP neural networks achieve the highest accuracies to date on this dataset.
+Even without any direct information about the chemical properties, the regression on LEFD features achieved similar accuracies to
+the best neural networks on autocorrelation features that encode chemical properties \cite{friederich_dos}.
+SNAP neural networks achieve the highest accuracies to date on this dataset.
 
 One mayor concern about this interpretation is the relatively small size of the dataset in combination 
 with its combinatorial generation.
@@ -51,7 +51,7 @@ With similar feature generation and regression methods, it might be possible
 predict other features from the molecule with relatively low effort.
 \\
 
-In a last step, we tried to discover the feature space to make sense of the model prediction.
+In a last step, the feature space was discovered to make sense of a models prediction.
 Analyzing the origin of the networks prediction gave mixed results.
 While it is possible to get an intuition about the global influence of different elements on
 the prediction, the local interpretability suffered from the low resolution of the encoding.
@@ -60,9 +60,9 @@ If these intuitions hold true in the real world will have to be confirmed by fur
 
 \section{Outlook}
 
-Since the size of the dataset is relatively small, the prediction accuracy might be further increased by 
-adding more examples of elements.
-Since the computation of the activation barrier for these elements might be too costly, instead the structure with some easy to compute 
+Since the size of the dataset is relatively small, possible solutions to increase the accuracy of the predcition might be to 
+increase the size of the dataset.
+The computation of the activation barrier for these elements might be too costly, instead the structure with some easy to compute 
 properties of the elements could be generated for each element.
 This would allow for the generation of large numbers of catalysts with different shapes.
 In a first step, a network could then be trained to predict some of the easy to compute properties of the catalysts from their shape.
@@ -71,10 +71,10 @@ In a second step, the network architecture would then be slightly adapted to now
 However the weights and biases for layers that are kept should not be changed.
 The network is then trained on the small dataset where the activation barrier for each element is known.
 In the hope that the first training iteration helped the network better understand the chemical structure of the element,
-this might help to find a better local minima for the network, and therefore increase the prediction accuracy.
+this might help to find a better local minima for the network predicting the activation barrier, and therefore increase the prediction accuracy.
 \\
 
-If a local interpretation of the molecule is required, SNAP might have to exchanged in favour of a higher resolution 
+If a local interpretation of the molecule is required, SNAP might have to be exchanged in favour of a higher resolution 
 feature generator.
 Other methods of encoding 3D spaces could include voxel representations.
 Using spherical gaussians similar to SNAP to encode density of atoms and other information about the molecule are thinkable.
@@ -85,12 +85,12 @@ Data augmentation on 3D voxel representations in convolutional neural networks s
 other fields \cite{7353481}.
 Voxel representations could therefore be a possible solution to further increasing interpretability of the model.
 
-The possibility of mapping both ways between the real world and features opens up new possibilities from 
+The possibility of mapping both ways between the real world and features opens up new possibilities 
 used in other areas of machine learning.
 It allows for many different approaches to better understand properties of chemical elements, 
-and might help to computational element discovery.
+and might help with computational element discovery.
 \\
-When we can understand the features produced from the chemical space,
+When the features produced from the chemical space can be interpreted,
 using neural network based techniques such as auto encoders or generative adversarial neural networks (GANs) are thinkable.
 Both autoencoders and GANs are machine learning methods that can be used to produce never seen before data with similar properties
 to the training data.
@@ -110,5 +110,5 @@ The low resolution of the SNAP descriptor will remain a challenge.
 In conclusion the SNAP feature extractor shows that data augmentation is possible in chemical spaces, and therefore 
 feature generators that allow for a bi-directional mapping between features and chemical space can achieve similar or higher
 accuracies to state-of-the-art one-directional feature extractors.
-This allows for the use of bi-directional feature encoders in computational exploration and generation of chemical structures.
-%TODO: Transfer LEarn
+This allows for the use of network explainers that can give insight into the origin of chemical properties.
+Currently the resolution of feature extractors is the limiting factor to interpretability.

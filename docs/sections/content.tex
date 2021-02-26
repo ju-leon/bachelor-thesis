@@ -17,19 +17,7 @@ Artificial neural networks(ANNs) and other machine learning techniques have stri
 For ANNs specifically, the input needs to be of fixed size and ideally as low dimensional as possible.
 To achieve that, a fixed number of features are extracted from the molecules.
 In order to learn, all the data required to predict molecular properties, in this case the activation barrier, should be encoded in the features.
-These features can then be used to train a neural network \ref{fig:feature-process}.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=12cm]{figures/introduction/chem-descriptor.jpg}
-  \caption[Machine learning in chemistry]{Visualization of feature generation and prediction from the generated features. 
-  A fixed size descriptor is generated from the structure. Using machine learning techniques, 
-  predictions are made from these features.
-  The feature generators proposed here should allow a partial inversion of this process to allow for interpretability of the results.
-  Reprinted from \cite{dscribe}.}
-  \label{fig:feature-process}
-\end{figure}
-
+These features can then be used to train a neural network.
 
 Simple encoders extract well know features of molecules such as their mean electro negativity or atomic numbers \cite{LO20181538}.
 Approaches by state-of-the-art chemical encoders include using graph convolutions to parse the chemical structure into fixed size features \cite{GNN_ENCODER}.
@@ -61,22 +49,22 @@ Since this description is not fully invariant, data augmentation is used along t
 \section{Alignment of catalyst molecules}
 
 Every catalyst molecule $\mathbb{E}$ in the dataset has a central Iridium atom with position $p_{Ir} \in \mathbb{E}$.
-We set out Iridium atom to be the center, and align all other atoms accordingly.
+The Iridium atom is set to the center, all other atoms are aligned accordingly.
 
 $$ \forall p_i \in \mathbb{E}: p_i' = p_i - p_{Ir}$$
 
-Now that our element is centered, the next step is rotating it.
+Now that the element is centered, the next step is rotating it.
 Every catalysts has a reaction pocket attached to the central metal atom.
-This reaction pocket is defined by a single hydrogen atom attached to the central iridium atoms.
+This reaction pocket is defined by a single hydrogen atom attached to the central iridium atom.
 The goal is to rotate the entire molecule so that the reaction pocket is aligned with the $z$-Axis.
-We define our axis to be aligned by the vector running from the center to the reaction pocket and normalize it, so
+The axis to be aligned is defined by the vector running from the center to the reaction pocket, so
 
 $$ v = \frac{p_{Pocket}'}{\| p_{Pocket}'\| } $$
 
 The vector $v$ is now rotated so that it aligns with the $z$-Axis.
 Since this rotation can be defined no matter the elements initial alignment, it effectively removes rotational invariances.
-We define a plane through the points $(0,0,0), (0,0,1), v$.
-The normal $n$ is the axis we will rotate the molecule around.
+Let $A$ be a plane through the points $(0,0,0), (0,0,1), v$.
+The normal $n$ of $A$ is the axis the molecule will be rotated around.
 
 $$
 n =\frac{\begin{pmatrix}
@@ -89,7 +77,7 @@ n =\frac{\begin{pmatrix}
   1
 \end{pmatrix}^T \times v \right\| }
 $$
-Next, we define the angle $\alpha$ between $v$ and the $z$-Axis on the plane.
+Next, the angle $\alpha$ between $v$ and the $z$-Axis on the plane is computed.
 
 $$ 
 \alpha = k \cdot \arctantwo \left( 1,  
@@ -118,7 +106,7 @@ $$
 The coordinates $p^R_i \in \mathbb{E}^R$ are now rotationally invariant under 2 axes. 
 The only degree of freedom left is rotations around the $z$ axis. 
 
-We will repeat this normalization for every element in the dataset.
+This normalization is repeated for every element in the dataset.
 
 %Since there's no natural way to align the elements around $z$, different approaches will be used.
 %In a first attempt, features are generated using a descriptor that is fully invariant under rotations around $z$.
@@ -170,13 +158,13 @@ The slice is now constructed by drawing a circle with radius $r_i(z)$ around the
   \label{fig:slice}
 \end{figure}
 
-The slice now consists of a set of circles.
+The slice consists of a set of circles.
 These circles can be partially or fully intersecting. 
 
 To describe the contour, a fourier contour descriptor is used.
 This contour descriptor allows to easily ignore rotation of the contour and generate invariant low-dimensional features from the shape.
 However, it can only work on a closed contour, so isolate islands of circles that don't intersect have to be dealt with separately.
-For simplicity, islands will be ignored be the contour descriptor.
+For simplicity, islands will be ignored by the contour descriptor.
 To identify islands and one continuos subset of circles, for each slice a graph is constructed.
 For every atom with radius $>0$ we create a node.
 For every atom that intersects with another we create an edge between these two nodes.
@@ -203,7 +191,7 @@ Once the starting circle is reached, the last remaining contour part of the star
 
 From the ordered list of contour sections, the contour points can easily be computed.
 Since each contour section consist of a radius $r$, location $(x,y)$, and start- and end angle $\alpha_{start}, \alpha_{end}$, the coordinates of the contour points can simply be computed using $x_c = \cos(\alpha_c) \cdot r + x$ and  $y_c = \sin(\alpha_c) \cdot r + y$ 
-for $\alpha_c = \alpha_{start} + i \cdot \Delta, \alpha_c \leq \alpha_{end}, i \in \mathbb{N}$.
+for $\alpha_c = \alpha_{start} + i \cdot \Delta, \alpha_c \leq \alpha_{end}, i \in \mathbb{N}_0$.
 
 $\Delta$ is a tuning parameter that specifies the resolution of the contour.
 
@@ -290,14 +278,14 @@ $$
 The $a_k, b_k, c_k, d_k$ form a basis for the functions $x(l), y(l)$.
 By addition of the vector $ \begin{pmatrix} a_0 & b_0 \end{pmatrix}^T $ a center offset can be defined.
 Since the contours encoded here should stay rotationally invariant, a two dimensional offset is not feasible.
-Instead, we will add the offset length $\|  \begin{pmatrix} a_0 & b_0 \end{pmatrix}^T \| $ as part of the feature vector.
+Instead the offset length $\|  \begin{pmatrix} a_0 & b_0 \end{pmatrix}^T \| $ is added to the feature vector.
 
 So far, the features $a_k, b_k, c_k, d_k$ are depended on the rotation of the contour.
 The next step will be to make the features invariant under rotations.
 %%%The starting point $s$ does not affect the coefficients as shown by \citeauthor{KUHL1982236}.
 
-We can view the contour as a summation of ellipses of different size.
-By aligning the first ellipse and rotating all other ellipses accordingly, we can make the final output invariant
+The contour can be viewed as a summation of ellipses of different size.
+By aligning the first ellipse and rotating all other ellipses accordingly, the final output can be made invariant
 of rotation \cite{MEBA}.
 
 $$
@@ -332,20 +320,20 @@ $$.
 The rotation around $\theta $ can be interpreted as normalizing the starting point $v$, 
 the rotation around $\psi$ as normalizing the rotation of the contour itself \cite{KUHL1982236}.
 
-The last step is to choose an order up to witch we want to approximate the contour.
+The last step is to choose an order up to which the contour is approximated.
 At the moment the infinite sum ensures a perfect approximation original contour. 
-By limiting the coefficients to an order $k_{max}$ we can set the number of coefficients describing our contour.
-Generally, the higher we choose our order, the better we can approximate small changes in the contour Figure~\ref{fig:slice-layered}.
+By limiting the coefficients to an order $k_{max}$ the number of coefficients describing our contour can be limited.
+Generally, the higher the order, the better small changes in the contour can be approximated Figure~\ref{fig:slice-layered}.
 
 After normalizing, the values $b_1^* = c_1^* = 1$ will always be equal to 0, since we rotated the first ellipse to be aligned.
 We can therefore remove $b_1^*, c_1^*$ from the feature vector.
 
-After calculating the coefficients for every slice, the different slices will be concatenated into a 2d array.
-One dimension of the array will correspond to the spacial $z$ direction, so it will be equivalent to the number of layers we choose.
+After calculating the coefficients for every slice, the different slices will be concatenated into a 2D array.
+One dimension of the array will correspond to the spacial $z$ direction, so it will be equivalent to the number of layers chosen.
 The other dimension will hold the fourier coefficients for each layer.
 
 To keep information about the offset from the center, the length $l = \| \begin{pmatrix} a_0 & b_0 \end{pmatrix} \| $ will be added for each slice.
-Since each fourier coefficient consists of 4 values and we remove $b_1^*, c_1^*$ and add the center offset $l$, the size of this dimension will be $k_{max} * 4 - 1$.
+Since each fourier coefficient consists of 4 values and $b_1^*, c_1^*$ are removed while the center offset $l$ is added, the size of this dimension will be $k_{max} * 4 - 1$.
 
 These features will be used for prediction of a molecules activation barrier in the next step.
 
@@ -384,14 +372,14 @@ while partly keeping the rotational invariance.
 Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts special struture.
 The SNAP descriptor therefor is less universal than SOAP. 
 In applications were no translation back to 3D space is required,
-in most instances SOAP should be chosen for it's fully rotationally invariant output.
+in most instances SOAP should be chosen over SNAP for it's fully rotationally invariant output.
 
 \subsection{SNAP requirements}
 
-The general idea of SNAP is to describe the density surrounding a cental atom using a fixed set of coefficients.
+The general idea of SNAP is to describe the atoms surrounding a cental atom using a fixed set of coefficients.
 Rotational invariance therefore cannot be guaranteed, unless the encoded molecule itself can be rotated in a way to explicitly set it's rotation.
 
-For catalyst molecules, this natural axis can be defined by setting the reaction pocket to the top, and the central Iridium atom as a center.
+For catalyst molecules, this natural axis can be defined by setting the reaction pocket to the top, and the central iridium atom as a center.
 
 For other molecule classes, defining a natural axis might not be as trivial.
 
@@ -421,7 +409,7 @@ In further enhancements of the SNAP encoder, describing other molecular properti
 Even describing 3D features not associated with a single species but rather describing the interaction or overlap of species 
 or molecules are thinkable.
 
-Since the basis set we're using to describe the space is using spherical coordinates, from now on
+Since the basis set used to describe the space is using spherical coordinates, from now on
 cartesian coordinated will be replaced by spherical coordinates.
 
 $$
@@ -479,8 +467,8 @@ $$\phi_{nl}(r) = r^l e^{-\alpha_{nl}r^2} $$ %TODO: phi of n oder phi of nl?? / a
 $\alpha$ and $\beta$ are constants that only need to be computed once for every pair of $l,m, r_{cut}$.
 The $\alpha$ parameters control the decay of the radial basis functions at $r_{cut}$.
 
-$\beta_{nn'l}$ parameters orthonormalize the radial basis functions.
-For each $l$ the weights $\beta_{nn'l}$ can be computed using the Löwdin orthonormalization:
+$\beta_{nn'l}$ parameters orthogonalize the radial basis functions.
+For each $l$ the weights $\beta_{nn'l}$ can be computed using the Löwdin orthogonalization:
 
 $$\beta = S(l)^{-1/2} $$
 
@@ -492,15 +480,15 @@ The implementation of $\alpha$ and $\beta$ prefactors is taken from \cite{dscrib
 Higher order factors could be added if needed.
 
 
-Combining spherical harmonics with radial basis functions we can describe the density space surrounding our central atom.
-In theory, choosing infinitely high $n, l$ we could approximate the space with infinitely high precision.
+Combining spherical harmonics with radial basis functions the density space surrounding the central atom can be described.
+In theory, choosing infinitely high $n, l$ could approximate the space with infinitely high precision.
 To get a fixed amount of coefficients, $n_{max}$ and $l_{max}$ need to be chosen that determine the
 accuracy of the encoding.
-Generally, the higher $n_{max}, l_{max}$ the more accurate the sapce can be approximated.
+Generally, the higher $n_{max}, l_{max}$ the more accurate the space can be approximated.
 %TODO Add figure of the space being described with different n, l , cutoff
 
-For radial basis functions we need to define a cutoff radius $r_{cut}$.
-Densities outside this cutoff radius will not be encoded in the features of our space.
+For radial basis functions a cutoff radius $r_{cut}$ needs to be defined.
+Densities outside this cutoff radius will not be encoded in the features of the space.
 
 The density for every species $Z$ in within the cutoff sphere can be expanded as:
 
@@ -511,7 +499,7 @@ The coefficients $c_{nlm}^Z$ are features generated by the SNAP descriptor.
 $$ c_{nlm}^Z = \iiint_{R^3} g_{nl}(r) Y_{lm}(\theta, \varphi) \rho^Z(r, \theta, \phi)  \,dr\theta\phi   $$
 % TODO: Integrate to infinity or r_cut?
 
-The 3 dimensional integral goes over all spherical coordinates within our cutoff sphere.
+The 3 dimensional integral goes over all spherical coordinates within the cutoff sphere.
 The coefficients $c^Z_{nlm}$ now describe the 3D space within a fixed size sphere.
 \\
 The key difference between SNAP and other chemical descriptors is the bi-directional mapping between feature space and 
@@ -522,7 +510,7 @@ This allows for a partial reconstruction of the molecule from the features encod
 However, due to the low number of radial basis functions and spherical harmonics usually used to describe an element, 
 the encoding of the density is far from perfect.
 While with an infinite amount of coefficients a perfect description of the space is thinkable,
-in reality the computational limits only allow for a rather low resolution of the density space Figure~\ref{fig:snap-density}. 
+in reality the computational limits only allow for a rather low resolution of the density space [Figure~\ref{fig:snap-density}]. 
 \begin{figure} [h]
   \centering
   \includegraphics[width=1\textwidth]{figures/snap/density/dense.png} % for .pdf files etc use \includegraphics{test.pdf}
