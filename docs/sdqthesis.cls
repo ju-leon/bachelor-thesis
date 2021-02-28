@@ -271,3 +271,6 @@
 \usepackage{amsmath}
 \let\oldAA\AA
 \renewcommand{\AA}{\text{\normalfont\oldAA}}
+
+
+\usepackage{float}

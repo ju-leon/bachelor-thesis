@@ -26,7 +26,7 @@ The feature generators relevant to this project are spacial encoders.
 
 Spacial encoders in chemistry generally focus on describing the interaction of chemical elements within a certain radius, rather 
 than the space itself \cite{Bart_k_2013}.
-Since global rotation and translation of an element generally does not influence it's chemical properties,
+Since global rotation and translation of an element generally does not influence its chemical properties,
 encoders try to produce rotationally invariant representations.
 This usually limits the possibilities of reconstructing the input data.
 A 3D representation can therefore not easily be computed from the generated features.
@@ -39,11 +39,11 @@ This axis is used to align the molecules.
 
 The use of this special structure of catalyst molecules to generate partly invariant features seems to be a novel approach.
 
-After alignment, two different approaches to feature generations are explored.
+After alignment, two different approaches to feature generation are explored.
 The first method slices the molecule at certain heights.
 The slices are then described using a fully rotationally invariant descriptor.
 
-The second approach is to use a combination of different 3D basis functions to encode the space surrounding the central atom.
+The second approach uses a combination of different 3D basis functions to encode the space surrounding the central atom.
 Since this description is not fully invariant, data augmentation is used along the remaining axes of freedom.
 
 \section{Alignment of catalyst molecules}
@@ -53,7 +53,7 @@ The Iridium atom is set to the center, all other atoms are aligned accordingly.
 
 $$ \forall p_i \in \mathbb{E}: p_i' = p_i - p_{Ir}$$
 
-Now that the element is centered, the next step is rotating it.
+Now that the element is centered, the next step is to rotate it.
 Every catalysts has a reaction pocket attached to the central metal atom.
 This reaction pocket is defined by a single hydrogen atom attached to the central iridium atom.
 The goal is to rotate the entire molecule so that the reaction pocket is aligned with the $z$-Axis.
@@ -61,9 +61,9 @@ The axis to be aligned is defined by the vector running from the center to the r
 
 $$ v = \frac{p_{Pocket}'}{\| p_{Pocket}'\| } $$
 
-The vector $v$ is now rotated so that it aligns with the $z$-Axis.
+The vector $v$ will be rotated so that it aligns with the $z$-Axis.
 Since this rotation can be defined no matter the elements initial alignment, it effectively removes rotational invariances.
-Let $A$ be a plane through the points $(0,0,0), (0,0,1), v$.
+Let $A$ be a plane through the points $(0,0,0)^T, (0,0,1)^T, v$.
 The normal $n$ of $A$ is the axis the molecule will be rotated around.
 
 $$
@@ -115,7 +115,7 @@ This normalization is repeated for every element in the dataset.
 
 
 
-
+\newpage
 \section{Fourier descriptors for invariant feature generation}
 
 The first attempt at feature generation was using a fully rotational invariant feature descriptor.
@@ -123,33 +123,50 @@ The method used is an Elliptic Fourier Descriptor (EFD).
 Elliptic fourier descriptors approximate a 2D contour with a set of coefficients.
 The higher the order of the descriptor, the better a contour can be approximated.
 
-To be able to describe a 3D object using fourier contour descriptors the object is sliced at different $z$ heights.
+The object is sliced at different $z$ heights, resulting in 2D contour maps for every slice.
 For each slice, the contour is described using an EFD.
 This generates a fully rotationally invariant description.
 Since EFDs allow to approximate a contour with just a few coefficients, the generated features
 are also low dimensional.
 This feature generator will be referred to as layered elliptic fourier descriptor(LEFD).
 
-\subsection{Slicing}
-\begin{figure} [h]
+\begin{figure} [H]
   \centering
   \includegraphics[width=0.5\textwidth]{figures/fourier/slice3D.png} % for .pdf files etc use \includegraphics{test.pdf}
   \caption[Slicing a molecule]{A molecule is sliced by a plane. Every slice is taken at a different $z$ height.}
   \label{fig:slice3D}
 \end{figure}
 
+\subsection{Slicing}
+
 Along the $z$-axis, starting from $z_{start}$ to $z_{end}$, the molecule is sliced in a distance of $z_{height}$.
 $z_{start}, z_{end}, z_{height}$ are tuning parameters.
 Here, $z_{start}, z_{end}$ are chosen so that all molecules from the dataset fully fit into the boundaries.
 
-A slice is computed by getting the radius of every atom $i$ in the molecule at the slice height $z$ Figure~\ref{fig:slice3D}.
+A slice is computed by getting the radius of every atom $i$ in the molecule at the slice height $z$ [Figure~\ref{fig:slice3D}].
 
 $$ r_i(z) =\left\{\begin{array}{ll} \sqrt{R_i^2 - (z - p_i^R[2])^2} &, | z - p_i^R[2] |  < R_i\\
   0 &, \text{otherwise}\end{array}\right.
 $$ %TODO: Der Betrag ist immer > 0 ???
 
-$R_i$ is the Van-der-Waals radius of element $i$, $p_i[2]$ is the $z$ component of the location vector.
-The slice is now constructed by drawing a circle with radius $r_i(z)$ around the $x,y$ coordinates for each atom for each slice Figure~\ref{fig:slice}.
+$R_i$ is the Van-der-Waals radius of element $i$, $p_i^R[2]$ is the $z$ component of the location vector.
+The slice is now constructed by drawing a circle with radius $r_i(z)$ around the $x,y$ coordinates for each atom for each slice [Figure~\ref{fig:slice}].
+
+
+The slice consists of a set of circles.
+These circles can partially or fully intersect. 
+
+To describe the contour, a fourier contour descriptor is used.
+This contour descriptor allows to easily ignore rotation of the contour and generate invariant low-dimensional features from the shape.
+However, it can only work on a closed contour.
+Isolate islands of circles that without intersection have to be dealt with separately.
+For simplicity, islands will be ignored by the contour descriptor.
+To identify islands and one continuos subset of circles, for each slice a graph is constructed.
+For every atom with radius $>0$ we create a node.
+For every atom that intersects with another we create an edge between these two nodes.
+Now the \texttt{Largest Connected Component}, so the connected subgraph with the most nodes, is computed.
+This returns the most atoms forming a continuously connected shape in the current slice.
+In the next steps only this subset of circles will be used to describe the contour.
 
 \begin{figure} [h]
   \centering
@@ -158,24 +175,11 @@ The slice is now constructed by drawing a circle with radius $r_i(z)$ around the
   \label{fig:slice}
 \end{figure}
 
-The slice consists of a set of circles.
-These circles can be partially or fully intersecting. 
-
-To describe the contour, a fourier contour descriptor is used.
-This contour descriptor allows to easily ignore rotation of the contour and generate invariant low-dimensional features from the shape.
-However, it can only work on a closed contour, so isolate islands of circles that don't intersect have to be dealt with separately.
-For simplicity, islands will be ignored by the contour descriptor.
-To identify islands and one continuos subset of circles, for each slice a graph is constructed.
-For every atom with radius $>0$ we create a node.
-For every atom that intersects with another we create an edge between these two nodes.
-Now the \texttt{Largest Connected Component}, so the connected subgraph with the most nodes, is computed.
-This gives us the most atoms forming a continuously connected shape in the current slice.
-In the next steps we will only use this subset of circles to describe the contour.
 %TODO: Not perfect, but good enough?
 \paragraph{Finding the contour}
 
 From the set of intersecting circles, the contour needs to be extracted. 
-Since the contour points are computed just from radius and position information, and are not rendered onto a 2D pixel grid, standard contour finding algorithms can not be used.
+Since the contour points are computed just from radius and position information, and not rendered onto a 2D pixel grid, standard contour finding algorithms cannot be used.
 Instead, knowledge about the general shape is used to compute the contour. 
 
 The contour is computed using \autoref{alg:CircleSetContour}.
@@ -183,9 +187,10 @@ The contour is computed using \autoref{alg:CircleSetContour}.
 First, the point "furthest to the right", so with the largest $x$-Value is found. 
 Since the point with the highest $x$-Value in any circle is always at angle 0, we set the initial angle $\alpha$ and rotation vector $\vec{p}$ accordingly.
 From the circle containing that point, the contour is followed from that point counter-clockwise until the first intersection with another circle is found.
-To the list of contour sections, we add the current contour section from angle $0$ to the angle of intersection.
+To the list of contour sections, the current contour section from angle $0$ to the angle of intersection is added.
 
-Now, the contour of this circle is followed again until it intersects another. This is repeated until the starting circle is reached again.
+Now, the contour of this circle is followed again until it intersects another.
+This is repeated until the starting circle is reached again.
 
 Once the starting circle is reached, the last remaining contour part of the starting circle needs to be added to the list of contour sections Figure~\ref{fig:circlesetcontour}.
 
@@ -195,10 +200,10 @@ for $\alpha_c = \alpha_{start} + i \cdot \Delta, \alpha_c \leq \alpha_{end}, i \
 
 $\Delta$ is a tuning parameter that specifies the resolution of the contour.
 
-This process of going along the outside ignores all "holes" in the shape, so only the outermost contour will be part of the final result. 
+This process is going along the outside ignores all "holes" in the shape, so only the outermost contour will be part of the final result. 
 This is beneficial since EFDs only allow for the encoding of a single closed contour.
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \minipage{0.32\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/contour/c1copy.pdf}
     \caption{Finding first contour section}
@@ -218,15 +223,16 @@ This is beneficial since EFDs only allow for the encoding of a single closed con
 
 \subsection{Elliptic fourier descriptor}
 
-Now that we have a contour for each slice, we'll use the elliptic fourier descriptor (EFD) to describe that contour.
+Now that a contour for each slice is found, an elliptic fourier descriptor (EFD) will be used to describe that contour.
 EFDs allow for a high resolution encoding of a contour in a fixed amount of coefficients.
 Additionally, EFD coefficients can easily be made rotationally invariant.
 
 EFDs, as described in \cite{LIN1987535} work by selecting a random starting point $s$ on the contour.
-Starting from $s$, we will follow the contour and denote the $x$ and $y$ coordinates as functions $x(l)$, $y(l)$ of the distance $l$ from the starting point.
+Starting from $s$, the contour will be followed. 
+The $x$ and $y$ coordinates will be denoted as functions $x(l)$, $y(l)$ of the distance $l$ from the starting point.
 Distance refers to the length it takes to get from $s$ to the point following the contour.
 
-Since the starting and end point of $x(l), y(l)$ will be equal, making them periodic, we can define a parameter $t=\frac{2\pi l}{n}$. %TODO: Erklären!!!!
+Since the starting and end point of $x(l), y(l)$ will be equal, making them periodic, a parameter $t=\frac{2\pi l}{n}$ can be defined. %TODO: Erklären!!!!
 The functions can then be described by Fourier expansions as
 
 %TODO: Replace t and put it in directly?
@@ -321,23 +327,18 @@ The rotation around $\theta $ can be interpreted as normalizing the starting poi
 the rotation around $\psi$ as normalizing the rotation of the contour itself \cite{KUHL1982236}.
 
 The last step is to choose an order up to which the contour is approximated.
-At the moment the infinite sum ensures a perfect approximation original contour. 
+At the moment the infinite sum ensures a perfect approximation of the original contour. 
 By limiting the coefficients to an order $k_{max}$ the number of coefficients describing our contour can be limited.
-Generally, the higher the order, the better small changes in the contour can be approximated Figure~\ref{fig:slice-layered}.
+Generally, the higher the order, the better small changes in the contour can be approximated [Figure~\ref{fig:slice-layered}].
 
-After normalizing, the values $b_1^* = c_1^* = 1$ will always be equal to 0, since we rotated the first ellipse to be aligned.
-We can therefore remove $b_1^*, c_1^*$ from the feature vector.
+
+After normalizing, the values $b_1^* = c_1^* = 1$ will always be equal to 0, since the first ellipse as rotated to be aligned.
+Therefore $b_1^*, c_1^*$ can be removed from the feature vector.
 
 After calculating the coefficients for every slice, the different slices will be concatenated into a 2D array.
 One dimension of the array will correspond to the spacial $z$ direction, so it will be equivalent to the number of layers chosen.
 The other dimension will hold the fourier coefficients for each layer.
-
-To keep information about the offset from the center, the length $l = \| \begin{pmatrix} a_0 & b_0 \end{pmatrix} \| $ will be added for each slice.
-Since each fourier coefficient consists of 4 values and $b_1^*, c_1^*$ are removed while the center offset $l$ is added, the size of this dimension will be $k_{max} * 4 - 1$.
-
-These features will be used for prediction of a molecules activation barrier in the next step.
-
-\begin{figure}[h]
+\begin{figure}[H]
   \minipage{0.4\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/fourier/contour.png}
   \endminipage\hfill
@@ -348,11 +349,18 @@ These features will be used for prediction of a molecules activation barrier in 
   On the left a slice is described by fourier descriptors. Higher order descriptors are able to approximate the contour better than lower order descriptors. 
   The isolate is ignored by the contour descriptor. The rotation is kept as part of the fourier description for illustration purposes.
   On the right the different slices making up on element are placed on top of each other. Slices without any volume are not rendered. 
-  Wile the rotation is removed to keep it rotationally invariant, the offset from the center is encoded.
+  While the rotation is removed to keep it rotationally invariant, the offset from the center is encoded.
   }
   \label{fig:slice-layered}
 \end{figure}
 
+To keep information about the offset from the center, the length $l = \| \begin{pmatrix} a_0 & b_0 \end{pmatrix} \| $ will be added for each slice.
+Since each fourier coefficient consists of 4 values and $b_1^*, c_1^*$ are removed while the center offset $l$ is added, the size of this dimension will be $k_{max} * 4 - 1$.
+
+These features will be used for prediction of a molecules activation barrier in the next step.
+
+
+\newpage
 \section{Feature generation using smooth normalized atomic positions}
 \label{ch:SNAP}
 In a second approach, the molecule was encoded by smoothing the atomic positions, 
@@ -370,9 +378,9 @@ on the open-source library Dscribe that provides an implementation of SOAP \cite
 The Smooth Normalized Atomic Positions (SNAP) descriptor proposed here allows for a reconstruction of the 3D space from the coefficients, 
 while partly keeping the rotational invariance.
 Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts special struture.
-The SNAP descriptor therefor is less universal than SOAP. 
+The SNAP descriptor therefore is less universal than SOAP. 
 In applications were no translation back to 3D space is required,
-in most instances SOAP should be chosen over SNAP for it's fully rotationally invariant output.
+in most instances SOAP should be chosen over SNAP for its fully rotationally invariant output.
 
 \subsection{SNAP requirements}
 
@@ -384,7 +392,7 @@ For catalyst molecules, this natural axis can be defined by setting the reaction
 For other molecule classes, defining a natural axis might not be as trivial.
 
 When no clear axis of alignment can be found, the SNAP output may be augmented by rotating the input along all axis of freedom.
-If there are multiple axis of freedom SOAP may be preferable since in naturally offers a fully rotationally invariant description.
+If there are multiple axis of freedom SOAP may be preferable since it naturally offers a fully rotationally invariant description.
 
 Additionally, SNAP only encodes a local region within $r_{cut}$.
 Density outside this cutoff radius is not considered.
@@ -409,8 +417,15 @@ In further enhancements of the SNAP encoder, describing other molecular properti
 Even describing 3D features not associated with a single species but rather describing the interaction or overlap of species 
 or molecules are thinkable.
 
+\begin{figure} [H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/snap/sph-harm.png} % for .pdf files etc use \includegraphics{test.pdf}
+  \caption[Spherical harmonics]{A selection of low order spherical harmonics plotted on a sphere. } %TODO: Add scale!!!
+  \label{fig:sphharm}
+\end{figure}
+
 Since the basis set used to describe the space is using spherical coordinates, from now on
-cartesian coordinated will be replaced by spherical coordinates.
+cartesian coordinates will be replaced by spherical coordinates.
 
 $$
 r = \sqrt{x^2 + y^2 + z^2}
@@ -435,12 +450,6 @@ P_{lm}(x) = (-1)^m (1-x^2)^{m/2} \frac{\partial^{l+m}}{\partial x^{l+m}}(x^2 - 1
 $$ %TODO: Looks at derivative
 
 
-\begin{figure} [h]
-  \centering
-  \includegraphics[width=0.5\textwidth]{figures/snap/sph-harm.png} % for .pdf files etc use \includegraphics{test.pdf}
-  \caption[Spherical harmonics]{A selection of low order spherical harmonics plotted on a sphere. } %TODO: Add scale!!!
-  \label{fig:sphharm}
-\end{figure}
 
 Using the spherical harmonics, a sphere surrounding the central atom can be encoded.
 To encode density information along the radial direction, spherical harmonics are combined with radial basis functions.
@@ -457,15 +466,16 @@ with
 $$\phi_{nl}(r) = r^l e^{-\alpha_{nl}r^2} $$ %TODO: phi of n oder phi of nl?? / alpha_n oder alpha_nl
 
 
-\begin{figure} [h]
+
+$\alpha$ and $\beta$ are constants that only need to be computed once for every pair of $l,m, r_{cut}$.
+The $\alpha$ parameters control the decay of the radial basis functions at $r_{cut}$.
+
+\begin{figure} [hb!]
   \centering
   \includegraphics[width=0.5\textwidth]{figures/snap/gaus_orb.png} % for .pdf files etc use \includegraphics{test.pdf}
   \caption[Radial basis functions]{Spherical gaussian orbital functions for a cutoff radius $r_{cut}=2$, $2$, $n_{max}=2$ and $l_{max}=2$. }
   \label{fig:gaussians}
 \end{figure}
-
-$\alpha$ and $\beta$ are constants that only need to be computed once for every pair of $l,m, r_{cut}$.
-The $\alpha$ parameters control the decay of the radial basis functions at $r_{cut}$.
 
 $\beta_{nn'l}$ parameters orthogonalize the radial basis functions.
 For each $l$ the weights $\beta_{nn'l}$ can be computed using the Löwdin orthogonalization:
@@ -504,13 +514,13 @@ The coefficients $c^Z_{nlm}$ now describe the 3D space within a fixed size spher
 \\
 The key difference between SNAP and other chemical descriptors is the bi-directional mapping between feature space and 
 density space.
-From the coefficients, the density space encoded can be easily reconstructed.
+From the coefficients, the density space can be easily reconstructed.
 This allows for a partial reconstruction of the molecule from the features encoded by SNAP.
 
 However, due to the low number of radial basis functions and spherical harmonics usually used to describe an element, 
 the encoding of the density is far from perfect.
-While with an infinite amount of coefficients a perfect description of the space is thinkable,
-in reality the computational limits only allow for a rather low resolution of the density space [Figure~\ref{fig:snap-density}]. 
+With an infinite amount of coefficients a perfect description of the space is thinkable,
+in reality computational limits only allow for a rather low resolution of the density space [Figure~\ref{fig:snap-density}]. 
 \begin{figure} [h]
   \centering
   \includegraphics[width=1\textwidth]{figures/snap/density/dense.png} % for .pdf files etc use \includegraphics{test.pdf}
