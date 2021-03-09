@@ -31,7 +31,7 @@ Neurons are grouped together in layers, where the output of each layer is connec
 For a single prediction, the example is applied to the input layer, the network is then flooded until the output layer is reached.
 In the case of regression used here, the value of the output layer is the prediction of the neural network.
 
-Finding a good performing network architecture is challenging. \\
+Finding a good performing network architecture is challenging. 
 Since generally no rule is known on what neural network architecture will work best on the given data, the space of possible networks needs to be explored.
 A variety of choices for the network architecture can be made, such as the amount of layers, size of the layers, type of activation functions, regularization, normalization, and many more.
 
@@ -50,7 +50,7 @@ A variety of choices for the network architecture can be made, such as the amoun
   
 When choosing the network architecture, generally a bigger network will be able to adapt to more complex data.
 However if the network will become to big, it might encounter issues with overfitting.
-Overfitting is a problem encountered when the network adapts to the training data too well.
+Overfitting is a problem encountered when the network adapts to the training data too well \cite{bishop2006pattern}.
 This will decrease its ability to generalize the data and make good predictions on previously unseen samples [Figure~\ref{fig:overfitting}].
 
 
@@ -60,7 +60,7 @@ This causes the network to adapt less well to the training data, but in return c
 performance on previously unseen data.
 
 Dropout layers randomly disable neurons in a layer.
-This forces the network to be less reliant on certain neurons, and instead learn the data in the entire network.
+This forces the network to be less reliant on certain neurons, and instead learn the data in the entire network \cite{baldi2013understanding}.
 \\
 
 Looking for a suitable network architecture, a hyperparameter optimization needs to be performed.
@@ -76,7 +76,7 @@ In a second step, hyperparameter analysis was run to find a good network archite
 All networks were generated in Keras, an open-source deep learning library.
 Keras offers a high level Python API to create, train and analyse neural networks.
 
-To allow for better training and predictions, all features and labels were standardized before being passed to the neural network.
+To allow for better training and predictions, all features and labels were normalized before being passed to the neural network.
 Standardizing is a process where each feature $f$ is scaled independently so the mean over all samples in the dataset is 0, 
 and every feature has unit variance.
 This can easily be achieved by independently subtracting the mean $\overline{f}$ over all samples, and dividing by the standard deviation $\sigma_f$.
@@ -100,7 +100,7 @@ and multiple days for SNAP features.
 Training and hyperparameter optimization was performed on the universtiy cluster %TODO: Notwendig?
 using a Nvidia Tesla V100-SXM2-32GBa GPU.
 
-During training and hyperparameter optimization, a fraction of the data was reserved as test set.
+During training and hyperparameter optimization, a fraction of 20\% of the data was reserved as test set.
 This test set was not used for training or validation, but only to evaluate the final performance of the networks.
 All data about network performance in this chapter is measured on the test set, unless specified otherwise.
 
@@ -175,7 +175,15 @@ However all the tests performed were indicating that densely connected layers wo
 The idea of convolution layers was therefore dropped early on, and instead the focus was shifted to optimizing a fully-connected architecture.
 \\ 
 
-\begin{figure}[!hb]
+
+After all \cite{friederich_dos} has shown that similar accuracy to the convolution approach can be achieved by learning from autocorrelation features,
+the next idea was to use a transfer learning approach.
+In a first step, the network was trained to predict the autocorrelation features computed in \cite{friederich_dos}.
+In a second step, the network is then extended with additional layers to learn to predict the activation barrier [Figure~\ref{fig:transferlearn}].
+The hope was that teaching the network about autocorrelation features, the model would learn to recognize relevant properties of a catalyst.
+In a second step, the entire network would then be trained to adapt specifically to the activation barrier.
+\\
+\begin{figure}[H]
     \minipage{0.1\textwidth}
     \endminipage\hfill
     \minipage{0.4\textwidth}
@@ -187,31 +195,12 @@ The idea of convolution layers was therefore dropped early on, and instead the f
     \minipage{0.1\textwidth}
     \endminipage
     \caption[CNN trained on LEFD features]{
-        Loss while training the CNN. The jitter in the training loss during convergence is likely caused by the dropout layers. 
+        Mean squared error loss while training the CNN. The jitter in the training loss during convergence is likely caused by the dropout layers. 
         The optimization goal was minimizing the mean squared error. 
         Training was performed on 80\% of the data.
         On the right are the predictions of the activation barrier in comparison to the real values ($MAE=1.36$, $r^2=0.84$).
     }
     \label{fig:fourier_cnn}
-\end{figure}
-
-After all \cite{friederich_dos} has shown that similar accuracy to the convolution approach can be achieved by learning from autocorrelation features,
-the next idea was to use a transfer learning approach.
-In a first step, the network was trained to predict the autocorrelation features computed in \cite{friederich_dos}.
-In a second step, the network is then extended with additional layers to learn to predict the activation barrier [Figure~\ref{fig:transferlearn}].
-The hope was that teaching the network about autocorrelation features, the model would learn to recognize relevant properties of a catalyst.
-In a second step, the entire network would then be trained to adapt specifically to the activation barrier.
-\\
-
-\begin{figure} [!b]
-    \centering
-    \includegraphics[width=0.7\textwidth]{figures/regression/fourier/nn.png} 
-    \caption[Transfer learning model]{Illustration of the transfer learning approach.
-        In red the original model predicting autocorrelation features from the input is illustrated.
-        In white the second part of the network, predicting the activation barrier from the autocorrelation features, is illustrated.
-        Different sizes and amounts of hidden layers were tested. Here, single hidden layers are shown for illustration purposes.
-    }
-    \label{fig:transferlearn}
 \end{figure}
 
 Seeing that the convolutional approach did not seem to improve results, a fully connected architecture predicting autocorrelation features from fourier coefficients 
@@ -221,6 +210,17 @@ Findings about good hyperparameter, such as layer size, regularization and dropo
 In the end, a network that predicted the 30 independent autocorrelation features was found.
 The network was able to predict some autocorrelation with very high accuracy. Specifically, the $T$ features and $I$ features were
 predicted with an accuracy of $r^2 > 0.98$. 
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/regression/fourier/nn.png} 
+    \caption[Transfer learning model]{Illustration of the transfer learning approach.
+        In red the original model predicting autocorrelation features from the input is illustrated.
+        In white the second part of the network, predicting the activation barrier from the autocorrelation features, is illustrated.
+        Different sizes and amounts of hidden layers were tested. Here, single hidden layers are shown for illustration purposes.
+    }
+    \label{fig:transferlearn}
+\end{figure}
 Other features, such as $Z$ features, were lacking behind in accuracy, with the network only being able to reach accuracies of $r^2<0.96$ for some features.
 The features the network was able to approximate well were also less important to the network found in \cite{friederich_dos}, while the features 
 the network performed poorly were the more important features [Figure~\ref{fig:transfer_result}].
@@ -298,9 +298,9 @@ In an effort to improve prediction accuracy, a different feature extractor, SNAP
       \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/scatterTransferFull.png}
     \endminipage
     \caption[LEFD transfer learning]{
-    Loss of the network being trained to predict autocorrelation features (right).
+    Loss of the network being trained to predict autocorrelation features (left).
     The adapted network is then trained again to predict the activation barrier. The loss function in the middle shows the second training.
-    The prediction accuracy has slight improved (right).  
+    The prediction accuracy of $MAE=1.139 kcal/mol$ and $r^2=0.874$ has slight improved (right) in comparison to the native ANN approach.  
     Both networks are trained on a train fraction of 80\%.
     }
     \label{fig:transfer_final}
@@ -616,7 +616,7 @@ to choose from up to 10 hidden layers, each with a maximum amount of 1000 neuron
     The model achieves an accuracy of accuracies of $0.52980 kcal/mol$ and
     $r^2 = 0.96231$.
   }
-  \label{fig:snap_roation}
+  \label{fig:snap_results}
 
 \end{figure}
 
@@ -624,7 +624,7 @@ to choose from up to 10 hidden layers, each with a maximum amount of 1000 neuron
 Even with slight variations in prediction accuracy due to rotation, the overall results of regression performed on SNAP features is still promising.
 All models found during hyperparameter optimization for different $n_{max}, l_{max}$ were able to predict the reaction barrier with accuracies in the
 range of the best regression methods found so far.
-With the best models for $n_{max}=8, l_{max}=4$ achieving accuracies of $MAE=0.530 kcal/mol$ and $r^2=0.0.962$. %TODO: Verbessern
+With the best models for $n_{max}=8, l_{max}=4$ achieving accuracies of $MAE=0.530 kcal/mol$ and $r^2=0.962$ \ref{fig:snap_results}.
 
 The network has a total of 7 hidden layers.
 Dropout and batch normalization layers are added in between \ref{fig:architectures}.

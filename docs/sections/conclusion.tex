@@ -12,7 +12,7 @@
 
 \chapter{Conclusion}
 \label{ch:Conclusion}
-In chapter \ref{ch:features} 2 different approaches at encoding a molecule into machine learning compatible features are introduced.
+In chapter \ref{ch:features}, two different approaches at encoding a molecule into machine learning compatible features are introduced.
 On the features produced by the descriptors, regression using neural networks is performed.
 
 While both methods allow for predictions with high accuracy, the results on SNAP features are more promising.
@@ -27,10 +27,11 @@ atom itself is encoded.
 While SNAP also encodes the general shape of the element, it does so for every species separately.
 
 Just from features generated from the shape alone the prediction accuracy is already on a par with other machine learning methods performed on autocorrelation features.
-This leads to the conclusion that the shape of a catalyst play is significant to its activation barrier.
+This leads to the conclusion that the shape of a catalyst is significant to its activation barrier.
 Even without any direct information about the chemical properties, the regression on LEFD features achieved similar accuracies to
 the best neural networks on autocorrelation features that encode chemical properties \cite{friederich_dos}.
-SNAP neural networks achieve the highest accuracies to date on this dataset.
+SNAP neural networks achieve the highest accuracies to date on this dataset, with 
+$MAE = 0.52980 kcal/mol$ and $r^2=0.96231$ when trained on 80\% of the training data.
 
 One major concern about this interpretation is the relatively small size of the dataset in combination 
 with its combinatorial generation.

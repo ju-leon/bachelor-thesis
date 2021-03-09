@@ -19,7 +19,7 @@ To achieve that, a fixed number of features are extracted from the molecules.
 In order to learn, all the data required to predict molecular properties, in this case the activation barrier, should be encoded in the features.
 These features can then be used to train a neural network.
 
-Simple encoders extract well know features of molecules such as their mean electro negativity or atomic numbers \cite{LO20181538}.
+Simple encoders extract well-known features of molecules such as their mean electro negativity or atomic numbers \cite{LO20181538}.
 Approaches by state-of-the-art chemical encoders include using graph convolutions to parse the chemical structure into fixed size features \cite{GNN_ENCODER}.
 Others try to encode interaction of different atoms or species of atoms into their features \cite{PhysRevLett.108.058301}.
 The feature generators relevant to this project are spacial encoders.
@@ -36,7 +36,6 @@ In order to retain partial rotational invariance the special structure of the in
 All catalyst molecules in the dataset have a central metal atom and a reaction pocket composed of a hydrogen atom attached to the metal center.
 By the centers of these 2 atoms a unique axis is formed.
 This axis is used to align the molecules.
-
 The use of this special structure of catalyst molecules to generate partly invariant features seems to be a novel approach.
 
 After alignment, two different approaches to feature generation are explored.
@@ -55,7 +54,6 @@ $$ \forall p_i \in \mathbb{E}: p_i' = p_i - p_{Ir}$$
 
 Now that the element is centered, the next step is to rotate it.
 Every catalysts has a reaction pocket attached to the central metal atom.
-This reaction pocket is defined by a single hydrogen atom attached to the central iridium atom.
 The goal is to rotate the entire molecule so that the reaction pocket is aligned with the $z$-Axis.
 The axis to be aligned is defined by the vector running from the center to the reaction pocket, so
 
@@ -97,7 +95,7 @@ $$
 
 
 The rotation $R(\alpha)$ can then be applied to all centered atoms in the element.
-The aligned and centered molecule can therefor be described as
+The aligned and centered molecule can therefore be described as
 
 $$ 
 \mathbb{E}^R = \left\{ R(\alpha) (p_i - p_{Ir}) |  p_i \in \mathbb{E} \right\}
@@ -116,7 +114,7 @@ This normalization is repeated for every element in the dataset.
 
 
 \newpage
-\section{Fourier descriptors for invariant feature generation}
+\section{Layered elliptic fourier descriptors (LEFD) for invariant feature generation}
 
 The first attempt at feature generation was using a fully rotational invariant feature descriptor.
 The method used is an Elliptic Fourier Descriptor (EFD).
@@ -126,8 +124,7 @@ The higher the order of the descriptor, the better a contour can be approximated
 The object is sliced at different $z$ heights, resulting in 2D contour maps for every slice.
 For each slice, the contour is described using an EFD.
 This generates a fully rotationally invariant description.
-Since EFDs allow to approximate a contour with just a few coefficients, the generated features
-are also low dimensional.
+Since EFDs allow to approximate a contour with just a few coefficients, features are generated with low dimensionality.
 This feature generator will be referred to as layered elliptic fourier descriptor(LEFD).
 
 \begin{figure} [H]
@@ -141,7 +138,7 @@ This feature generator will be referred to as layered elliptic fourier descripto
 
 Along the $z$-axis, starting from $z_{start}$ to $z_{end}$, the molecule is sliced in a distance of $z_{height}$.
 $z_{start}, z_{end}, z_{height}$ are tuning parameters.
-Here, $z_{start}, z_{end}$ are chosen so that all molecules from the dataset fully fit into the boundaries.
+Here, $z_{start}, z_{end}$ were chosen so that all molecules from the dataset fully fit into the boundaries.
 
 A slice is computed by getting the radius of every atom $i$ in the molecule at the slice height $z$ [Figure~\ref{fig:slice3D}].
 
@@ -150,9 +147,7 @@ $$ r_i(z) =\left\{\begin{array}{ll} \sqrt{R_i^2 - (z - p_i^R[2])^2} &, | z - p_i
 $$ %TODO: Der Betrag ist immer > 0 ???
 
 $R_i$ is the Van-der-Waals radius of element $i$, $p_i^R[2]$ is the $z$ component of the location vector.
-The slice is now constructed by drawing a circle with radius $r_i(z)$ around the $x,y$ coordinates for each atom for each slice [Figure~\ref{fig:slice}].
-
-
+The slice is constructed by drawing a circle with radius $r_i(z)$ around the $x,y$ coordinates for each atom for each slice [Figure~\ref{fig:slice}].
 The slice consists of a set of circles.
 These circles can partially or fully intersect. 
 
@@ -160,13 +155,13 @@ To describe the contour, a fourier contour descriptor is used.
 This contour descriptor allows to easily ignore rotation of the contour and generate invariant low-dimensional features from the shape.
 However, it can only work on a closed contour.
 Isolate islands of circles that without intersection have to be dealt with separately.
-For simplicity, islands will be ignored by the contour descriptor.
+For simplicity, islands are ignored by the contour descriptor.
 To identify islands and one continuos subset of circles, for each slice a graph is constructed.
-For every atom with radius $>0$ we create a node.
-For every atom that intersects with another we create an edge between these two nodes.
-Now the \texttt{Largest Connected Component}, so the connected subgraph with the most nodes, is computed.
+For every atom with radius $>0$ a node is created.
+For every atom that intersects with another an edge between these two nodes is added.
+The \texttt{Largest Connected Component}, so the connected subgraph with the most nodes, is computed.
 This returns the most atoms forming a continuously connected shape in the current slice.
-In the next steps only this subset of circles will be used to describe the contour.
+In the next steps only this subset of circles is used to describe the contour.
 
 \begin{figure} [h]
   \centering
@@ -361,7 +356,7 @@ These features will be used for prediction of a molecules activation barrier in 
 
 
 \newpage
-\section{Feature generation using smooth normalized atomic positions}
+\section{Feature generation using smooth normalized atomic positions (SNAP)}
 \label{ch:SNAP}
 In a second approach, the molecule was encoded by smoothing the atomic positions, 
 and then combining a set of functions describing the 3D space around the metal center.
@@ -377,19 +372,18 @@ on the open-source library Dscribe that provides an implementation of SOAP \cite
 
 The Smooth Normalized Atomic Positions (SNAP) descriptor proposed here allows for a reconstruction of the 3D space from the coefficients, 
 while partly keeping the rotational invariance.
-Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts special struture.
-The SNAP descriptor therefore is less universal than SOAP. 
-In applications were no translation back to 3D space is required,
-in most instances SOAP should be chosen over SNAP for its fully rotationally invariant output.
+Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts iridium reaction-pocket structure.
+%The SNAP descriptor therefore is less universal than SOAP. 
+%In applications were no translation back to 3D space is required,
+%in most instances SOAP should be chosen over SNAP for its fully rotationally invariant output.
 
 \subsection{SNAP requirements}
 
 The general idea of SNAP is to describe the atoms surrounding a cental atom using a fixed set of coefficients.
 Rotational invariance therefore cannot be guaranteed, unless the encoded molecule itself can be rotated in a way to explicitly set it's rotation.
-
 For catalyst molecules, this natural axis can be defined by setting the reaction pocket to the top, and the central iridium atom as a center.
 
-For other molecule classes, defining a natural axis might not be as trivial.
+%For other molecule classes, defining a natural axis might not be as trivial.
 
 When no clear axis of alignment can be found, the SNAP output may be augmented by rotating the input along all axis of freedom.
 If there are multiple axis of freedom SOAP may be preferable since it naturally offers a fully rotationally invariant description.
