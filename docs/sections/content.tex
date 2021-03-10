@@ -334,16 +334,11 @@ After calculating the coefficients for every slice, the different slices will be
 One dimension of the array will correspond to the spacial $z$ direction, so it will be equivalent to the number of layers chosen.
 The other dimension will hold the fourier coefficients for each layer.
 \begin{figure}[H]
-  \minipage{0.4\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/fourier/contour.png}
-  \endminipage\hfill
-  \minipage{0.6\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/fourier/fourier-slices.png}
-  \endminipage
+  \includegraphics[width=1.0\textwidth]{figures/fourier/snap-layered.png}
   \caption[Slices produced by LEFD encoder]{
-  On the left a slice is described by fourier descriptors. Higher order descriptors are able to approximate the contour better than lower order descriptors. 
+  A slice is described by fourier descriptors (a). Higher order descriptors are able to approximate the contour better than lower order descriptors. 
   The isolate is ignored by the contour descriptor. The rotation is kept as part of the fourier description for illustration purposes.
-  On the right the different slices making up on element are placed on top of each other. Slices without any volume are not rendered. 
+  Different slices making up on element are placed on top of each other (b). Slices without any volume are not rendered. 
   While the rotation is removed to keep it rotationally invariant, the offset from the center is encoded.
   }
   \label{fig:slice-layered}
@@ -517,7 +512,7 @@ With an infinite amount of coefficients a perfect description of the space is th
 in reality computational limits only allow for a rather low resolution of the density space [Figure~\ref{fig:snap-density}]. 
 \begin{figure} [h]
   \centering
-  \includegraphics[width=1\textwidth]{figures/snap/density/dense.png} % for .pdf files etc use \includegraphics{test.pdf}
+  \includegraphics[width=1\textwidth]{figures/snap/density/Densities.png} % for .pdf files etc use \includegraphics{test.pdf}
   \caption[SNAP density visualization]{Visualization of the density reconstructed from $c_{nlm}^Z$ coefficients for different resolutions.
   Top: $r_{cut} = 10$, bottom: $r_{cut} = 25$, left: $n_{max} = l_{max} = 2$, right: $n_{max} = l_{max} = 8$.
   The density shown is visualizing the density for phosphorus only.

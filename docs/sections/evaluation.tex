@@ -168,49 +168,35 @@ Dropout and batch normalization layers were added in between to reduce overfitti
 The prediction accuracy of the CNN was slightly worse than the prediction accuracy achieved on autocorrelation features \cite{friederich_dos}.
 The best CNN achieved a mean squared error over all test examples of $MAE=1.36 kcal/mol$ and a coefficient of determination of $r^2=0.84$ [Figure~\ref{fig:fourier_cnn}] when trained on a train fraction of 80\%.
 In comparison, the best neural network of \cite{friederich_dos} achieved a prediction accuracy of $MAE=1.12 kcal/mol$ and $r^2=0.845$.
+\begin{figure}[H]
+    \minipage{0.1\textwidth}
+    \endminipage\hfill
+    \minipage{0.4\textwidth}
+      \begin{overpic}[width=1.0\textwidth,tics=10]{figures/regression/fourier/cnn/lossCNN.png}
+        \put (-5,60) {\Large a}
+      \end{overpic}
+    \endminipage\hfill
+    \minipage{0.4\textwidth}
+      \begin{overpic}[width=1.0\textwidth,tics=10]{figures/regression/fourier/cnn/scatterCNN.png}
+        \put (-10,65) {\Large b}
+      \end{overpic}
+    \endminipage\hfill
+    \minipage{0.1\textwidth}
+    \endminipage
+    \caption[CNN trained on LEFD features]{
+        Mean squared error loss while training the CNN (a). The jitter in the training loss during convergence is likely caused by the dropout layers. 
+        The optimization goal was minimizing the mean squared error. 
+        Training was performed on 80\% of the data, the networks reaches accuracies of $MAE=1.36$, $r^2=0.84$.
+        The predictions of the activation barrier are compared to the real values (b).
+    }
+    \label{fig:fourier_cnn}
+\end{figure}
 
 Considering the space of possible network configurations is highly irregular, there is likely a network configuration using convolution layers 
 that performs better than the one found here.
 However all the tests performed were indicating that densely connected layers would achieve similar or higher accuracy.
 The idea of convolution layers was therefore dropped early on, and instead the focus was shifted to optimizing a fully-connected architecture.
 \\ 
-
-
-After all \cite{friederich_dos} has shown that similar accuracy to the convolution approach can be achieved by learning from autocorrelation features,
-the next idea was to use a transfer learning approach.
-In a first step, the network was trained to predict the autocorrelation features computed in \cite{friederich_dos}.
-In a second step, the network is then extended with additional layers to learn to predict the activation barrier [Figure~\ref{fig:transferlearn}].
-The hope was that teaching the network about autocorrelation features, the model would learn to recognize relevant properties of a catalyst.
-In a second step, the entire network would then be trained to adapt specifically to the activation barrier.
-\\
-\begin{figure}[H]
-    \minipage{0.1\textwidth}
-    \endminipage\hfill
-    \minipage{0.4\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/cnn/lossCNN.png}
-    \endminipage\hfill
-    \minipage{0.4\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/cnn/scatterCNN.png}
-    \endminipage\hfill
-    \minipage{0.1\textwidth}
-    \endminipage
-    \caption[CNN trained on LEFD features]{
-        Mean squared error loss while training the CNN. The jitter in the training loss during convergence is likely caused by the dropout layers. 
-        The optimization goal was minimizing the mean squared error. 
-        Training was performed on 80\% of the data.
-        On the right are the predictions of the activation barrier in comparison to the real values ($MAE=1.36$, $r^2=0.84$).
-    }
-    \label{fig:fourier_cnn}
-\end{figure}
-
-Seeing that the convolutional approach did not seem to improve results, a fully connected architecture predicting autocorrelation features from fourier coefficients 
-was used.
-Since there were 30 autocorrelation features used, the last layer of the network had a size of 30.
-Findings about good hyperparameter, such as layer size, regularization and dropout rates, could be partly reused from the convolution step.
-In the end, a network that predicted the 30 independent autocorrelation features was found.
-The network was able to predict some autocorrelation with very high accuracy. Specifically, the $T$ features and $I$ features were
-predicted with an accuracy of $r^2 > 0.98$. 
-
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.7\textwidth]{figures/regression/fourier/nn.png} 
@@ -221,23 +207,32 @@ predicted with an accuracy of $r^2 > 0.98$.
     }
     \label{fig:transferlearn}
 \end{figure}
+
+After all \cite{friederich_dos} has shown that similar accuracy to the convolution approach can be achieved by learning from autocorrelation features,
+the next idea was to use a transfer learning approach.
+In a first step, the network was trained to predict the autocorrelation features computed in \cite{friederich_dos}.
+In a second step, the network is then extended with additional layers to learn to predict the activation barrier [Figure~\ref{fig:transferlearn}].
+The hope was that teaching the network about autocorrelation features, the model would learn to recognize relevant properties of a catalyst.
+In a second step, the entire network would then be trained to adapt specifically to the activation barrier.
+\\
+
+Seeing that the convolutional approach did not seem to improve results, a fully connected architecture predicting autocorrelation features from fourier coefficients 
+was used.
+Since there were 30 autocorrelation features used, the last layer of the network had a size of 30.
+Findings about good hyperparameter, such as layer size, regularization and dropout rates, could be partly reused from the convolution step.
+In the end, a network that predicted the 30 independent autocorrelation features was found.
+The network was able to predict some autocorrelation with very high accuracy. Specifically, the $T$ features and $I$ features were
+predicted with an accuracy of $r^2 > 0.98$. 
+
 Other features, such as $Z$ features, were lacking behind in accuracy, with the network only being able to reach accuracies of $r^2<0.96$ for some features.
 The features the network was able to approximate well were also less important to the network found in \cite{friederich_dos}, while the features 
 the network performed poorly were the more important features [Figure~\ref{fig:transfer_result}].
 
 \begin{figure}[h]
-    \minipage{0.32\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/importance_map.png}
-    \endminipage\hfill
-    \minipage{0.32\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/scatterZ2.png}
-    \endminipage
-    \minipage{0.32\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/scatterT0.png}
-    \endminipage
+    \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/transfer-learn.png}
     \caption[Prediction of autocorrelation features from LEFD]{
-    Importance of features for the neural networks (left). Reprinted from \cite{friederich_dos}.
-    Prediction of Z-2 features from fourier features (middle) and prediction of T-0 features from fourier features (right). 
+    Importance of features for the neural networks (a). Reprinted from \cite{friederich_dos}.
+    Prediction of Z-2 features from fourier features (b) and prediction of T-0 features from fourier features (c). 
     The network was trained on a train fraction of 80\%.
     }
     \label{fig:transfer_result}
@@ -248,9 +243,20 @@ The last layers of model were removed, and replaced with newly initialized layer
 These newly added layers have an output size of 1 to allow for prediction of the activation barrier.
 The best configuration found kept the first 3 layers of the original network, and then added 3 additional hidden layers and one output layer.
 Regularization and normalization was used for some of the layers.
+\begin{figure}[H]
+  \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/transfer-loss.png}
+  \caption[LEFD transfer learning]{
+  Mean squared error loss of the network being trained to predict autocorrelation features (a).
+  The adapted network is then trained again to predict the activation barrier (b).
+  The prediction accuracy of $MAE=1.139 kcal/mol$ and $r^2=0.874$ has slight improved in comparison to the native ANN approach (c).  
+  Both networks are trained on a train fraction of 80\%.
+  }
+  \label{fig:transfer_final}
+\end{figure}
 The model was then trained again with fourier coefficients as input and activation barriers as output.
 Comparing the convolution approach, the network took longer to converge and overall regression accuracy improved.
 The network achieved a $r^2=0.874$ and a $MAE=1.139 kcal/mol$ when trained on 80\% of the data [Figure~\ref{fig:transfer_final}].
+
 
 
 In an attempt to find a better network architecture, a hyperparameter optimization was performed.
@@ -261,6 +267,17 @@ The search space here was limited by the findings of manual hyperparamter tuning
 Notable optimization values given to the hyperparamter tuner were the number and size of fully connected layers, the regularization rate of these layers, and the dropout rate for the layers.
 The optimizer also had control over the learning rate.
 
+
+\begin{figure}[H]
+    \includegraphics[width=1.0\textwidth]{figures/regression/fourier/slice-exp.png}
+    \caption[Evaluation of LEFD models]{
+      $MAE$ and $r^2$ values for different slice heights (a,b).
+      For all slice heights a separate hyperparameter optimization was run, resulting in different network architectures.
+      All networks are trained using 80\% on the data. The $r^2=0.882$ scores and $MAE=1.096 kcal/mol$ were evaluated later using a test dataset.
+      Predictions of the best performing network found in the hyperparameter optimization step are plotted (c).
+    }
+    \label{fig:fourier_final}
+\end{figure}
 
 
 In addition, multiple hyperparameter optimizations were performed for different slice heights $l$.
@@ -277,6 +294,7 @@ The improvement in accuracy from 30 to 75 slices is so small that it might be an
 randomness of training, and does not necessarily mean that the network is able to learn better from the higher amount of slices.
 
 
+
 The process shows that performing regression on fourier features is possible.
 The accuracy however is worse than other machine learning techniques on autocorrelation features, especially when trained on small training fractions.
 Since the goal of this thesis is to learn from the 3D structure of the molecule, the similar performance to networks trained on autocorrelation features
@@ -284,46 +302,14 @@ might indicate that the information learned from the 3D structure is limited.
 This assumption is further validated by the fact that the transfer learning approach that 
 tries to eliminate spacial information about the element in the middle of the network, achieves similar accuracy to the 
 network trained on features that do not include any information about the 3D structure.
-
 In an effort to improve prediction accuracy, a different feature extractor, SNAP, was developed.
 
-\begin{figure}[b]
-    \minipage{0.3333\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/lossTransferAutocor.png}
-    \endminipage\hfill
-    \minipage{0.3333\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/lossTransferFull.png}
-    \endminipage\hfill
-    \minipage{0.3333\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/transfer/scatterTransferFull.png}
-    \endminipage
-    \caption[LEFD transfer learning]{
-    Loss of the network being trained to predict autocorrelation features (left).
-    The adapted network is then trained again to predict the activation barrier. The loss function in the middle shows the second training.
-    The prediction accuracy of $MAE=1.139 kcal/mol$ and $r^2=0.874$ has slight improved (right) in comparison to the native ANN approach.  
-    Both networks are trained on a train fraction of 80\%.
-    }
-    \label{fig:transfer_final}
-\end{figure}
 
-\begin{figure}[H]
-    \minipage{0.3333\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/mae_layer.png}
-    \endminipage\hfill
-    \minipage{0.3333\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/r2_layer.png}
-    \endminipage\hfill
-    \minipage{0.3333\textwidth}
-      \includegraphics[width=1.0\textwidth]{figures/regression/fourier/scatterHyperparam.png}
-    \endminipage
-    \caption[Evaluation of LEFD models]{
-      $MAE$ and $r^2$ values for different slice heights.
-      For all slice heights a separate hyperparameter optimization was run, resulting in different network architectures.
-      All networks are trained using 80\% on the data. The $r^2$ scores and $MAE$ were evaluated later using a test dataset.
-      On the right predictions of the best performing network found in the hyperparameter optimization step is plotted.
-    }
-    \label{fig:fourier_final}
-\end{figure}
+
+
+
+
+
 
 \newpage
 \section{Regression on SNAP features}
@@ -410,7 +396,7 @@ barriers in the dataset, while the location seems to be less important.
 Since hyperparameter searches are very costly, hyperparameter analysis was run to an $n_{max} = 9$.
 Significantly increasing $n_{max}$ might further improve prediction accuracy.
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \minipage{0.3333\textwidth}
     \includegraphics[width=1.0\textwidth]{figures/regression/snap/fixnl.png}
   \endminipage\hfill
@@ -465,6 +451,18 @@ However for $r_{del}=6$ the mean MAE over all networks trained on 80\% of the da
 For $r_{del} = 6$ 95\% of the atoms are included in the data. 
 The remaining 4\% outside of the cutoff sphere were ignored. 
 
+\begin{figure}[H]
+  \includegraphics[width=1.0\textwidth]{figures/regression/snap/cutoff-comp.png} %TODO: REPLACE!!!!
+  \caption[Comparison of SNAP cutoff radii]{
+  (a) Networks with different $n_{max}, l_{max}$ are trained on different cutoff radii.
+
+  (c) Networks are trained with a fixed $r_{cut} = 12 \AA$ and a cutoff sphere $r_{del}$ outside of where all atoms are removed.
+  (b) shows the percentage of atoms included in the cutoff sphere with radius $r_{del}$.
+  All networks are trained on a train fraction of 80\%.
+ }
+  \label{fig:snap_hyperparameter}
+\end{figure}
+
 For $r_{cut}=8$ the mean MAE over all networks trained on 80\% of the data was at $MAE = 0.734 kcal/mol$. 
 At this cutoff radius, 100\% of the atoms are included in the data.
 This accuracy is within the margin of error that could be caused by the randomness of the training process
@@ -483,25 +481,6 @@ This means the features to encode empty space will compete with the features enc
 actual information about the molecule.
 The less empty space needs to be encoded, the more accurate actual density can be represented.
 From now on, all cutoff radii will therefore be chosen at $r_{cut} = 8 \AA$.
-
-\begin{figure}[!htb]
-  \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/rcut-compare.png} %TODO: REPLACE!!!!
-  \endminipage\hfill
-  \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-sphere-perc.png}
-  \endminipage\hfill
-  \minipage{0.3333\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/cut-sphere-comp.png}
-  \endminipage\hfill
-  \caption[Comparison of SNAP cutoff radii]{
-  On the left are networks with different $n_{max}, l_{max}$ trained on different cutoff radii.
-  On the right networks are trained with a fixed $r_{cut} = 12 \AA$ and a cutoff sphere $r_{del}$ outside of where all atoms are removed.
-  The center shows the percentage of atoms included in the cutoff sphere with radius $r_{del}$.
-  All networks are trained on a train fraction of 80\%.
- }
-  \label{fig:snap_hyperparameter}
-\end{figure}
 
 
 \paragraph{Sensitivity to rotation}
@@ -544,6 +523,24 @@ While different rotations of the molecule do not include any new data, they stil
 general shape of a catalyst.
 This might help the network learn about the general topology of the input data.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1.0\textwidth]{figures/regression/snap/snap-rotation.png}
+  %\hfill  
+  %\minipage{0.3333\textwidth}
+  %  \includegraphics[width=1.0\textwidth]{figures/regression/snap/augmentation.png}
+  %\endminipage\hfill
+  \caption[Evaluation of SNAP rotational invariance]{
+  The predictions for a network on SNAP features for $n_{max}=9, l_{max}=3$ trained with 30 data augmentation steps (a) 
+  and 5 augmentation steps (b) for 4 randomly selected samples from the test dataset.
+  The continuos line is the prediction of the network, the dotted line is the calculated barrier.
+  The networks were trained on a train split of 70\%.
+  %On the right are the results for multiple models trained on different augmentation steps.
+  %All networks are trained on the same network architecture, at different train fractions.
+  }
+  \label{fig:snap_roation}
+
+\end{figure}
 Transfer learning might utilize this property in further improvements.
 In the future the test error might be improved by creating a second dataset with a variety of different catalysts molecules.
 Due to the combinatorial approach in which molecules surrounding Vaska's complex can be generated, 
@@ -563,28 +560,17 @@ The hope is that with this approach the prediction accuracy will improve again.
 
 If this hypothesis holds true shall be explored in future experiments.
 
-
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
-  \minipage{0.5\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-5steps-30per.png}
-  \endminipage\hfill
-  \minipage{0.5\textwidth}
-  \includegraphics[width=1.0\textwidth]{figures/regression/snap/aug-30steps-30per.png}
-  \endminipage\hfill
-  %\hfill  
-  %\minipage{0.3333\textwidth}
-  %  \includegraphics[width=1.0\textwidth]{figures/regression/snap/augmentation.png}
-  %\endminipage\hfill
-  \caption[Evaluation of SNAP rotational invariance]{
-  The predictions for a network on SNAP features for $n_{max}=9, l_{max}=3$ trained with 5 data augmentation steps (left) 
-  and 20 augmentation steps (right) for 4 randomly selected samples from the test dataset.
-  The continuos line is the prediction of the network, the dotted line is the calculated barrier.
-  The networks were trained on a train split of 70\%.
-  %On the right are the results for multiple models trained on different augmentation steps.
-  %All networks are trained on the same network architecture, at different train fractions.
+  \includegraphics[width=0.8\textwidth]{figures/regression/snap/snap-result.png}
+  \caption[Best performing model on SNAP features]{
+    Loss of the best performing model on SNAP features with  $n_{max}=8, l_{max}=4$ (a). 
+    The loss function used is mean squared error.
+    Predictions of the model trained on a training fraction of 80\% (b). 
+    For every sample, 30 data augmentation steps are used. This makes some samples appear like small vertical lines.
+    The model achieves an accuracy of $0.52980 kcal/mol$ and $r^2 = 0.96231$.
   }
-  \label{fig:snap_roation}
+  \label{fig:snap_results}
 
 \end{figure}
 
@@ -600,34 +586,13 @@ Hyperparameter optimization was run on a train fraction of 80\% of the dataset.
 This time, the hyperparameter space was increased slightly to allow the optimizer
 to choose from up to 10 hidden layers, each with a maximum amount of 1000 neurons.
 
-
-\begin{figure}[!htb]
-  \minipage{0.5\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/snap/loss_8-4.png}
-  \endminipage\hfill
-  \minipage{0.5\textwidth}
-  \includegraphics[width=1.0\textwidth]{figures/regression/snap/scatter_8-4.png}
-  \endminipage\hfill  
-  \caption[Best performing model on SNAP features]{
-    Loss of the best performing model on SNAP features with  $n_{max}=8, l_{max}=4$ on the left. 
-    The loss function used is mean squared error.
-    Predictions of the model trained on a training fraction of 80\% on the right. 
-    For every sample, 30 data augmentation steps are used. This makes some samples appear like small vertical lines.
-    The model achieves an accuracy of accuracies of $0.52980 kcal/mol$ and
-    $r^2 = 0.96231$.
-  }
-  \label{fig:snap_results}
-
-\end{figure}
-
-
 Even with slight variations in prediction accuracy due to rotation, the overall results of regression performed on SNAP features is still promising.
 All models found during hyperparameter optimization for different $n_{max}, l_{max}$ were able to predict the reaction barrier with accuracies in the
 range of the best regression methods found so far.
-With the best models for $n_{max}=8, l_{max}=4$ achieving accuracies of $MAE=0.530 kcal/mol$ and $r^2=0.962$ \ref{fig:snap_results}.
+With the best models for $n_{max}=8, l_{max}=4$ achieving accuracies of $MAE=0.530 kcal/mol$ and $r^2=0.962$ [Figure~\ref{fig:snap_results}].
 
 The network has a total of 7 hidden layers.
-Dropout and batch normalization layers are added in between \ref{fig:architectures}.
+Dropout and batch normalization layers are added in between [Figure~\ref{fig:architectures}].
 
 Compared to other modes of encoding the data, SNAP seems to be especially susceptible to outliers.
 For all models, the regression accuracy is heavily influenced by a small number of samples with poor precision.
@@ -665,7 +630,23 @@ However the SNAP features not only allow for this analysis, but are also able to
 Another important metric is the performance of the networks for different sizes of training data.
 The models performance will therefore be compared by their accuracy for different test split sizes.
 \\
-The first approach regression was using LEFD features.
+\begin{figure}[H]
+  \minipage{0.5\textwidth}
+    \includegraphics[width=1.0\textwidth]{figures/regression/mae-compare.png}
+  \endminipage\hfill
+  \minipage{0.5\textwidth}
+  \includegraphics[width=1.0\textwidth]{figures/regression/r2-compare.png}
+  \endminipage\hfill  
+  \caption[Comparison of learning curves]{
+    Learning curves of different machine learning methods on the same dataset.
+    Gaussian Process and Gaussian Boosting models were proposed in \cite{friederich_dos}.
+    The GCN is a unpublished result by \citeauthor{friederich_dos}.
+  }
+  \label{fig:comparison}
+
+\end{figure}
+
+The first approach to regression was using LEFD features.
 When training on 80\% of LEFD features, the best neural network achieved an accuracy of $MAE = 1.096 kcal/mol$ and $r^2=0.882$.
 While the accuracy is slightly higher than the best neural network in \cite{friederich_dos}, it still falls short 
 of both the GNN and other machine learning models.
@@ -693,24 +674,9 @@ there are some outlier with very poor performance.
 Depending on the application of the network, a network with a lower overall accuracy 
 that is less susceptible to outliers might be better suited.
 
-\begin{figure}[!htb]
-  \minipage{0.5\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/regression/mae-compare.png}
-  \endminipage\hfill
-  \minipage{0.5\textwidth}
-  \includegraphics[width=1.0\textwidth]{figures/regression/r2-compare.png}
-  \endminipage\hfill  
-  \caption[Comparison of learning curves]{
-    Learning curves of different machine learning methods on the same dataset.
-    Gaussian Process and Gaussian Boosting models were proposed in \cite{friederich_dos}.
-    The GCN is a unpublished result by \citeauthor{friederich_dos}.
-  }
-  \label{fig:comparison}
-
-\end{figure}
 
 
-
+\newpage
 \section{Explaining the prediction}
 
 Traditionally neural networks are seen as a black-box approach to data analysis.
@@ -760,6 +726,15 @@ issues can be resolved.
 Seeing that scaling issues are not easily solvable, a second attempt to explain the origin of the prediction
 was run using a gradient based method.
 
+
+The information that can be extracted from SHAP values therefore is limited to feature space.
+In the case of Figure~\ref{fig:shap}, the features corresponding to bromine and arsenic seem to decrease the barrier.
+Interestingly the features encoding the absence of phosphorus seem to increase the barrier.
+
+A good sign that the values have some validity is that Iridium never influences the barrier.
+Since iridium is present exactly once in all elements, it should not carry any information about the barrier,
+and therefore not influence the prediction at all.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/evaluation/SHAP.png}
@@ -772,15 +747,6 @@ was run using a gradient based method.
      }
     \label{fig:shap}
   \end{figure}
-
-The information that can be extracted from SHAP values therefore is limited to feature space.
-
-In the case of Figure~\ref{fig:shap}, the features corresponding to bromine and arsenic seem to decrease the barrier.
-Interestingly the features encoding the absence of phosphorus seem to increase the barrier.
-
-A good sign that the values have some validity is that Iridium never influences the barrier.
-Since iridium is present exactly once in all elements, it should not carry any information about the barrier,
-and therefore not influence the prediction at all.
 
 SHAP allows to get some intuition of the element and how its atoms influence the barrier.
 However for now the information we can gain is limited to a global representation of the element.
@@ -842,7 +808,16 @@ The difference between these two densities should contain information about wher
 $$ \rho^Z_\nabla = \rho^Z_{f+g} -  \rho^Z_{f} $$
 
 This gives a 3D dimensional density space in which interpretations of the result can be performed.
-\begin{figure}
+Here the encoding limitations introduced earlier are encountered.
+For some atoms, the encoding seems to work as expected, producing regions of negative gradient density where
+an increase in the activation barrier is expected, for others the distribution is not precise enough for detailed analysis.
+Looking at Figure~\ref{fig:snap-gradient}, an area of negative density for the nitrogen plot 1a of element 1 can be observed.
+The negativity is relatively strong in comparison with the gradient density for other elements.
+This indicates that decreasing the amount of nitrogen atoms should increase the activation barrier.
+This is confirmed by the data.
+
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{figures/evaluation/GradientComp.png}
   \caption[Comparison of local gradients]{
@@ -858,13 +833,6 @@ This gives a 3D dimensional density space in which interpretations of the result
   \label{fig:snap-gradient}
 \end{figure}
 
-Here the encoding limitations introduced earlier are encountered.
-For some atoms, the encoding seems to work as expected, producing regions of negative gradient density where
-an increase in the activation barrier is expected, for others the distribution is not precise enough for detailed analysis.
-Looking at Figure~\ref{fig:snap-gradient}, an area of negative density for the nitrogen plot 1a of element 1 can be observed.
-The negativity is relatively strong in comparison with the gradient density for other elements.
-This indicates that decreasing the amount of nitrogen atoms should increase the activation barrier.
-This is confirmed by the data.
 When exchanging one nitrogen atom for fluorine, the activation barrier increases from $3.6 kcal/mol$ to $18.0kcal/mol$.
 However, when looking at the other plots, the density plot becomes less clear.
 Since the addition of the fluorine atom increased the activation barrier, the expectation is that a region of strong positive
@@ -886,6 +854,15 @@ This comes with its own set of challenges, since the size of the features does n
 The cubic scale of $l_{max}$ implies a dramatic increase in the size of the feature vector, increasing computation time for booth feature generation and training of the regression model.
 \\
 
+\begin{figure}[H]
+  \includegraphics[width=1.0\textwidth]{figures/evaluation/gradient-comp.png}
+  \caption[Comparison of summed gradients]{
+    Comparison of the gradient for molecule 1 (a) and 2 (b) for different species of atoms.
+  }
+  \label{fig:snap_global_gradient}
+
+\end{figure}
+
 While the local encoding does not seem to be accurate enough for detailed interpretation,
 when integrating over the entire density space, an insight about the global influence for each species can be gained.
 The output looks similar to what was achieved with SHAP values, but in this case insight on how changing the density for a certain species will affect the activation barrier should be gained.
@@ -894,7 +871,7 @@ Similarly, a low density should indicate adding more density for this species wi
 
 For easier computation, instead of an integration the sum over a grid will be computed: 
 
-$$ \rho_\nabla^Z \sim \sum_{\mathbb{R}^3} \rho_\nabla^Z $$
+$$ \int_{\mathbb{R}^3} \rho_\nabla^Z \sim \sum_{\mathbb{R}^3} \rho_\nabla^Z $$
 
 When looking at the sum over $\rho^Z_\nabla$, the plot is heavily dominated by hydrogen and carbon
 in many cases.
@@ -902,20 +879,6 @@ Since hydrogen and carbon are used in a variety of different ligands, the interp
 these elements is low.
 For other elements, the gradient density might be a better indication 
 
-
-\begin{figure}[!htb]
-  \minipage{0.5\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/evaluation/elem2-GRAD.png}
-  \endminipage\hfill
-  \minipage{0.5\textwidth}
-    \includegraphics[width=1.0\textwidth]{figures/evaluation/elem1-GRAD.png}
-  \endminipage\hfill
-  \caption[Comparison of summed gradients]{
-    Comparison of the gradient for molecule 1 (left) and 2 (right) for different species of atoms.
-  }
-  \label{fig:snap_global_gradient}
-
-\end{figure}
 
 
 It is unclear if the chemical interpretation here should be that hydrogen and carbon play a bigger role in the activation
@@ -928,10 +891,10 @@ This would indicate that decreasing the amount of nitrogen in the element should
 Looking at the second element, further increasing the fluorine density should further increase the activation barrier.
 Both are consistent with the calculated barriers.
 
+
 For other elements, the interpretation of the gradient becomes less clear.
 In some cases, the gradient does not seem to correspond to the intuition about a molecule.
 The gradient also varies between models trained on different $n_{max}$ and $l_{max}$ [Figure~\ref{fig:snap-gradient-model}].
-
 
 All these uncertainties make a general conclusion about the relevance of the gradient difficult.
 While there seems to be some correlation between what is expected from the gradient and what data suggests, 
@@ -948,9 +911,7 @@ to improve the interpretability the resolution of the encoding needs to be incre
   \centering
   \includegraphics[width=0.9\textwidth]{figures/evaluation/Gradient-model-comp.png}
   \caption[Comparison of gradients between different models]{
-      Gradient for nitrogen for the same element on 2 different models.
-      The model on the left was trained on $n_{max} = 9, l_{max}=3$ while the model on the right was trained on 
-      $n_{max}=8, l_{max}=4$. 
+      Gradient for nitrogen for the same element on 2 different models trained on different combinations of $n_{max}, l_{max}$.
       While the shape of the 2 densities has some similarities, the scale of the density differs by a factor of 6.
       The summation over the density space has some similarities, however for some elements the difference is significant.
    }
