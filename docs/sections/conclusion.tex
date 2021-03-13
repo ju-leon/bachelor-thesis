@@ -38,7 +38,7 @@ with its combinatorial generation.
 The high accuracy of the network raises concerns about the diversity of the dataset.
 The possibility of the network learning structure in the dataset, e.g. different ligand combinations,
 rather than the structure of the chemical space cannot be ruled out.
-While booth, a validation set during training and a test set after training were used to counter these issues,
+While both, a validation set during training and a test set after training were used to counter these issues,
 the dataset needs to be extended with further ligands in the future to draw a more definite conclusion.
 
 In the future the feature generators might be used to encode additional information about the elements.
@@ -91,11 +91,12 @@ used in other areas of machine learning.
 It allows for many different approaches to better understand properties of chemical elements, 
 and might help with computational element discovery.
 \\
+
 When the features produced from the chemical space can be interpreted,
 using neural network based techniques such as auto encoders or generative adversarial neural networks (GANs) are thinkable.
 Both autoencoders and GANs are machine learning methods that can be used to produce never seen before data with similar properties
 to the training data.
-For image generation, GANs and autoencoders have proven to generate output that is virtually indistinguishable from real data \cite{karras2019stylebased} .
+For image generation, GANs and autoencoders have proven to generate output that is virtually indistinguishable from real data \cite{karras2019stylebased}.
 Using these techniques, but applying them to features of catalysts, rather than to images, computational generation of catalyst molecules is thinkable.
 The approach is again limited by the accuracy of mapping between chemical space and feature space.
 

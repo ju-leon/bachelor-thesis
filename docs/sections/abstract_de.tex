@@ -12,21 +12,26 @@
 
 \Abstract
 
-Vaska's Komplex beschreibt eine Iridium Verbindung, mit der durch einen kombinatorischen Ansatz 
-verschiedenste Katalysatoren erzeugt werden können.
-Die Aktivierungenergie der entstehenden Katalysatoren ist abhängig von ihrer Struktur. 
+Vaska's Komplex beschreibt eine Iridiumverbindung, von der durch einen kombinatorischen Ansatz 
+verschiedenste Katalysatoren abgeleitet werden können.
+Die Aktivierungsenergie der entstehenden Katalysatoren ist abhängig von ihrer durch
+Liganden gegebenen Struktur. 
 
-Die Berechnung dieser Aktivierungsenergie ist sehr komplex und benötig entsprechend viel Rechenleistung.
-Durch den Einsatz von Techniken des maschinellen Lernens kann die Aktivierungsenergie mit hoher Genauigkeit vorraus gesagt werden,
-ohne das eine konkrete Berechnung der Aktivierungsenergie nötig ist.
+Aufgrund der vielen möglichen Kombinationen von Liganden und die Komplexität der zugrunde liegenden quantenchemischen 
+Abhängigkeiten ist die Berechnung der Aktivierungsenergie sehr komplex und benötigt entsprechend viel Rechenleistung.
+%Die Berechnung dieser Aktivierungsenergie ist sehr komplex und benötigt entsprechend viel Rechenleistung.
+Durch den Einsatz von Techniken des maschinellen Lernens kann die Aktivierungsenergie mit hoher Genauigkeit vorausgesagt werden,
+ohne dass eine konkrete Berechnung der Aktivierungsenergie nötig ist.
 
 In dieser Bachelorarbeit werden verschiedene Methoden die dreidimensionale Struktur 
 eines Katalysators in maschinenverständliche Merkmale zu überführen vorgestellt. 
-Die Merkmale werden dabei weitesgehend unabhängig von der Rotation des Elements gehalten.
+Die Merkmale werden dabei weitestgehend unabhängig von der Rotation des Elements gehalten.
 
-Mit Hilfe neuronaler Netzwerke wird anhand der Merkmale die Aktivierungsenergie des Katalysators vorhergesagt.
+Mithilfe neuronaler Netzwerke wird anhand der Merkmale die Aktivierungsenergie des Katalysators vorhergesagt.
+Die neuronalen Netze erreichen Genauigkeiten bei der Vorhersage von $MAE = 0.53kcal/mol$ bei einem Bestimmtheitsmaß von $r^2 = 0.96$ (trainiert auf 80\% der Daten),
+die bis heute höchste erreichte Genauigkeit auf diesem Datensatz.
 
-Da die hier vorgestellten Merkmalextraktoren einen Rückschluss auf die Struktur des Moleküls zulassen, kann in einem letzten Schritt untersucht werden,
+Da die hier vorgestellten Merkmalsextraktoren einen Rückschluss auf die Struktur des Moleküls zulassen, kann in einem letzten Schritt untersucht werden,
 welchen Einfluss bestimmte Teile des Elements auf seine Aktivierungsenergie haben.
-
+Dadurch lassen sich Rückschlüsse ziehen, wie der Katalysator geändert werden muss, um seine Aktivierungsenergie zu verringern.
 

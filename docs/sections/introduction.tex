@@ -17,13 +17,13 @@
 %% | Example content |
 %% -------------------
 
-Catalysts in combination with chemical reactions are used to speed up a reaction by lowering its activation energy. 
-Catalysts increase the reaction rate by lowering the activation energy.
+Catalysts in combination with chemical reactions are used to increase the reaction rate by lowering the activation energy.
 The reaction barrier of a reaction in combination with a catalyst is crucial for its robustness and selectivity.
 
 The catalyst molecules observed in this thesis are derivatives of Vaska's complex, a chemical compound consisting of a variety of different catalysts all with an iridium atom at their center.
 The activation barrier depends on the structure of the catalyst and it's ligands.
 It varies greatly between different molecules.
+
 Seemingly small changes in the catalysts shape can have a large influence on the catalysts activation barrier [Figure~\ref{fig:struct-diff}].
 A rule to predict the activation barrier from the molecules structure cannot easily be found.  
 Knowing how to change catalyst molecules in order to lower their activation barrier is a difficult challenge, even to humans.
@@ -50,21 +50,21 @@ This helps to better understand both the network that is usually regarded as a b
 The explainers used here are simple gradient based methods, and SHAP explainers \cite{NIPS2017_7062}.
 This allows for intuition on which parts of the catalyst molecule contribute to the prediction of the activation barrier.
 This intuition may be helpful in further chemical analysis of the metal catalyst.
-It might even help the chemist an idea on how a structure needs to be changed in order to lower the activation barrier of the catalyst.
+It might even give the chemist an idea on how a structure needs to be changed in order to lower the activation barrier of the catalyst.
 \\
 
-The metal catalysts in question are constructed by combining different ligands around a central Iridium atom.
+The metal catalysts in question are constructed by combining different ligands around a central iridium atom.
 As illustrated in Figure~\ref{fig:chemspace}, the central atom has multiple locations that allow different types of ligands to be attached to.  
 It enables a quick generation of thousands of different catalyst molecules.
 By adding more ligands, the dataset can be increased in size with little effort.
-For all catalysts in the dataset the activation barrier, along with other properties, is then computed.
+For all catalysts in the dataset the activation barrier, along with other properties is then computed.
 \\
 As with many machine learning tasks, feature selection is one of the big challenges in this project.
 While there are many universal techniques to extract features from chemical structures, they all have their drawbacks.
 The feature extracting methods developed in this Bachelor's thesis will rely heavily on the 3D structure of the molecule.
 The hypothesis is that the 3D structure is playing an important role in the activation barrier, and encoding the 3D structure will enhance regression accuracy.
-Additionally encoding 3D structure will allow to interpretations of the chemical space surrounding the central 
-iridium atom to understand the importance of location of the atoms in our molecule.
+Additionally encoding 3D structure will allow interpretations of the chemical space surrounding the central 
+iridium atom to understand the importance of location of the atoms in a molecule.
 
 In order to use feature explainers on the neural network, a reverse mapping from feature space to chemical space needs to be possible.
 There currently is no widespread way to encode catalyst molecules that also allows for 
@@ -105,7 +105,7 @@ This removes the need for further normalizations, since all features generated b
 The second is using data augmentation to teach the neural network about all possible rotations.
 This means the molecule is rotated along the last remaining axis of freedom, and multiple examples of the same molecule at different rotations are used as training examples for the neural network.
 This ideally allows the network to abstract away the rotation of a molecule.
-Using the data augmentation approach, the accuracy of the neural network is significantly higher, reaching a classification error of only  $0.53 kcal/mol$ on a train fraction of 80\%.
+Using the data augmentation approach, the accuracy of the neural network is significantly higher, reaching a regression error of only  $0.53 kcal/mol$ on a train fraction of 80\%.
 
 After completion of training the networks are able to predict a catalysts activation barrier from its 3D structure.
 The main motivation behind encoding the 3D structure is based on the ability to analyse the networks after training.
@@ -122,7 +122,7 @@ containing the coordinates for every atom in that molecule.
 Additional information about the molecule was precomputed among it the reaction barrier focused on in this work [Figure~\ref{fig:barriers}]. %TODO: Reaction barrier for which reaction?
 The number of atoms forming one molecule varies between catalysts.
 Consistent throughout the dataset is the central iridium atom and the reaction pocket, a single hydrogen atom attached to the center.
-The global position and rotation of the molecule within the dataset is arbitrary, and have no effect on its activation barrier.
+The global position and rotation of the molecule within the dataset is arbitrary, and has no effect on its activation barrier.
 
 The dataset was constructed from a set of ligands.
 These ligands are placed around the iridium core in a specific order.
@@ -139,7 +139,6 @@ By combining different ligands from these groups, catalysts are created [Figure~
 Due to this combinatorial approach the dataset could later be increased with relatively low effort.
 The biggest hurdle to increasing the dataset size is computing the activation barrier.
 This computation is highly complex and therefore not feasible for large datasets.
-
 However, generating a larger dataset without computing the activation barrier could still be helpful when using transfer learning approaches to fine tune the network.
 This idea is further discussed in chapter~\ref{ch:Conclusion}.
 
@@ -163,7 +162,7 @@ When training on a large fraction of the dataset this network reached accuracies
 beyond what could be achieved using autocorrelation features, reaching accuracies of $<0.5 kcal/mol$ for a training fraction of 90\%.
 
 All of these methods used features independent of the 3D structure of the element.
-Other than the obvious disadvantage of withholding information from the element, another disadvantage is the lack of interpretability of results.
+Other than the obvious disadvantage of withholding information about the element, another disadvantage is the lack of interpretability of results.
 While these features succeed at predicting reaction barriers, gaining 
 information about what part of the molecule is contributing to the prediction is limited or not possible.
 
@@ -244,7 +243,7 @@ The second objective is to train a neural network on these features that predict
 The goal was to achieve accuracy similar or higher to what \citeauthor{friederich_dos} achieved in \cite{friederich_dos}.
 
 In a final step, neural network explainers are used to explain the origin of predictions of the neural networks.
-The goal goal is to gain intuition on what parts of the catalyst contribute to the activation barrier, 
+The goal is to gain intuition on what parts of the catalyst contribute to the activation barrier, 
 and how the catalyst has to be altered in order to lower the activation barrier.
 
 
@@ -276,9 +275,8 @@ Using a set of coefficients, the density space surrounding the central atom can 
 The second step is to predict the activation barrier from these features using an artificial neural network.
 A reference for prediction accuracy was set by \cite{friederich_dos}.
 The networks proposed here achieve higher accuracy's than the best regression methods proposed in \cite{friederich_dos}.
-
-The regression methods performed on features created with SNAP achieve accuracies $7.22\%$ higher than regression methods on graph convolutions,
-the highest accuracy regressors on this dataset to date.
+When trained on 80\% of the data, the regression methods performed on features created with SNAP achieve accuracies $7.22\%$ higher than regression methods on graph convolutions,
+the highest accuracy regressor on this dataset to date.
 
 \subsection{Explaining the feature space}
 Since the features should allow for an inversion back to the 3D space, it's possible to approximate which areas in 3D space are responsible for the prediction.

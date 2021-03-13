@@ -176,7 +176,6 @@ In the next steps only this subset of circles is used to describe the contour.
 From the set of intersecting circles, the contour needs to be extracted. 
 Since the contour points are computed just from radius and position information, and not rendered onto a 2D pixel grid, standard contour finding algorithms cannot be used.
 Instead, knowledge about the general shape is used to compute the contour. 
-
 The contour is computed using \autoref{alg:CircleSetContour}.
 
 First, the point "furthest to the right", so with the largest $x$-Value is found. 
@@ -186,15 +185,13 @@ To the list of contour sections, the current contour section from angle $0$ to t
 
 Now, the contour of this circle is followed again until it intersects another.
 This is repeated until the starting circle is reached again.
-
-Once the starting circle is reached, the last remaining contour part of the starting circle needs to be added to the list of contour sections Figure~\ref{fig:circlesetcontour}.
+Once the starting circle is reached, the last remaining contour part of the starting circle needs to be added to the list of contour sections [Figure~\ref{fig:circlesetcontour}].
 
 From the ordered list of contour sections, the contour points can easily be computed.
 Since each contour section consist of a radius $r$, location $(x,y)$, and start- and end angle $\alpha_{start}, \alpha_{end}$, the coordinates of the contour points can simply be computed using $x_c = \cos(\alpha_c) \cdot r + x$ and  $y_c = \sin(\alpha_c) \cdot r + y$ 
 for $\alpha_c = \alpha_{start} + i \cdot \Delta, \alpha_c \leq \alpha_{end}, i \in \mathbb{N}_0$.
 
 $\Delta$ is a tuning parameter that specifies the resolution of the contour.
-
 This process is going along the outside ignores all "holes" in the shape, so only the outermost contour will be part of the final result. 
 This is beneficial since EFDs only allow for the encoding of a single closed contour.
 
@@ -323,11 +320,11 @@ the rotation around $\psi$ as normalizing the rotation of the contour itself \ci
 
 The last step is to choose an order up to which the contour is approximated.
 At the moment the infinite sum ensures a perfect approximation of the original contour. 
-By limiting the coefficients to an order $k_{max}$ the number of coefficients describing our contour can be limited.
+By limiting the coefficients to an order $k_{max}$ the number of coefficients describing the contour can be limited.
 Generally, the higher the order, the better small changes in the contour can be approximated [Figure~\ref{fig:slice-layered}].
 
 
-After normalizing, the values $b_1^* = c_1^* = 1$ will always be equal to 0, since the first ellipse as rotated to be aligned.
+After normalizing, the values $b_1^* = c_1^* = 1$ will always be equal to 0, since the first ellipse is rotated to be aligned.
 Therefore $b_1^*, c_1^*$ can be removed from the feature vector.
 
 After calculating the coefficients for every slice, the different slices will be concatenated into a 2D array.
@@ -346,7 +343,6 @@ The other dimension will hold the fourier coefficients for each layer.
 
 To keep information about the offset from the center, the length $l = \| \begin{pmatrix} a_0 & b_0 \end{pmatrix} \| $ will be added for each slice.
 Since each fourier coefficient consists of 4 values and $b_1^*, c_1^*$ are removed while the center offset $l$ is added, the size of this dimension will be $k_{max} * 4 - 1$.
-
 These features will be used for prediction of a molecules activation barrier in the next step.
 
 
@@ -367,7 +363,7 @@ on the open-source library Dscribe that provides an implementation of SOAP \cite
 
 The Smooth Normalized Atomic Positions (SNAP) descriptor proposed here allows for a reconstruction of the 3D space from the coefficients, 
 while partly keeping the rotational invariance.
-Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts iridium reaction-pocket structure.
+Rotational invariance however is not given by the feature generation itself, but rather by using the catalysts iridium and reaction pocket structure.
 %The SNAP descriptor therefore is less universal than SOAP. 
 %In applications were no translation back to 3D space is required,
 %in most instances SOAP should be chosen over SNAP for its fully rotationally invariant output.
@@ -385,7 +381,6 @@ If there are multiple axis of freedom SOAP may be preferable since it naturally 
 
 Additionally, SNAP only encodes a local region within $r_{cut}$.
 Density outside this cutoff radius is not considered.
-
 If a global description of the entire element is needed, SNAP might not be the best option, especially when 
 the size of the elements in the dataset varies a lot.
 
@@ -403,8 +398,7 @@ $R_i$ is the center of that atom.
 $w_{Z_i}$ is a weight factor for each species. 
 Since all species will be described independently of each other, for now all $w_{Z_i}=1$.
 In further enhancements of the SNAP encoder, describing other molecular properties by adapting $w_{i}$ or the decay parameter $\sigma$ is possible.
-Even describing 3D features not associated with a single species but rather describing the interaction or overlap of species 
-or molecules are thinkable.
+Even describing 3D features not associated with a single elements but rather describing the interaction or overlap of species are thinkable.
 
 \begin{figure} [H]
   \centering
@@ -514,7 +508,6 @@ in reality computational limits only allow for a rather low resolution of the de
   \centering
   \includegraphics[width=1\textwidth]{figures/snap/density/Densities.png} % for .pdf files etc use \includegraphics{test.pdf}
   \caption[SNAP density visualization]{Visualization of the density reconstructed from $c_{nlm}^Z$ coefficients for different resolutions.
-  Top: $r_{cut} = 10$, bottom: $r_{cut} = 25$, left: $n_{max} = l_{max} = 2$, right: $n_{max} = l_{max} = 8$.
   The density shown is visualizing the density for phosphorus only.
   The phosphorus atom is the orange atom surrounded by the density cloud.
   }
