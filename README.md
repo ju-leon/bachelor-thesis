@@ -16,13 +16,13 @@ While there are many standart chemical feature extractor, none of the state-of-t
 
 ## Abstract
 
-Metal Catalysts are crucial for a variety of applications, from water splitting to $CO_2$ reduction. Catalysts derived from Vaska’s complex can be constructed by combining different ligands around an iridium atom. Depending on the structure of the resulting complex, the activation barrier will vary.
+Metal Catalysts are crucial for a variety of applications, from water splitting to CO2 reduction. Catalysts derived from Vaska’s complex can be constructed by combining different ligands around an iridium atom. Depending on the structure of the resulting complex, the activation barrier will vary.
 
-Due to the large space of possible ligand combinations and the complexity of quantum chemistry methods, experimental or virtual exploration of activation energies is impractical. Machine learning can bridge the gap and allow for fast prediction of a catalysts activation barrier. The methods proposed here are capable of performing high accuracy predictions of the activation barrier based on the $3D$ shape of the molecule.
+Due to the large space of possible ligand combinations and the complexity of quantum chemistry methods, experimental or virtual exploration of activation energies is impractical. Machine learning can bridge the gap and allow for fast prediction of a catalysts activation barrier. The methods proposed here are capable of performing high accuracy predictions of the activation barrier based on the 3D shape of the molecule.
 
 Two different ways of encoding a catalysts into a format understandable to a neural network are explored. The first is using elliptic fourier descriptors to generate fully rotationally invariant features. The second is using a combination of spherical harmonics and radial basis functions to generate a representation of the molecule. Both feature generators proposed allow for a semi bi-directional mapping between feature space and chemical space.
 
-A neural network is then trained to predict the activation barrier from these features. The best neural network achieves an accuracy of $0.53kcal/mol$ and $r^2 = 0.96$ on a train fraction of $80\%$.
+A neural network is then trained to predict the activation barrier from these features. The best neural network achieves an accuracy of 0.53kcal/mol and r^2 = 0.96 on a train fraction of 80%.
 
 In a last step, the neural network is used to analyze which parts of the catalyst are important to the prediction of the activation barrier. With this information an intuition on how the chemical structure has to be changed in order to lower the activation barrier can be learned.
 
