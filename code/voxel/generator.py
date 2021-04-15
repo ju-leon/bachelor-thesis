@@ -15,6 +15,8 @@ class VoxelGenerator():
         
     def gkern(self, middle):
         """Returns a 3D Gaussian kernel.""" 
+        middle = np.rint(middle)
+
         width = math.floor(self.resolution / 2)
         x = np.arange(-width - middle[0],width - middle[0],1)
         y = np.arange(-width - middle[1],width - middle[1],1)
@@ -25,7 +27,7 @@ class VoxelGenerator():
 
 
     def voxelise(self, element):
-        voxel_rep = np.zeros((len(self.species),100,100,100))
+        voxel_rep = np.zeros((len(self.species),self.resolution,self.resolution,self.resolution))
 
         for atom, location in zip(element.get_chemical_symbols(), element.get_positions()):
             atom_index = self.species.index(atom)
