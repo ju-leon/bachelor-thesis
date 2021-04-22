@@ -4,23 +4,17 @@ import kerastuner as kt
 import numpy as np
 import os
 from tqdm import tqdm
-from PIL import Image
-from matplotlib.pyplot import imshow
 import math
 import sklearn
 
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import regularizers
-import numpy as np
-from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD, Adam
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 
 from collections import namedtuple
 from ase.io import read
@@ -28,7 +22,6 @@ from ase.build import molecule
 from ase import Atoms, Atom
 from ase.visualize import view
 from ase.geometry.analysis import Analysis
-import plotly.graph_objects as go
 from ase.data import vdw_radii
 from ase.data.colors import cpk_colors, jmol_colors
 
