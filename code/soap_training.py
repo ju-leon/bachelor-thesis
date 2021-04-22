@@ -152,6 +152,15 @@ def reg_stats(y_true, y_pred, scaler):
     return r2, mae
 
 
+def interpolate(feature1, feature2, steps=10):
+    interpolations = []
+    for alpha in np.linspace(0, 1, steps):
+        interpolations.append(
+            (feature1 * alpha) + (feature2 * (1 - alpha)))
+
+    return interpolations
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Generate rotationally invariant features from catalysts using fourier descriptors')
@@ -175,6 +184,8 @@ def main():
 
     parser.add_argument('--batch_size', default=400,
                         help='Batch size', type=int)
+
+    parser.add_argument('--add_interpolations', default=True, type=bool)
 
     args = parser.parse_args()
 
@@ -298,11 +309,10 @@ def main():
         trainX = np.concatenate((trainX, valX))
         trainY = np.concatenate((trainY, valY))
 
-        train_split = 1 - test_split 
+        train_split = 1 - test_split
         # Prevent errors when spliting size is illegal
         if train_split >= 0.8:
             train_split = 0.78
-
 
         (valX, trainX, valY, trainY) = train_test_split(
             trainX, trainY, test_size=train_split / 0.8, random_state=4)
@@ -323,6 +333,20 @@ def main():
         testY = testY.flatten()
         valY = valY.flatten()
 
+
+        """
+        Interpolation:
+        """
+        interpolations = []
+        interpol_labels = [] 
+        if args.add_interpolations:
+            for x in range(len(trainX)):
+                for y in range(len(trainX)):
+                    interpolations += interpolate(trainX[x], trainX[y], steps=10)
+                    interpol_labels += interpolate(trainY[x], trainY[y], steps=10)
+
+            trainX = np.array(interpolations)
+            trainY = np.array(interpol_labels)
 
         opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
                                        0]["learning_rate"])
