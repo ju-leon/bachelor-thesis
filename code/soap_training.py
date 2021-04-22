@@ -212,7 +212,7 @@ def main():
     labels = barrierScaler.transform(labels.reshape(-1, 1))
     labels = labels.reshape(number_samples, args.augment_steps, -1)
 
-    for test_split in [0.1, 0.2]:
+    for test_split in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.92, 0.85, 0.94]:
         soap = dscribe.descriptors.SOAP(
             species=species,
             periodic=False,
@@ -381,8 +381,7 @@ def main():
         # Save R2, MAE
         r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
 
-        file = open(args.out_dir + "out_final" +
-                    str(nmax) + "-" + str(lmax) + ".csv", "a")
+        file = open(args.out_dir + "out.csv", "a")
         file.write(str(args.augment_steps))
         file.write(",")
         file.write(str(args.batch_size))
