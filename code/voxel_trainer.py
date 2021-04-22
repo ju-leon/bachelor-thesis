@@ -117,7 +117,7 @@ number_samples = len(labels)
 ALIGN AND AUGMENT
 '''
 elems = align_elements(elems)
-elems, labels = augment_elements(elems, labels, 30)
+elems, labels = augment_elements(elems, labels, 5)
 
 
 '''
