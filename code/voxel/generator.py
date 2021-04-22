@@ -31,7 +31,7 @@ class VoxelGenerator():
 
         for atom, location in zip(element.get_chemical_symbols(), element.get_positions()):
             atom_index = self.species.index(atom)
-            voxel_rep[atom_index] += self.gkern((location/self.scale) * self.resolution)
+            voxel_rep[atom_index] += self.gkern((location/self.scale) * (self.resolution/2))
             
         voxel_rep = np.stack(voxel_rep, axis=-1)
         
