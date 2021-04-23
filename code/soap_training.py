@@ -255,10 +255,10 @@ def main():
         interpolations = []
         interpol_labels = [] 
         if args.add_interpolations:
-            for x in range(len(trainX)):
+            for x in tqdm(range(len(trainX))):
                 for y in range(len(trainX)):
-                    interpolations += interpolate(trainX[x], trainX[y], steps=10)
-                    interpol_labels += interpolate(trainY[x], trainY[y], steps=10)
+                    interpolations += interpolate(trainX[x], trainX[y], steps=5)
+                    interpol_labels += interpolate(trainY[x], trainY[y], steps=5)
 
             trainX = np.array(interpolations)
             trainY = np.array(interpol_labels)
