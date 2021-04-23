@@ -240,11 +240,6 @@ def main():
         testY = np.load("labels_test_" + str(nmax) + ":" +
                         str(lmax) + ":" + "0.2" + ".npy")
 
-        trainX = np.concatenate((trainX, valX))
-        trainY = np.concatenate((trainY, valY))
-
-        (trainX, valX, trainY, valY) = train_test_split(
-            trainX, trainY, test_size=test_split, random_state=4)
 
         trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
         testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
@@ -252,6 +247,22 @@ def main():
         trainY = trainY.flatten()
         testY = testY.flatten()
         valY = valY.flatten()
+
+
+        """
+        Interpolation:
+        """
+        interpolations = []
+        interpol_labels = [] 
+        if args.add_interpolations:
+            for x in range(len(trainX)):
+                for y in range(len(trainX)):
+                    interpolations += interpolate(trainX[x], trainX[y], steps=10)
+                    interpol_labels += interpolate(trainY[x], trainY[y], steps=10)
+
+            trainX = np.array(interpolations)
+            trainY = np.array(interpol_labels)
+
 
         global input_shape
         input_shape = trainX[0].shape
@@ -306,47 +317,12 @@ def main():
         testY = np.load("labels_test_" + str(nmax) + ":" +
                         str(lmax) + ":" + "0.2" + ".npy")
 
-        trainX = np.concatenate((trainX, valX))
-        trainY = np.concatenate((trainY, valY))
-
-        train_split = 1 - test_split
-        # Prevent errors when spliting size is illegal
-        if train_split >= 0.8:
-            train_split = 0.78
-
-        (valX, trainX, valY, trainY) = train_test_split(
-            trainX, trainY, test_size=train_split / 0.8, random_state=4)
-
-        # Test set has size 0.2, so if training size is small, cut from test set have to be taken
-        if test_split < 0.2:
-            (trainX2, testX, trainY2, testY) = train_test_split(
-                testX, testY, test_size=test_split / 0.2, random_state=4)
-            print(trainX.shape)
-            print(trainX2.shape)
-            trainX = np.concatenate((trainX, trainX2))
-            trainY = np.concatenate((trainY, trainY2))
-
         trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
         testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
         valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
         trainY = trainY.flatten()
         testY = testY.flatten()
         valY = valY.flatten()
-
-
-        """
-        Interpolation:
-        """
-        interpolations = []
-        interpol_labels = [] 
-        if args.add_interpolations:
-            for x in range(len(trainX)):
-                for y in range(len(trainX)):
-                    interpolations += interpolate(trainX[x], trainX[y], steps=10)
-                    interpol_labels += interpolate(trainY[x], trainY[y], steps=10)
-
-            trainX = np.array(interpolations)
-            trainY = np.array(interpol_labels)
 
         opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
                                        0]["learning_rate"])
