@@ -77,30 +77,27 @@ def get_neighbors(csv_location):
 
 
 def interpolate(element1, element2, alpha=0.5):
-    return (element1 * alpha) + (element2 * (1 - alpha))
+    return np.array((element1 * alpha) + (element2 * (1 - alpha)))
 
 
 def get_interpolations(csv_location, elements, labels, names, interpolation_steps=5):
     diffs, pairs = get_neighbors(csv_location)
 
-    names = np.array(names)
-    labels = np.array(labels)
-
     elements_inter = []
     labels_inter = []
     for pair in tqdm(pairs):
-        indices1 = np.where(names == pair[0].split(',')[-1])
-        indices2 = np.where(names == pair[1].split(',')[-1])
+        name1 = pair[0].split(',')[-1]
+        name2 = pair[1].split(',')[-1]
+        if name1 in names and name2 in names:
+            indices1 = np.where(names == name1)[0]
+            indices2 = np.where(names == name2)[0]
 
-        for index1 in indices1:
-            for index2 in indices2:
-                for x in np.linspace(0, 1, interpolation_steps):
-                    elements_inter.append(interpolate(
-                        elements[index1], elements[index2], alpha=x))
-                    labels_inter.append(interpolate(
-                        labels[index1], labels[index2], alpha=x))
-
-    elements_inter = np.array(elements_inter)
-    labels_inter = np.array(labels_inter)
+            for index1 in indices1:
+                for index2 in indices2:
+                    for x in np.linspace(0, 0.5, interpolation_steps):
+                        elements_inter.append(interpolate(
+                            elements[index1], elements[index2], alpha=x).reshape(12, int(elements.shape[-1] / 12), 1))
+                        labels_inter.append(interpolate(
+                            labels[index1], labels[index2], alpha=x))
 
     return elements_inter, labels_inter

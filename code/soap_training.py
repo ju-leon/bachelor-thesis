@@ -201,39 +201,18 @@ def main():
 
     species = ["H", "C", "N", "O", "F", "P", "S", "Cl", "As", "Br", "I", "Ir"]
 
-    features_soap, labels = generate_features(species,
-                                              data_dir=args.data_dir,
-                                              augment_steps=args.augment_steps,
-                                              interpolate=True,
-                                              nmax=args.nmax,
-                                              lmax=args.lmax,
-                                              rcut=args.rcut,
-                                              interpolation_steps=args.interpolation_steps
-                                              )
-
-    number_samples = len(features_soap)
-
-    # Scale coefficents
-    feature_shape = features_soap.shape
-    features_soap = features_soap.reshape(-1, feature_shape[-1])
-    soapScaler = StandardScaler()
-    soapScaler.fit(features_soap)
-    features_soap = soapScaler.transform(features_soap)
-    features_soap = features_soap.reshape(-1, args.interpolation_steps *
-                                          args.interpolation_steps, args.augment_steps, feature_shape[-1])
-
-    # Scale labels
-    labels_shape = labels.shape
-    labels = labels.reshape(-1, 1)
-    labels = np.array(labels)
-    barrierScaler = StandardScaler()
-    barrierScaler.fit(labels)
-    labels = barrierScaler.transform(labels)
-    labels = labels.reshape(-1, args.interpolation_steps *
-                            args.interpolation_steps, args.augment_steps, 1)
-
-    (trainX, testX, trainY, testY) = train_test_split(
-        features_soap, labels, test_size=args.test_split, random_state=32)
+    trainX, trainY, testX, testY = generate_features(species,
+                                                     split=args.test_split,
+                                                     data_dir=args.data_dir,
+                                                     augment_steps=args.augment_steps,
+                                                     interpolate=True,
+                                                     nmax=args.nmax,
+                                                     lmax=args.lmax,
+                                                     rcut=args.rcut,
+                                                     interpolation_steps=args.interpolation_steps
+                                                     )
+    trainY = np.array(trainY)
+    testY = np.array(testY)
 
     (testX, valX, testY, valY) = train_test_split(
         testX, testY, test_size=0.5, random_state=32)
@@ -242,10 +221,10 @@ def main():
     lmax = args.lmax
     rcut = args.rcut
 
-    np.save("features_train_" + str(nmax) + ":" +
-            str(lmax) + ":" + str(args.test_split) + ".npy", trainX)
-    np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
-            str(args.test_split) + ".npy", trainY)
+    # np.save("features_train_" + str(nmax) + ":" +
+    #        str(lmax) + ":" + str(args.test_split) + ".npy", trainX)
+    # np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
+    #        str(args.test_split) + ".npy", trainY)
 
     np.save("features_val_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", valX)
@@ -257,9 +236,9 @@ def main():
     np.save("labels_test_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", testY)
 
-    trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
-    testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
-    valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
+    #trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
+    testX = testX.reshape(-1, 12, int(testX.shape[-1] / 12), 1)
+    valX = valX.reshape(-1, 12, int(valX.shape[-1] / 12), 1)
     trainY = trainY.flatten()
     testY = testY.flatten()
     valY = valY.flatten()

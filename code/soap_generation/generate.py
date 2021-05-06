@@ -17,6 +17,10 @@ from soap_generation.alignment import align_elements
 from soap_generation.augment import augment_elements
 
 
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+
 def read_data(data_dir):
     barriers = dict()
 
@@ -40,9 +44,10 @@ def read_data(data_dir):
     return elems, labels, names
 
 
-def generate_features(species, data_dir, nmax=8, lmax=4, rcut=12, augment_steps=30, interpolate=False, interpolation_steps=10):
+def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, augment_steps=30, interpolate=False, interpolation_steps=10):
     # Load data
     elems, labels, names = read_data(data_dir)
+    number_samples = len(elems)
 
     # Align elements
     elems = align_elements(elems)
@@ -63,9 +68,38 @@ def generate_features(species, data_dir, nmax=8, lmax=4, rcut=12, augment_steps=
     atom_index = [[0]] * len(elems)
     features_soap = soap.create_coeffs(elems, positions=atom_index)
 
+    soapScaler = StandardScaler()
+    soapScaler.fit(features_soap)
+    features_soap = soapScaler.transform(features_soap)
+
+    labels = np.array(labels)
+    barrierScaler = StandardScaler()
+    barrierScaler.fit(labels.reshape(-1, 1))
+    labels = barrierScaler.transform(labels.reshape(-1, 1))
+
+    features_soap = features_soap.reshape(
+        number_samples, augment_steps, -1)
+
+    labels = labels.reshape(
+        number_samples, augment_steps, -1)
+
+    names = np.array(names)
+    names = names.reshape(
+        number_samples, augment_steps, -1)
+
+    (trainX, testX, trainY, testY) = train_test_split(
+        features_soap, list(zip(labels, names)), test_size=0.2, random_state=32)
+
+    trainY, namesY = list(zip(*trainY))
+    testY, _ = list(zip(*testY))
+
+    trainX = np.array(trainX).reshape(-1, trainX.shape[-1])
+    trainY = np.array(trainY).flatten()
+    namesY = np.array(namesY).flatten()
+
     if interpolate:
         features_interpolates, labels = get_interpolations(
-            data_dir, features_soap, labels, names, interpolation_steps=interpolation_steps)
-        return features_interpolates, labels
+            data_dir, trainX, trainY, namesY, interpolation_steps=interpolation_steps)
+        return features_interpolates, labels, testX, testY
     else:
-        return features_soap, labels
+        return features_soap, labels, testX, testY
