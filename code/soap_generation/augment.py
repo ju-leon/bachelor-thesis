@@ -5,19 +5,21 @@ from ase.build import molecule
 from ase import Atoms
 from ase.visualize import view
 import copy
-
+from tqdm import tqdm
 
 def z_rotation(angle):
     return np.array([[np.cos(angle), -np.sin(angle), 0], [np.sin(angle), np.cos(angle), 0], [0, 0, 1]])
 
 
-def augment_elements(elems, labels, steps):
+def augment_elements(elems, labels, steps, names=None):
     steps = np.linspace(0, np.pi * 2, num=steps, endpoint=False)
+
+    names_available = names is not None
 
     elems_ag = []
     labels_ag = []
-
-    for element, label in zip(elems, labels):
+    names_ag = []
+    for element, label, index in tqdm(zip(elems, labels, range(len(labels)))):
         for step in steps:
             rotation = z_rotation(step)
 
@@ -29,5 +31,11 @@ def augment_elements(elems, labels, steps):
 
             elems_ag.append(element_rotated)
             labels_ag.append(label)
+
+            if names_available:
+                names_ag.append(names[index])
+
+    if names_available:
+        return elems_ag, labels_ag, names_ag
 
     return elems_ag, labels_ag
