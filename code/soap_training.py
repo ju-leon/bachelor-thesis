@@ -282,9 +282,9 @@ def main():
 
     # Train the model
     H = model.fit(
-        x=trainX,
+        x=[trainX],
         y=trainY,
-        validation_data=(valX, valY),
+        validation_data=([valX], valY),
         epochs=20000,
         batch_size=args.batch_size,
         verbose=2,
