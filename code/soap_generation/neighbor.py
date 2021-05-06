@@ -102,7 +102,8 @@ def get_interpolations(csv_location, elements, labels, names, interpolation_step
                             labels[index1], labels[index2], alpha=x))
 
     for element, label in zip(elements, labels):
-        elements_inter.append(element)
+        elements_inter.append(element.reshape(
+            12, int(elements.shape[-1] / 12), 1))
         labels_inter.append(label)
 
     return elements_inter, labels_inter
