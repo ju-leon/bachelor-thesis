@@ -40,6 +40,7 @@ from sklearn.preprocessing import StandardScaler
 
 from soap_generation.alignment import align_elements
 from soap_generation.augment import augment_elements
+from soap_generation.generate import generate_features
 
 import os.path
 from os import path
@@ -182,6 +183,8 @@ def main():
     parser.add_argument('--rcut', default=12,
                         help='Cutoff radius', type=int)
 
+    parser.add_argument('--test_split', default=0.2, type=float)
+
     parser.add_argument('--batch_size', default=400,
                         help='Batch size', type=int)
 
@@ -192,191 +195,146 @@ def main():
     # Check if hyperparam optimization was run for given pair
     if not path.exists("Hyperband_FINAL_SNAP_" + str(args.nmax) + ":" + str(args.lmax) + ":0.2"):
         print("Skipping " + str(args.nmax) + ":" + str(args.lmax))
-        sys.exit()
-
-    elems, labels = read_data(args.data_dir)
-
-    elems = align_elements(elems)
-
-    number_samples = len(elems)
-    elems, labels = augment_elements(elems, labels, args.augment_steps)
+        # sys.exit()
 
     species = ["H", "C", "N", "O", "F", "P", "S", "Cl", "As", "Br", "I", "Ir"]
-    nmax = args.nmax
-    lmax = args.lmax
-    rcut = args.rcut
+
+    features_soap, labels = generate_features(species,
+                                              data_dir=args.data_dir,
+                                              augment_steps=args.augment_steps,
+                                              interpolate=True,
+                                              nmax=args.nmax,
+                                              lmax=args.lmax,
+                                              rcut=args.rcut
+                                              )
+
+    number_samples = len(features_soap)
+
+    # Scale coefficents
+    feature_shape = features_soap.shape
+    features_soap = features_soap.reshape(-1, feature_shape[-1])
+    soapScaler = StandardScaler()
+    soapScaler.fit(features_soap)
+    features_soap = soapScaler.transform(features_soap)
+    features_soap = features_soap.reshape(feature_shape)
+
     # Scale labels
+    labels_shape = labels.shape
+    labels = labels.reshape(-1, labels_shape[-1])
     labels = np.array(labels)
     barrierScaler = StandardScaler()
     barrierScaler.fit(labels.reshape(-1, 1))
-    labels = barrierScaler.transform(labels.reshape(-1, 1))
     labels = labels.reshape(number_samples, args.augment_steps, -1)
+    labels = labels.reshape(labels_shape)
 
-    for test_split in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.92, 0.85, 0.94]:
-        soap = dscribe.descriptors.SOAP(
-            species=species,
-            periodic=False,
-            rcut=rcut,
-            nmax=nmax,
-            lmax=lmax,
-            rbf="gto"
-        )
+    (trainX, testX, trainY, testY) = train_test_split(
+        features_soap, labels, test_size=args.test_split, random_state=32)
 
-        file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
-            lmax) + "_n=" + str(nmax) + "_split=" + str(test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
+    (testX, valX, testY, valY) = train_test_split(
+        testX, testY, test_size=0.5, random_state=32)
 
-        trainX = np.load("features_train_" +
-                         str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
-        trainY = np.load("labels_train_" + str(nmax) + ":" +
-                         str(lmax) + ":" + "0.2" + ".npy")
+    nmax = args.nmax
+    lmax = args.lmax
+    rcut = args.rcut
 
-        valX = np.load("features_val_" + str(nmax) + ":" +
-                       str(lmax) + ":" + "0.2" + ".npy")
-        valY = np.load("labels_val_" + str(nmax) + ":" +
-                       str(lmax) + ":" + "0.2" + ".npy")
+    np.save("features_train_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", trainX)
+    np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
+            str(args.test_split) + ".npy", trainY)
 
-        testX = np.load("features_test_" + str(nmax) + ":" +
-                        str(lmax) + ":" + "0.2" + ".npy")
-        testY = np.load("labels_test_" + str(nmax) + ":" +
-                        str(lmax) + ":" + "0.2" + ".npy")
+    np.save("features_val_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", valX)
+    np.save("labels_val_" + str(nmax) + ":" + str(lmax) +
+            ":" + str(args.test_split) + ".npy", valX)
 
+    np.save("features_test_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", testX)
+    np.save("labels_test_" + str(nmax) + ":" +
+            str(lmax) + ":" + str(args.test_split) + ".npy", testY)
 
-        trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
-        testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
-        valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
-        trainY = trainY.flatten()
-        testY = testY.flatten()
-        valY = valY.flatten()
+    trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
+    testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
+    valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
+    trainY = trainY.flatten()
+    testY = testY.flatten()
+    valY = valY.flatten()
 
+    file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
+        lmax) + "_n=" + str(nmax) + "_split=" + str(args.test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
-        """
-        Interpolation:
-        """
-        interpolations = []
-        interpol_labels = [] 
-        if args.add_interpolations:
-            for x in tqdm(range(len(trainX))):
-                for y in range(len(trainX)):
-                    interpolations += interpolate(trainX[x], trainX[y], steps=5)
-                    interpol_labels += interpolate(trainY[x], trainY[y], steps=5)
+    global input_shape
+    input_shape = trainX[0].shape
 
-            trainX = np.array(interpolations)
-            trainY = np.array(interpol_labels)
+    print(input_shape)
 
+    tuner = kt.Hyperband(
+        get_model,
+        objective='val_mean_squared_error',
+        max_epochs=1200,
+        project_name="Hyperband_FINAL_SNAP_" +
+        str(args.nmax) + ":" + str(args.lmax) + ":0.2"
+    )
 
-        global input_shape
-        input_shape = trainX[0].shape
+    best_hp = tuner.get_best_hyperparameters(3)[0]
 
-        print(input_shape)
+    model = get_model(best_hp)
 
-        tuner = kt.Hyperband(
-            get_model,
-            objective='val_mean_squared_error',
-            max_epochs=1200,
-            project_name="Hyperband_FINAL_SNAP_" +
-            str(args.nmax) + ":" + str(args.lmax) + ":0.2"
-        )
+    opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
+        0]["learning_rate"])
+    model.compile(loss="mean_squared_error", optimizer=opt)
 
-        best_hp = tuner.get_best_hyperparameters(3)[0]
+    # Train the model
+    H = model.fit(
+        x=trainX,
+        y=trainY,
+        validation_data=(valX, valY),
+        epochs=2000,
+        batch_size=args.batch_size,
+        verbose=2,
+        callbacks=[tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', patience=200)]
+    )
 
-        model = get_model(best_hp)
+    # Save loss of current model
+    save_loss(H, args.out_dir + "loss" + file_identifier + ".png")
 
-        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
-                                       0]["learning_rate"])
-        model.compile(loss="mean_squared_error", optimizer=opt)
+    # Scale back
+    train_y_pred = barrierScaler.inverse_transform(
+        model.predict(trainX))
+    train_y_real = barrierScaler.inverse_transform(trainY)
 
-        # Train the model
-        H = model.fit(
-            x=trainX,
-            y=trainY,
-            validation_data=(valX, valY),
-            epochs=2000,
-            batch_size=args.batch_size,
-            verbose=2,
-            callbacks=[tf.keras.callbacks.EarlyStopping(
-                monitor='val_loss', patience=200)]
-        )
+    val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
+    val_y_real = barrierScaler.inverse_transform(valY)
 
-        # Save loss of current model
-        save_loss(H, args.out_dir + "loss" + file_identifier + ".png")
+    test_y_pred = barrierScaler.inverse_transform(model.predict(testX))
+    test_y_real = barrierScaler.inverse_transform(testY)
 
-        # Final optimization step
+    save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
+                 test_y_real, test_y_pred, args.out_dir + "scatter" + file_identifier + ".png")
 
-        trainX = np.load("features_train_" +
-                         str(nmax) + ":" + str(lmax) + ":" + "0.2" + ".npy")
-        trainY = np.load("labels_train_" + str(nmax) + ":" +
-                         str(lmax) + ":" + "0.2" + ".npy")
+    # Save R2, MAE
+    r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
 
-        valX = np.load("features_val_" + str(nmax) + ":" +
-                       str(lmax) + ":" + "0.2" + ".npy")
-        valY = np.load("labels_val_" + str(nmax) + ":" +
-                       str(lmax) + ":" + "0.2" + ".npy")
+    file = open(args.out_dir + "out.csv", "a")
+    file.write(str(args.augment_steps))
+    file.write(",")
+    file.write(str(args.batch_size))
+    file.write(",")
+    file.write(str(args.test_split))
+    file.write(",")
+    file.write(str(args.nmax))
+    file.write(",")
+    file.write(str(args.lmax))
+    file.write(",")
+    file.write(str(rcut))
+    file.write(",")
+    file.write(str(r2))
+    file.write(",")
+    file.write(str(mae))
+    file.write("\n")
+    file.close()
 
-        testX = np.load("features_test_" + str(nmax) + ":" +
-                        str(lmax) + ":" + "0.2" + ".npy")
-        testY = np.load("labels_test_" + str(nmax) + ":" +
-                        str(lmax) + ":" + "0.2" + ".npy")
-
-        trainX = trainX.reshape(-1, 12, int(trainX.shape[2] / 12), 1)
-        testX = testX.reshape(-1, 12, int(testX.shape[2] / 12), 1)
-        valX = valX.reshape(-1, 12, int(valX.shape[2] / 12), 1)
-        trainY = trainY.flatten()
-        testY = testY.flatten()
-        valY = valY.flatten()
-
-        opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
-                                       0]["learning_rate"])
-        model.compile(loss="mean_squared_error", optimizer=opt)
-
-        # Train the model
-        H = model.fit(
-            x=trainX,
-            y=trainY,
-            validation_data=(valX, valY),
-            epochs=50,
-            batch_size=128,
-            verbose=2,
-            callbacks=[tf.keras.callbacks.EarlyStopping(
-                monitor='val_loss', patience=200)]
-        )
-
-        # Scale back
-        train_y_pred = barrierScaler.inverse_transform(
-            model.predict(trainX))
-        train_y_real = barrierScaler.inverse_transform(trainY)
-
-        val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
-        val_y_real = barrierScaler.inverse_transform(valY)
-
-        test_y_pred = barrierScaler.inverse_transform(model.predict(testX))
-        test_y_real = barrierScaler.inverse_transform(testY)
-
-        save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
-                     test_y_real, test_y_pred, args.out_dir + "scatter" + file_identifier + ".png")
-
-        # Save R2, MAE
-        r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
-
-        file = open(args.out_dir + "out.csv", "a")
-        file.write(str(args.augment_steps))
-        file.write(",")
-        file.write(str(args.batch_size))
-        file.write(",")
-        file.write(str(test_split))
-        file.write(",")
-        file.write(str(args.nmax))
-        file.write(",")
-        file.write(str(args.lmax))
-        file.write(",")
-        file.write(str(rcut))
-        file.write(",")
-        file.write(str(r2))
-        file.write(",")
-        file.write(str(mae))
-        file.write("\n")
-        file.close()
-
-        model.save(args.out_dir + "model" + file_identifier + ".h5")
+    model.save(args.out_dir + "model" + file_identifier + ".h5")
 
 
 if __name__ == "__main__":
