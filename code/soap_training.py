@@ -171,7 +171,7 @@ def main():
     parser.add_argument(
         'out_dir', help='Directory for storing generated features')
 
-    parser.add_argument('--augment_steps', default=10,
+    parser.add_argument('--augment_steps', default=20,
                         help='Number of augmentations around Z axis for every sample', type=int)
 
     parser.add_argument('--nmax', default=3,

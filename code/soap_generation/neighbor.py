@@ -100,7 +100,7 @@ def get_interpolations(csv_location, elements, labels, names, interpolation_step
                     labels_inter.append(interpolate(
                         labels[index1], labels[index2], alpha=x))
 
-    elements_inter = np.array(elements_inter[:30])
-    labels_inter = np.array(labels_inter[:30])
+    elements_inter = np.array(elements_inter)
+    labels_inter = np.array(labels_inter)
 
     return elements_inter, labels_inter
