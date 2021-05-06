@@ -211,6 +211,10 @@ def main():
                                                      rcut=args.rcut,
                                                      interpolation_steps=args.interpolation_steps
                                                      )
+
+    print("Data Length: " + str(len(trainX)))
+    print("Label Length: " + str(len(trainY)))
+
     trainY = np.array(trainY)
     testY = np.array(testY)
 
@@ -236,7 +240,7 @@ def main():
     np.save("labels_test_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", testY)
 
-    #trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
+    # trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
     testX = testX.reshape(-1, 12, int(testX.shape[-1] / 12), 1)
     valX = valX.reshape(-1, 12, int(valX.shape[-1] / 12), 1)
     trainY = trainY.flatten()
@@ -250,6 +254,15 @@ def main():
     input_shape = trainX[0].shape
 
     print(input_shape)
+    print(trainX[-1].shape)
+    print(testX[0].shape)
+    print(testX[-1].shape)
+
+    print(len(trainX))
+    print(len(trainY))
+
+    print(len(testX))
+    print(len(testY))
 
     tuner = kt.Hyperband(
         get_model,
