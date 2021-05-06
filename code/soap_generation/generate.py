@@ -40,7 +40,7 @@ def read_data(data_dir):
     return elems, labels, names
 
 
-def generate_features(species, data_dir, nmax=8, lmax=4, rcut=12, augment_steps=30, interpolate=False):
+def generate_features(species, data_dir, nmax=8, lmax=4, rcut=12, augment_steps=30, interpolate=False, interpolation_steps=10):
     # Load data
     elems, labels, names = read_data(data_dir)
 
@@ -65,7 +65,7 @@ def generate_features(species, data_dir, nmax=8, lmax=4, rcut=12, augment_steps=
 
     if interpolate:
         features_interpolates, labels = get_interpolations(
-            data_dir, features_soap, labels, names)
+            data_dir, features_soap, labels, names, interpolation_steps=interpolation_steps)
         return features_interpolates, labels
     else:
         return features_soap, labels

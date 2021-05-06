@@ -190,6 +190,8 @@ def main():
 
     parser.add_argument('--add_interpolations', default=True, type=bool)
 
+    parser.add_argument('--interpolation_steps', default=2, type=int)
+
     args = parser.parse_args()
 
     # Check if hyperparam optimization was run for given pair
@@ -205,7 +207,8 @@ def main():
                                               interpolate=True,
                                               nmax=args.nmax,
                                               lmax=args.lmax,
-                                              rcut=args.rcut
+                                              rcut=args.rcut,
+                                              interpolation_steps=args.interpolation_steps
                                               )
 
     number_samples = len(features_soap)
@@ -216,7 +219,8 @@ def main():
     soapScaler = StandardScaler()
     soapScaler.fit(features_soap)
     features_soap = soapScaler.transform(features_soap)
-    features_soap = features_soap.reshape(feature_shape)
+    features_soap = features_soap.reshape(-1, args.interpolation_steps *
+                                          args.interpolation_steps, args.augment_steps, feature_shape[-1])
 
     # Scale labels
     labels_shape = labels.shape
@@ -225,7 +229,8 @@ def main():
     barrierScaler = StandardScaler()
     barrierScaler.fit(labels)
     labels = barrierScaler.transform(labels)
-    labels = labels.reshape(labels_shape)
+    labels = labels.reshape(-1, args.interpolation_steps *
+                            args.interpolation_steps, args.augment_steps, 1)
 
     (trainX, testX, trainY, testY) = train_test_split(
         features_soap, labels, test_size=args.test_split, random_state=32)
