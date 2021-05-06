@@ -243,9 +243,9 @@ def main():
     # trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
     testX = testX.reshape(-1, 12, int(testX.shape[-1] / 12), 1)
     valX = valX.reshape(-1, 12, int(valX.shape[-1] / 12), 1)
-    trainY = trainY.flatten()
-    testY = testY.flatten()
-    valY = valY.flatten()
+    trainY = trainY.reshape(-1, 1)
+    testY = testY.flatten(-1, 1)
+    valY = valY.flatten(-1, 1)
 
     file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
         lmax) + "_n=" + str(nmax) + "_split=" + str(args.test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
