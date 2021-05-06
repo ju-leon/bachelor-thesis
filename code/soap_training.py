@@ -288,7 +288,7 @@ def main():
         x=trainX,
         y=trainY,
         validation_data=(valX, valY),
-        epochs=2000,
+        epochs=20000,
         batch_size=args.batch_size,
         verbose=2,
         callbacks=[tf.keras.callbacks.EarlyStopping(
