@@ -63,11 +63,12 @@ def get_neighbors(csv_location):
             b2 = barriers[idx2]
             if num_common(s1, s2):
                 # print(s1,s2)
-                diff = b2-b1
-                diffs.append(abs(diff))
-                pairs.append([filenames[idx1], filenames[idx2]])
-                diffs2.append([s1, s2])
-                bs.append([b1, b2])
+                diff = abs(b2-b1)
+                if diff > 4:
+                    diffs.append(abs(diff))
+                    pairs.append([filenames[idx1], filenames[idx2]])
+                    diffs2.append([s1, s2])
+                    bs.append([b1, b2])
 
     for element in pairs:
         pair0 = element[0]
@@ -99,5 +100,9 @@ def get_interpolations(csv_location, elements, labels, names, interpolation_step
                             elements[index1], elements[index2], alpha=x).reshape(12, int(elements.shape[-1] / 12), 1))
                         labels_inter.append(interpolate(
                             labels[index1], labels[index2], alpha=x))
+
+    for element, label in zip(elements, labels):
+        elements_inter.append(element)
+        labels_inter.append(label)
 
     return elements_inter, labels_inter
