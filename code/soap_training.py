@@ -220,11 +220,11 @@ def main():
 
     # Scale labels
     labels_shape = labels.shape
-    labels = labels.reshape(-1, labels_shape[-1])
+    labels = labels.reshape(-1, 1)
     labels = np.array(labels)
     barrierScaler = StandardScaler()
-    barrierScaler.fit(labels.reshape(-1, 1))
-    labels = labels.reshape(number_samples, args.augment_steps, -1)
+    barrierScaler.fit(labels)
+    labels = barrierScaler.transform(labels)
     labels = labels.reshape(labels_shape)
 
     (trainX, testX, trainY, testY) = train_test_split(
