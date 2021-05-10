@@ -97,14 +97,6 @@ def save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred, test_y_real
     plt.savefig(location)
 
 
-def step_decay(epoch):
-    initial_lrate = 0.001
-    drop = 0.6
-    epochs_drop = 80.0
-    lrate = initial_lrate * math.pow(drop,
-                                     math.floor((1+epoch)/epochs_drop))
-    return lrate
-
 
 def get_model(hp):
     global input_shape
@@ -215,6 +207,9 @@ def main():
     print("Data Length: " + str(len(trainX)))
     print("Label Length: " + str(len(trainY)))
 
+    trainX = np.array(trainX)
+    testX = np.array(testX)
+
     trainY = np.array(trainY)
     testY = np.array(testY)
 
@@ -240,12 +235,12 @@ def main():
     np.save("labels_test_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", testY)
 
-    # trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
+    #trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
     testX = testX.reshape(-1, 12, int(testX.shape[-1] / 12), 1)
     valX = valX.reshape(-1, 12, int(valX.shape[-1] / 12), 1)
     trainY = trainY.reshape(-1, 1)
-    testY = testY.flatten(-1, 1)
-    valY = valY.flatten(-1, 1)
+    testY = testY.reshape(-1, 1)
+    valY = valY.reshape(-1, 1)
 
     file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
         lmax) + "_n=" + str(nmax) + "_split=" + str(args.test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
@@ -282,10 +277,10 @@ def main():
 
     # Train the model
     H = model.fit(
-        x=[trainX],
+        x=trainX,
         y=trainY,
-        validation_data=([valX], valY),
-        epochs=20000,
+        validation_data=(valX, valY),
+        epochs=2000,
         batch_size=args.batch_size,
         verbose=2,
         callbacks=[tf.keras.callbacks.EarlyStopping(
@@ -294,42 +289,6 @@ def main():
 
     # Save loss of current model
     save_loss(H, args.out_dir + "loss" + file_identifier + ".png")
-
-    # Scale back
-    train_y_pred = barrierScaler.inverse_transform(
-        model.predict(trainX))
-    train_y_real = barrierScaler.inverse_transform(trainY)
-
-    val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
-    val_y_real = barrierScaler.inverse_transform(valY)
-
-    test_y_pred = barrierScaler.inverse_transform(model.predict(testX))
-    test_y_real = barrierScaler.inverse_transform(testY)
-
-    save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
-                 test_y_real, test_y_pred, args.out_dir + "scatter" + file_identifier + ".png")
-
-    # Save R2, MAE
-    r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
-
-    file = open(args.out_dir + "out.csv", "a")
-    file.write(str(args.augment_steps))
-    file.write(",")
-    file.write(str(args.batch_size))
-    file.write(",")
-    file.write(str(args.test_split))
-    file.write(",")
-    file.write(str(args.nmax))
-    file.write(",")
-    file.write(str(args.lmax))
-    file.write(",")
-    file.write(str(rcut))
-    file.write(",")
-    file.write(str(r2))
-    file.write(",")
-    file.write(str(mae))
-    file.write("\n")
-    file.close()
 
     model.save(args.out_dir + "model" + file_identifier + ".h5")
 
