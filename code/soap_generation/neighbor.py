@@ -95,7 +95,7 @@ def get_interpolations(csv_location, elements, labels, names, interpolation_step
 
             for index1 in indices1:
                 for index2 in indices2:
-                    for x in np.linspace(0.1, 0.5, interpolation_steps, endpoint=False):
+                    for x in np.random.uniform(0.05, 0.5, interpolation_steps):
                         elements_inter.append(interpolate(
                             elements[index1], elements[index2], alpha=x).reshape(12, int(elements.shape[-1] / 12), 1))
                         labels_inter.append(interpolate(

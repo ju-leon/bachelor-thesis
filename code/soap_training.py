@@ -97,7 +97,6 @@ def save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred, test_y_real
     plt.savefig(location)
 
 
-
 def get_model(hp):
     global input_shape
     # input_shape = (12, 48, 1)

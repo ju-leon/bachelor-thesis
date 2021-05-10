@@ -7,12 +7,13 @@ from ase.visualize import view
 import copy
 from tqdm import tqdm
 
+
 def z_rotation(angle):
     return np.array([[np.cos(angle), -np.sin(angle), 0], [np.sin(angle), np.cos(angle), 0], [0, 0, 1]])
 
 
 def augment_elements(elems, labels, steps, names=None):
-    steps = np.linspace(0, np.pi * 2, num=steps, endpoint=False)
+    steps = np.random.uniform(0, np.pi * 2, size=steps)
 
     names_available = names is not None
 
