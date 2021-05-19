@@ -183,6 +183,8 @@ def main():
 
     parser.add_argument('--interpolation_steps', default=2, type=int)
 
+    parser.add_argument('--name', default='model')
+
     args = parser.parse_args()
 
     # Check if hyperparam optimization was run for given pair
@@ -241,7 +243,7 @@ def main():
     testY = testY.reshape(-1, 1)
     valY = valY.reshape(-1, 1)
 
-    file_identifier = "__augment_steps=" + str(args.augment_steps) + "_l=" + str(
+    file_identifier = "_" + args.name + "_augment_steps=" + str(args.augment_steps) + "_l=" + str(
         lmax) + "_n=" + str(nmax) + "_split=" + str(args.test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
     global input_shape
