@@ -87,8 +87,28 @@ def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, aug
     names = names.reshape(
         number_samples, augment_steps, -1)
 
-    (trainX, testX, trainY, testY) = train_test_split(
-        features_soap, list(zip(labels, names)), test_size=0.2, random_state=32)
+    split_by_sidegroup = True
+    sidegroup = "chloride_1_smi1_1_s_1"
+    if split_by_sidegroup:
+        trainX = []
+        trainY = []
+        testX = []
+        testY = []
+        for feature, label, name in zip(features_soap, labels, names):
+            if sidegroup in name:
+                trainX += [feature]
+                trainY += [label]
+            else:
+                testX += [feature]
+                testY += [label]
+
+        trainX = np.array(trainX)
+        trainY = np.array(trainY)
+        testX = np.array(testX)
+        testY = np.array(testY)
+    else:
+        (trainX, testX, trainY, testY) = train_test_split(
+            features_soap, list(zip(labels, names)), test_size=0.2, random_state=32)
 
     trainY, namesY = list(zip(*trainY))
     testY, _ = list(zip(*testY))
