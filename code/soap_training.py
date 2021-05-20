@@ -245,7 +245,7 @@ def main():
     #np.save(save_location + "labels_train.npy", trainY)
 
     np.save(save_location + "features_val.npy", valX)
-    np.save(save_location + "labels_val.npy", valX)
+    np.save(save_location + "labels_val.npy", valY)
     np.save(save_location + "names_val.npy", valNames)
 
     np.save(save_location + "features_test.npy", testX)

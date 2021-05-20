@@ -96,9 +96,10 @@ def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, aug
         print("Using ligand as validation: " + sidegroup_validation)
         trainX = []
         trainY = []
-        namesY = []
+        trainNames = []
         testX = []
         testY = []
+        testNames = []
 
         features_soap = features_soap.reshape(
             number_samples * augment_steps, -1)
@@ -113,10 +114,11 @@ def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, aug
             if sidegroup_validation in name[0]:
                 testX += [feature]
                 testY += [label]
+                testNames += [name]
             else:
                 trainX += [feature]
                 trainY += [label]
-                namesY += [name]
+                trainNames += [name]
 
         trainX = np.array(trainX)
         trainY = np.array(trainY)
