@@ -125,16 +125,17 @@ def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, aug
     else:
         (trainX, testX, trainY, testY) = train_test_split(
             features_soap, list(zip(labels, names)), test_size=0.2, random_state=32)
-        trainY, namesY = list(zip(*trainY))
-        testY, _ = list(zip(*testY))
+        trainY, trainNames = list(zip(*trainY))
+        testY, testNames = list(zip(*testY))
 
     trainX = np.array(trainX).reshape(-1, trainX.shape[-1])
     trainY = np.array(trainY).flatten()
-    namesY = np.array(namesY).flatten()
+    trainNames = np.array(trainNames).flatten()
+    testNames = np.array(testNames).flatten()
 
     if interpolate:
         features_interpolates, labels = get_interpolations(
-            data_dir, trainX, trainY, namesY, interpolation_steps=interpolation_steps)
-        return features_interpolates, labels, testX, testY
+            data_dir, trainX, trainY, trainNames, interpolation_steps=interpolation_steps)
+        return features_interpolates, labels, trainNames, testX, testY, testNames
     else:
-        return features_soap, labels, testX, testY
+        return features_soap, labels, trainNames, testX, testY, testNames

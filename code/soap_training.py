@@ -206,19 +206,19 @@ def main():
         lmax) + "_n=" + str(nmax) + "_split=" + str(args.test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
     species = ["H", "C", "N", "O", "F", "P", "S", "Cl", "As", "Br", "I", "Ir"]
-    trainX, trainY, testX, testY = generate_features(species,
-                                                     split=args.test_split,
-                                                     data_dir=args.data_dir,
-                                                     augment_steps=args.augment_steps,
-                                                     interpolate=True,
-                                                     nmax=args.nmax,
-                                                     lmax=args.lmax,
-                                                     rcut=args.rcut,
-                                                     interpolation_steps=args.interpolation_steps,
-                                                     sidegroup_validation=args.sidegroup_validation,
-                                                     file_identifier=file_identifier,
-                                                     out_dir=save_location
-                                                     )
+    trainX, trainY, _, testX, testY, testNames = generate_features(species,
+                                                                   split=args.test_split,
+                                                                   data_dir=args.data_dir,
+                                                                   augment_steps=args.augment_steps,
+                                                                   interpolate=True,
+                                                                   nmax=args.nmax,
+                                                                   lmax=args.lmax,
+                                                                   rcut=args.rcut,
+                                                                   interpolation_steps=args.interpolation_steps,
+                                                                   sidegroup_validation=args.sidegroup_validation,
+                                                                   file_identifier=file_identifier,
+                                                                   out_dir=save_location
+                                                                   )
 
     print("Data Length: " + str(len(trainX)))
     print("Label Length: " + str(len(trainY)))
@@ -230,16 +230,27 @@ def main():
     testY = np.array(testY)
 
     (testX, valX, testY, valY) = train_test_split(
-        testX, testY, test_size=0.5, random_state=32)
+        testX, list(zip(testY, testNames)), test_size=0.5, random_state=32)
 
-    np.save(save_location + "features_train.npy", trainX)
-    np.save(save_location + "labels_train.npy", trainY)
+    testY, testNames = list(zip(*testY))
+    valY, valNames = list(zip(*valY))
+
+    testY = np.array(testY)
+    testNames = np.array(testNames)
+
+    valY = np.array(valY)
+    valNames = np.array(valNames)
+
+    #np.save(save_location + "features_train.npy", trainX)
+    #np.save(save_location + "labels_train.npy", trainY)
 
     np.save(save_location + "features_val.npy", valX)
     np.save(save_location + "labels_val.npy", valX)
+    np.save(save_location + "names_val.npy", valNames)
 
     np.save(save_location + "features_test.npy", testX)
     np.save(save_location + "labels_test.npy", testY)
+    np.save(save_location + "names_test.npy", testNames)
 
     #trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
     testX = testX.reshape(-1, 12, int(testX.shape[-1] / 12), 1)
