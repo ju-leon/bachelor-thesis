@@ -16,9 +16,10 @@ from ase.visualize import view
 from soap_generation.alignment import align_elements
 from soap_generation.augment import augment_elements
 
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+
+from pickle import dump
 
 
 def read_data(data_dir):
@@ -44,7 +45,7 @@ def read_data(data_dir):
     return elems, labels, names
 
 
-def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, augment_steps=30, interpolate=False, interpolation_steps=10):
+def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, augment_steps=30, interpolate=False, interpolation_steps=10, sidegroup_validation="none", file_identifier="save_", out_dir=""):
     # Load data
     elems, labels, names = read_data(data_dir)
     number_samples = len(elems)
@@ -72,10 +73,14 @@ def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, aug
     soapScaler.fit(features_soap)
     features_soap = soapScaler.transform(features_soap)
 
+    dump(soapScaler, open(out_dir + 'featureScaler.pkl', 'wb'))
+
     labels = np.array(labels)
     barrierScaler = StandardScaler()
     barrierScaler.fit(labels.reshape(-1, 1))
     labels = barrierScaler.transform(labels.reshape(-1, 1))
+
+    dump(barrierScaler, open(out_dir + 'barrierScaler.pkl', 'wb'))
 
     features_soap = features_soap.reshape(
         number_samples, augment_steps, -1)
@@ -87,20 +92,31 @@ def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, aug
     names = names.reshape(
         number_samples, augment_steps, -1)
 
-    split_by_sidegroup = True
-    sidegroup = "chloride_1_smi1_1_s_1"
-    if split_by_sidegroup:
+    if sidegroup_validation != 'none':
+        print("Using ligand as validation: " + sidegroup_validation)
         trainX = []
         trainY = []
+        namesY = []
         testX = []
         testY = []
+
+        features_soap = features_soap.reshape(
+            number_samples * augment_steps, -1)
+
+        labels = labels.reshape(
+            number_samples * augment_steps, -1)
+
+        names = names.reshape(
+            number_samples * augment_steps, -1)
+
         for feature, label, name in zip(features_soap, labels, names):
-            if sidegroup in name:
-                trainX += [feature]
-                trainY += [label]
-            else:
+            if sidegroup_validation in name[0]:
                 testX += [feature]
                 testY += [label]
+            else:
+                trainX += [feature]
+                trainY += [label]
+                namesY += [name]
 
         trainX = np.array(trainX)
         trainY = np.array(trainY)
@@ -109,9 +125,8 @@ def generate_features(species, data_dir, split=0.2, nmax=8, lmax=4, rcut=12, aug
     else:
         (trainX, testX, trainY, testY) = train_test_split(
             features_soap, list(zip(labels, names)), test_size=0.2, random_state=32)
-
-    trainY, namesY = list(zip(*trainY))
-    testY, _ = list(zip(*testY))
+        trainY, namesY = list(zip(*trainY))
+        testY, _ = list(zip(*testY))
 
     trainX = np.array(trainX).reshape(-1, trainX.shape[-1])
     trainY = np.array(trainY).flatten()

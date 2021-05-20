@@ -185,15 +185,27 @@ def main():
 
     parser.add_argument('--name', default='model')
 
+    parser.add_argument('--sidegroup_validation', default='none')
+
     args = parser.parse_args()
 
     # Check if hyperparam optimization was run for given pair
     if not path.exists("Hyperband_FINAL_SNAP_" + str(args.nmax) + ":" + str(args.lmax) + ":0.2"):
         print("Skipping " + str(args.nmax) + ":" + str(args.lmax))
-        # sys.exit()
+        sys.exit()
+
+    if not os.path.exists(args.out_dir + args.name):
+        os.makedirs(args.out_dir + args.name)
+
+    save_location = args.out_dir + args.name + "/"
+
+    nmax = args.nmax
+    lmax = args.lmax
+    rcut = args.rcut
+    file_identifier = "_" + args.name + "_augment_steps=" + str(args.augment_steps) + "_l=" + str(
+        lmax) + "_n=" + str(nmax) + "_split=" + str(args.test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
     species = ["H", "C", "N", "O", "F", "P", "S", "Cl", "As", "Br", "I", "Ir"]
-
     trainX, trainY, testX, testY = generate_features(species,
                                                      split=args.test_split,
                                                      data_dir=args.data_dir,
@@ -202,7 +214,10 @@ def main():
                                                      nmax=args.nmax,
                                                      lmax=args.lmax,
                                                      rcut=args.rcut,
-                                                     interpolation_steps=args.interpolation_steps
+                                                     interpolation_steps=args.interpolation_steps,
+                                                     sidegroup_validation=args.sidegroup_validation,
+                                                     file_identifier=file_identifier,
+                                                     out_dir=save_location
                                                      )
 
     print("Data Length: " + str(len(trainX)))
@@ -217,24 +232,14 @@ def main():
     (testX, valX, testY, valY) = train_test_split(
         testX, testY, test_size=0.5, random_state=32)
 
-    nmax = args.nmax
-    lmax = args.lmax
-    rcut = args.rcut
+    np.save(save_location + "features_train.npy", trainX)
+    np.save(save_location + "labels_train.npy", trainY)
 
-    # np.save("features_train_" + str(nmax) + ":" +
-    #        str(lmax) + ":" + str(args.test_split) + ".npy", trainX)
-    # np.save("labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
-    #        str(args.test_split) + ".npy", trainY)
+    np.save(save_location + "features_val.npy", valX)
+    np.save(save_location + "labels_val.npy", valX)
 
-    np.save("features_val_" + str(nmax) + ":" +
-            str(lmax) + ":" + str(args.test_split) + ".npy", valX)
-    np.save("labels_val_" + str(nmax) + ":" + str(lmax) +
-            ":" + str(args.test_split) + ".npy", valX)
-
-    np.save("features_test_" + str(nmax) + ":" +
-            str(lmax) + ":" + str(args.test_split) + ".npy", testX)
-    np.save("labels_test_" + str(nmax) + ":" +
-            str(lmax) + ":" + str(args.test_split) + ".npy", testY)
+    np.save(save_location + "features_test.npy", testX)
+    np.save(save_location + "labels_test.npy", testY)
 
     #trainX = trainX.reshape(-1, 12, int(trainX.shape[-1] / 12), 1)
     testX = testX.reshape(-1, 12, int(testX.shape[-1] / 12), 1)
@@ -242,9 +247,6 @@ def main():
     trainY = trainY.reshape(-1, 1)
     testY = testY.reshape(-1, 1)
     valY = valY.reshape(-1, 1)
-
-    file_identifier = "_" + args.name + "_augment_steps=" + str(args.augment_steps) + "_l=" + str(
-        lmax) + "_n=" + str(nmax) + "_split=" + str(args.test_split) + "_rcut=" + str(rcut) + "_batch" + str(args.batch_size)
 
     global input_shape
     input_shape = trainX[0].shape
@@ -289,9 +291,9 @@ def main():
     )
 
     # Save loss of current model
-    save_loss(H, args.out_dir + "loss" + file_identifier + ".png")
+    save_loss(H, save_location + "loss.png")
 
-    model.save(args.out_dir + "model" + file_identifier + ".h5")
+    model.save(save_location + "model.h5")
 
 
 if __name__ == "__main__":
