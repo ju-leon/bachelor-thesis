@@ -248,7 +248,13 @@ class SOAPDecoder():
         return sum
 
     def spherical_harm(self, theta, phi, l, m):
-        return sph_harm(m, l, theta, phi).real
+        if m == 0:
+            return sph_harm(m, l, theta, phi).real
+        else:
+            if m % 2 == 1:
+                return sph_harm(int((m + 1) / 2), l, theta, phi).real
+            else:
+                return sph_harm(int((m + 1) / 2), l, theta, phi).imag
 
     def density(self, features, Z, x, y, z):
         phi, theta, r = self.cart2sph(x, y, z)
@@ -257,6 +263,7 @@ class SOAPDecoder():
         for n in range(self.nmax):
             for l in range(self.lmax+1):
                 for m in range(0, 2*l+1):
+                    counter += 1
                     # TODO: Adapt for multiple centers(outer loop?)
                     c = self.get_c(features, 0, Z, n, l, m) * self.radial_basis(r,
                                                                                 n, l) * self.spherical_harm(theta, phi, l, m)
