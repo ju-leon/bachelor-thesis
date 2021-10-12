@@ -15,23 +15,21 @@ import numpy as np
 from tqdm import tqdm
 
 import keras
-from keras.models import Sequential
-from keras.applications import ResNet50
-from keras.layers import Dense, Dropout, Activation, Flatten, Input, BatchNormalization
-from keras.layers import Convolution2D, MaxPooling2D, concatenate
-from keras.utils import np_utils
-from keras import Model
-from keras.models import Model
-from keras import regularizers
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten, Input, BatchNormalization
+from tensorflow.keras.layers import Convolution2D, MaxPooling2D, concatenate
+from tensorflow.keras import Model
+from tensorflow.keras.models import Model
+from tensorflow.keras import regularizers
 import argparse
 
-from kerastuner.tuners import Hyperband
-import kerastuner as kt
+from keras_tuner.tuners import Hyperband
+import keras_tuner as kt
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from keras.preprocessing.image import ImageDataGenerator
-from keras.optimizers import SGD, Adam
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.optimizers import SGD, Adam
 import matplotlib.pyplot as plt
 
 import csv
