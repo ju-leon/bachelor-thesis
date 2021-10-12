@@ -263,7 +263,6 @@ class SOAPDecoder():
         for n in range(self.nmax):
             for l in range(self.lmax+1):
                 for m in range(0, 2*l+1):
-                    counter += 1
                     # TODO: Adapt for multiple centers(outer loop?)
                     c = self.get_c(features, 0, Z, n, l, m) * self.radial_basis(r,
                                                                                 n, l) * self.spherical_harm(theta, phi, l, m)
