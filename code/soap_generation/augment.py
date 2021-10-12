@@ -13,7 +13,6 @@ def z_rotation(angle):
 
 
 def augment_elements(elems, labels, steps, names=None):
-    steps = np.random.uniform(0, np.pi * 2, size=steps)
 
     names_available = names is not None
 
@@ -21,7 +20,8 @@ def augment_elements(elems, labels, steps, names=None):
     labels_ag = []
     names_ag = []
     for element, label, index in tqdm(zip(elems, labels, range(len(labels)))):
-        for step in steps:
+        random_pos = np.random.uniform(0, np.pi * 2, size=steps)
+        for step in random_pos:
             rotation = z_rotation(step)
 
             element_rotated = copy.deepcopy(element)
