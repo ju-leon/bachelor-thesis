@@ -66,13 +66,16 @@ def save_loss(history, location):
     plt.savefig(location)
 
 
-def save_scatter(train_y_real, train_y_pred, test_y_real, test_y_pred, location):
+def save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred, test_y_real, test_y_pred, location):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(train_y_real, train_y_pred,
                marker="o", c="C1", label="Training")
-    ax.scatter(test_y_real, test_y_pred, marker="o",
+    ax.scatter(val_y_real, val_y_pred, marker="o",
                c="C3", label="Validation")
+    ax.scatter(test_y_real, test_y_pred, marker="o",
+               c="C2", label="Test")
+
     ax.set_aspect('equal')
     ax.set_xlabel("Calculated barrier [kcal/mol]")
     ax.set_ylabel("Predicted barrier [kcal/mol]")
@@ -275,12 +278,60 @@ def main():
         str(nmax) + ":" + str(lmax) + ":" + str(args.test_split)
     )
 
-    tuner.search(trainX, trainY,
-                 validation_data=(valX, valY),
-                 epochs=1500,
-                 callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=20)])
+    best_hp = tuner.get_best_hyperparameters(3)[0]
 
-    tuner.results_summary()
+    model = get_model(best_hp)
+
+    opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
+        0]["learning_rate"])
+    model.compile(loss="mean_squared_error", optimizer=opt)
+
+    # Train the model
+    H = model.fit(
+        x=trainX,
+        y=trainY,
+        validation_data=(valX, valY),
+        epochs=100,
+        batch_size=256,
+        verbose=2,
+        callbacks=[tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', patience=200)]
+    )
+
+        # Save loss of current model
+    save_loss(H, args.out_dir + "loss.png")
+
+    model.save(args.out_dir + "model.h5")
+
+    # Save R2, MAE  
+    r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
+    file = open(args.out_dir + "out.csv", "a")
+    file.write(str(args.test_split))
+    file.write(",")
+    file.write(str(args.nmax))
+    file.write(",")
+    file.write(str(args.lmax))
+    file.write(",")
+    file.write(str(args.rcut))
+    file.write(",")
+    file.write(str(r2))
+    file.write(",")
+    file.write(str(mae))
+    file.write("\n")
+    file.close()
+
+    # Scale back
+    train_y_pred = barrierScaler.inverse_transform(model.predict(trainX))
+    train_y_real = barrierScaler.inverse_transform(trainY)
+
+    val_y_pred = barrierScaler.inverse_transform(model.predict(valX))
+    val_y_real = barrierScaler.inverse_transform(valY)
+
+    test_y_pred = barrierScaler.inverse_transform(model.predict(testX))
+    test_y_real = barrierScaler.inverse_transform(testY)
+
+    save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred, test_y_real, test_y_pred, args.out_dir +
+                 "scatter_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
 
 
 if __name__ == "__main__":
