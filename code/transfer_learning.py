@@ -38,7 +38,7 @@ import pickle
 def read_data(data_dir):
     properties = dict()
 
-    with open(data_dir + 'morfeus_properties.csv', 'r') as file:
+    with open(data_dir + 'morfeus_properties_xtb.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)
         for row in reader:
@@ -46,9 +46,9 @@ def read_data(data_dir):
 
     labels = []
     elems = []
-    for f in tqdm(os.listdir(data_dir + "xyz_cat_w_H/")):
+    for f in tqdm(os.listdir(data_dir + "xyz_cat_w_H_xtb/")):
         if f.endswith(".xyz"):
-            elems.append(read(data_dir + "xyz_cat_w_H/" + f))
+            elems.append(read(data_dir + "xyz_cat_w_H_xtb/" + f))
             labels.append(properties[f])
 
     labels = np.array(labels)
