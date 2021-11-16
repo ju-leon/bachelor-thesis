@@ -38,23 +38,23 @@ import pickle
 def read_data(data_dir):
     properties = dict()
 
-    with open(data_dir + 'vaskas_features_properties_smiles_filenames.csv', 'r') as file:
+    with open(data_dir + 'combined.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)
         for row in reader:
-            properties[row[0]] = float(row[22])
+            properties[row[0]] = row  # float(row[22])
 
     labels = []
     elems = []
-    for f in tqdm(os.listdir(data_dir + "coordinates_molSimplify/")):
+    for f in tqdm(os.listdir(data_dir + "combined/")):
         if f.endswith(".xyz"):
             if f in properties.keys():
-                elems.append(read(data_dir + "coordinates_molSimplify/" + f))
+                elems.append(read(data_dir + "combined/" + f))
                 labels.append(properties[f])
 
     labels = np.array(labels)
     return elems, labels
-
+    
 
 def save_loss(history, location):
     plt.plot(history.history['loss'], label='loss')
