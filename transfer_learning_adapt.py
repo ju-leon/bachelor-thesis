@@ -36,23 +36,23 @@ import pickle
 
 
 def read_data(data_dir):
-    properties = dict()
+    barriers = dict()
 
     with open(data_dir + 'vaskas_features_properties_smiles_filenames.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)
         for row in reader:
-            properties[row[0]] = float(row[22])
+            barriers[row[93]] = float(row[91])
 
     labels = []
     elems = []
     for f in tqdm(os.listdir(data_dir + "coordinates_molSimplify/")):
         if f.endswith(".xyz"):
-            if f in properties.keys():
-                elems.append(read(data_dir + "coordinates_molSimplify/" + f))
-                labels.append(properties[f])
+            elems.append(read(data_dir + "coordinates_molSimplify/" + f))
+            labels.append(barriers[f[:-4]])
 
     labels = np.array(labels)
+
     return elems, labels
 
 
@@ -91,44 +91,6 @@ def step_decay(epoch):
     lrate = initial_lrate * math.pow(drop,
                                      math.floor((1+epoch)/epochs_drop))
     return lrate
-
-
-def get_model(hp):
-    global input_shape
-
-    inputs = tf.keras.Input(shape=input_shape)
-
-    x = inputs
-    x = tf.keras.layers.Flatten()(x)
-
-    for i in range(hp.Int('hidden_layers', 1, 6, default=3)):
-        size = hp.Int('hidden_size_' + str(i), 10, 700, step=40)
-        reg = hp.Float('hidden_reg_' + str(i), 0,
-                       0.06, step=0.01, default=0.02)
-        dropout = hp.Float('hidden_dropout_' + str(i),
-                           0, 0.5, step=0.1, default=0.2)
-
-        x = tf.keras.layers.Dense(size, activation="relu",
-                                  kernel_regularizer=tf.keras.regularizers.l2(reg))(x)
-        x = tf.keras.layers.Dropout(dropout)(x)
-
-        norm = hp.Choice('hidden_batch_norm_' + str(i), values=[True, False])
-
-        if norm:
-            x = tf.keras.layers.BatchNormalization()(x)
-
-    x = tf.keras.layers.Dense(1, kernel_regularizer='l2')(x)
-
-    model = tf.keras.Model(inputs=inputs, outputs=x)
-
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(
-            hp.Float('learning_rate', 1e-6, 1e-4, sampling='log')),
-        loss='mean_squared_error',
-        metrics=[tf.keras.metrics.MeanSquaredError()])
-
-    return model
-
 
 def reg_stats(y_true, y_pred, scaler):
     y_true = np.array(y_true)
@@ -242,22 +204,23 @@ def main():
     except:
         os.mkdir(directory)
 
-    np.save(args.out_dir + "features_pre_train_" + str(nmax) + ":" +
+    np.save(args.out_dir + "features_train_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", trainX)
-    np.save(args.out_dir + "labels_pre_train_" + str(nmax) + ":" + str(lmax) + ":" +
+    np.save(args.out_dir + "labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
             str(args.test_split) + ".npy", trainY)
 
-    np.save(args.out_dir + "features_pre_val_" + str(nmax) + ":" +
+    np.save(args.out_dir + "features_val_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", valX)
-    np.save(args.out_dir + "labels_pre_val_" + str(nmax) + ":" + str(lmax) +
+    np.save(args.out_dir + "labels_val_" + str(nmax) + ":" + str(lmax) +
             ":" + str(args.test_split) + ".npy", valX)
 
-    np.save(args.out_dir + "features_pre_test_" + str(nmax) + ":" +
+    np.save(args.out_dir + "features_test_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", testX)
-    np.save(args.out_dir + "labels_pre_test_" + str(nmax) + ":" +
+    np.save(args.out_dir + "labels_test_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", testY)
 
-    trained_rows = [6]
+    # Always select the first entry
+    trained_rows = [0]
     trainY = trainY[:, trained_rows].astype(float)
     valY = valY[:, trained_rows].astype(float)
     testY = testY[:, trained_rows].astype(float)
@@ -271,20 +234,9 @@ def main():
     global input_shape
     input_shape = trainX[0].shape
 
-    tuner = kt.Hyperband(
-        get_model,
-        objective='val_mean_squared_error',
-        max_epochs=1200,
-        project_name="Hyperband_FINAL_SNAP_" +
-        str(nmax) + ":" + str(lmax) + ":" + str(args.test_split)
-    )
+    model = tf.keras.models.load_model(args.out_dir + "model_pretrain.h5")
 
-    best_hp = tuner.get_best_hyperparameters(3)[0]
-
-    model = get_model(best_hp)
-
-    opt = tf.keras.optimizers.Adam(learning_rate=tuner.get_best_hyperparameters(3)[
-        0]["learning_rate"])
+    opt = tf.keras.optimizers.Adam()
     model.compile(loss="mean_squared_error", optimizer=opt)
 
     # Train the model
@@ -292,21 +244,21 @@ def main():
         x=trainX,
         y=trainY,
         validation_data=(valX, valY),
-        epochs=1000,
+        epochs=200,
         batch_size=256,
         verbose=2,
         callbacks=[tf.keras.callbacks.EarlyStopping(
             monitor='val_loss', patience=200)]
     )
 
-    # Save loss of current model
-    save_loss(H, args.out_dir + "loss_pretrain.png")
+        # Save loss of current model
+    save_loss(H, args.out_dir + "loss_adapt.png")
 
-    model.save(args.out_dir + "model_pretrain.h5")
+    model.save(args.out_dir + "model_adapt.h5")
 
-    # Save R2, MAE
+    # Save R2, MAE  
     r2, mae = reg_stats(testY, model.predict(testX), barrierScaler)
-    file = open(args.out_dir + "out_pretrain.csv", "a")
+    file = open(args.out_dir + "out_adapt.csv", "a")
     file.write(str(args.test_split))
     file.write(",")
     file.write(str(args.nmax))
@@ -332,7 +284,7 @@ def main():
     test_y_real = barrierScaler.inverse_transform(testY)
 
     save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred, test_y_real, test_y_pred, args.out_dir +
-                 "scatter_pretrain_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
+                 "scatter_adapt_l=" + str(lmax) + ",n=" + str(nmax) + ".pdf")
 
 
 if __name__ == "__main__":
