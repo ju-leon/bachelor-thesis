@@ -38,7 +38,7 @@ import pickle
 def read_data(data_dir):
     properties = dict()
 
-    with open(data_dir + 'morfeus_properties_xtb.csv', 'r') as file:
+    with open(data_dir + 'combined.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)
         for row in reader:
@@ -46,10 +46,11 @@ def read_data(data_dir):
 
     labels = []
     elems = []
-    for f in tqdm(os.listdir(data_dir + "xyz_cat_w_H_xtb/")):
+    for f in tqdm(os.listdir(data_dir + "combined/")):
         if f.endswith(".xyz"):
-            elems.append(read(data_dir + "xyz_cat_w_H_xtb/" + f))
-            labels.append(properties[f])
+            if f in properties.keys():
+                elems.append(read(data_dir + "combined/" + f))
+                labels.append(properties[f])
 
     labels = np.array(labels)
     return elems, labels
@@ -256,7 +257,7 @@ def main():
     np.save(args.out_dir + "labels_test_" + str(nmax) + ":" +
             str(lmax) + ":" + str(args.test_split) + ".npy", testY)
 
-    trained_rows = [22]
+    trained_rows = [6]
     trainY = trainY[:, trained_rows].astype(float)
     valY = valY[:, trained_rows].astype(float)
     testY = testY[:, trained_rows].astype(float)
@@ -291,7 +292,7 @@ def main():
         x=trainX,
         y=trainY,
         validation_data=(valX, valY),
-        epochs=100,
+        epochs=2000,
         batch_size=256,
         verbose=2,
         callbacks=[tf.keras.callbacks.EarlyStopping(
