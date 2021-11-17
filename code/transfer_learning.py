@@ -168,6 +168,8 @@ def main():
 
     args = parser.parse_args()
 
+    print(args.ligand_test)
+
     elems, labels = read_data(args.data_dir)
 
     elems = align_elements(elems)
@@ -224,6 +226,8 @@ def main():
     else:
         (trainX, testX, trainY, testY) = train_test_split(
             features_soap, labels, test_size=args.test_split, random_state=32)
+
+    print("Len test: ", len(testX))
 
     (testX, valX, testY, valY) = train_test_split(
         testX, testY, test_size=0.5, random_state=32)
