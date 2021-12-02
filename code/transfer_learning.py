@@ -78,8 +78,8 @@ def save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred, test_y_real
                c="C2", label="Test")
 
     ax.set_aspect('equal')
-    ax.set_xlabel("Calculated barrier [kcal/mol]")
-    ax.set_ylabel("Predicted barrier [kcal/mol]")
+    ax.set_xlabel("Calculated transfer property")
+    ax.set_ylabel("Predicted transfer property")
     ax.legend(loc="upper left")
     plt.savefig(location)
 
@@ -296,7 +296,7 @@ def main():
         x=trainX,
         y=trainY,
         validation_data=(valX, valY),
-        epochs=1000,
+        epochs=300,
         batch_size=256,
         verbose=2,
         callbacks=[tf.keras.callbacks.EarlyStopping(

@@ -37,19 +37,21 @@ import pickle
 
 def read_data(data_dir):
     barriers = dict()
+    smiles_d = dict()
 
     with open(data_dir + 'vaskas_features_properties_smiles_filenames.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)
         for row in reader:
             barriers[row[93]] = float(row[91])
+            smiles_d[row[93]] = row[92]
 
     labels = []
     elems = []
     for f in tqdm(os.listdir(data_dir + "coordinates_molSimplify/")):
         if f.endswith(".xyz"):
             elems.append(read(data_dir + "coordinates_molSimplify/" + f))
-            labels.append(barriers[f[:-4]])
+            labels.append([barriers[f[:-4]], smiles_d[f[:-4]]])
 
     labels = np.array(labels)
 
@@ -59,7 +61,7 @@ def read_data(data_dir):
 def save_loss(history, location):
     plt.plot(history.history['loss'], label='loss')
     plt.plot(history.history['val_loss'], label='val_loss')
-    plt.ylim([0, 1])
+    plt.ylim([0, 2])
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
@@ -165,6 +167,10 @@ def main():
     labels = labels.reshape(
         number_samples, args.augment_steps, -1)
 
+    print(labels)
+    print(labels[0])
+    print(labels[0,0])
+
     if args.ligand_test != 'none':
         testX = []
         trainX = []
@@ -172,7 +178,7 @@ def main():
         trainY = []
 
         for x in range(len(labels)):
-            if args.ligand_test in labels[x, 0, 2:6]:
+            if args.ligand_test in labels[x, 0, 1]:
                 testX.append(features_soap[x])
                 testY.append(labels[x])
             else:
