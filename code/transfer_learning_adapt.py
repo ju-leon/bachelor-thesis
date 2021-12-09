@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 import csv
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.externals import joblib
 
 from soap_generation.alignment import align_elements
 from soap_generation.augment import augment_elements
@@ -241,21 +242,6 @@ def main():
         os.stat(directory)
     except:
         os.mkdir(directory)
-    """
-    np.save(
-        args.out_dir + "features_train_" + str(nmax) + ":" + str(lmax) + ":" +
-        str(args.test_split) + ".npy", trainX)
-    np.save(
-        args.out_dir + "labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
-        str(args.test_split) + ".npy", trainY)
-
-    """
-    
-    np.save(args.out_dir + "features_val_" + args.dataset + ".npy", valX)
-    np.save(args.out_dir + "labels_val_" + args.dataset + ".npy", valX)
-
-    np.save(args.out_dir + "features_test_" + args.dataset + ".npy", testX)
-    np.save(args.out_dir + "labels_test_" + args.dataset + ".npy", testY)
 
     # Always select the first entry
     trained_rows = [0]
@@ -268,6 +254,26 @@ def main():
     trainY = barrierScaler.transform(trainY)
     valY = barrierScaler.transform(valY)
     testY = barrierScaler.transform(testY)
+
+    """
+    np.save(
+        args.out_dir + "features_train_" + str(nmax) + ":" + str(lmax) + ":" +
+        str(args.test_split) + ".npy", trainX)
+    np.save(
+        args.out_dir + "labels_train_" + str(nmax) + ":" + str(lmax) + ":" +
+        str(args.test_split) + ".npy", trainY)
+
+    """
+
+    np.save(args.out_dir + "features_val_" + args.dataset + ".npy", valX)
+    np.save(args.out_dir + "labels_val_" + args.dataset + ".npy", valY)
+
+    np.save(args.out_dir + "features_test_" + args.dataset + ".npy", testX)
+    np.save(args.out_dir + "labels_test_" + args.dataset + ".npy", testY)
+
+    joblib.dump(barrierScaler,
+                args.out_dir + "barrierScaler_" + args.dataset + ".pkl")
+
 
     global input_shape
     input_shape = trainX[0].shape
