@@ -69,7 +69,7 @@ def save_loss(history, location):
 
 def save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
                  test_y_real, test_y_pred, location):
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
     ax.scatter(train_y_real,
                train_y_pred,
@@ -83,6 +83,7 @@ def save_scatter(train_y_real, train_y_pred, val_y_real, val_y_pred,
     ax.set_xlabel("Calculated transfer property")
     ax.set_ylabel("Predicted transfer property")
     ax.legend(loc="upper left")
+    fig.tight_layout()
     plt.savefig(location)
 
 
