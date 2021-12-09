@@ -28,7 +28,6 @@ import matplotlib.pyplot as plt
 import csv
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.externals import joblib
 
 from soap_generation.alignment import align_elements
 from soap_generation.augment import augment_elements
@@ -237,6 +236,10 @@ def main():
     valY = valY.reshape(-1, labels.shape[-1])
     testY = testY.reshape(-1, labels.shape[-1])
 
+    print(trainY.shape)
+    print(valY.shape)
+    print(testY.shape)
+
     directory = os.path.dirname(args.out_dir)
     try:
         os.stat(directory)
@@ -254,7 +257,6 @@ def main():
     trainY = barrierScaler.transform(trainY)
     valY = barrierScaler.transform(valY)
     testY = barrierScaler.transform(testY)
-
     """
     np.save(
         args.out_dir + "features_train_" + str(nmax) + ":" + str(lmax) + ":" +
@@ -271,9 +273,8 @@ def main():
     np.save(args.out_dir + "features_test_" + args.dataset + ".npy", testX)
     np.save(args.out_dir + "labels_test_" + args.dataset + ".npy", testY)
 
-    joblib.dump(barrierScaler,
-                args.out_dir + "barrierScaler_" + args.dataset + ".pkl")
-
+    pickle.dump(barrierScaler,
+                open(args.out_dir + "barrierScaler_" + args.dataset + ".pkl", 'wb'))
 
     global input_shape
     input_shape = trainX[0].shape
