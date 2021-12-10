@@ -88,6 +88,9 @@ def save_scatter(title, train_y_real, train_y_pred, val_y_real, val_y_pred,
     ax.set_ylabel("Predicted barrier [kcal/mol]")
     ax.legend(loc="upper left")
 
+    txt = "MAE={:2.2f}, r2={:2.2f}".format(mae, r2)
+    fig.text(.5, -0.1, txt, ha='center')
+
     plt.title(title)
     plt.savefig(location)
 
